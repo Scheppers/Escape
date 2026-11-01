@@ -1,6 +1,6 @@
 const LEVELS={
- medieval:{name:"Middeleeuws alchemistenlabo",art:"assets/medieval_lab.svg",labels:["Scheidingstechnieken","Wetten en aspecten","Atoommodellen","Bindingstypes"],code:[3,7,2,4],intro:"Je bent aangekomen in een middeleeuws alchemistenlabo."},
- lavoisier:{name:"Labo tijdens de Franse Revolutie",art:"assets/french_lab.svg",labels:["Reacties in waterig midden","Kwantitatieve aspecten","Koolstofchemie","Redoxreacties"],code:[8,1,5,6],intro:"De tijdreis brengt je naar het labo van Lavoisier."},
+ medieval:{name:"Middeleeuws alchemistenlabo",art:"assets/medieval_lab.svg",labels:["Kookpot","Oud boek","Glazen potten","Werktafel"],code:[3,7,2,4],intro:"Je bent aangekomen in een middeleeuws alchemistenlabo."},
+ lavoisier:{name:"Labo tijdens de Franse Revolutie",art:"assets/french_lab.svg",labels:["Balans","Notities van Lavoisier","Glaswerk","Proefopstelling"],code:[8,1,5,6],intro:"De tijdreis brengt je naar het labo van Lavoisier."},
  modern:{name:"Modern chemielabo",art:"assets/modern_lab.svg",labels:["Reageerbuizen","Weegschaal","Maatkolf","Periodiek systeem"],code:[6,4,9,2],intro:"Je bereikt het moderne chemielabo."},
  future:{name:"Futuristisch chemielabo",art:"assets/futuristic_lab.svg",labels:["Robotarm","Hologram","Reactor","Tijdpoort"],code:[5,2,8,1],intro:"Je stapt de toekomst binnen. Het futuristische labo bewaakt de laatste tijdcode."}
 };
@@ -64,6 +64,47 @@ const ELEMENT_SPRINT_ITEMS=[
  {name:"mendelevium",symbol:"Md"},{name:"nobelium",symbol:"No"},{name:"lawrencium",symbol:"Lr"},{name:"rutherfordium",symbol:"Rf"},{name:"dubnium",symbol:"Db"},{name:"seaborgium",symbol:"Sg"},{name:"bohrium",symbol:"Bh"},{name:"hassium",symbol:"Hs"},{name:"meitnerium",symbol:"Mt"},{name:"darmstadtium",symbol:"Ds"},
  {name:"röntgenium",symbol:"Rg"},{name:"copernicium",symbol:"Cn"},{name:"nihonium",symbol:"Nh"},{name:"flerovium",symbol:"Fl"},{name:"moscovium",symbol:"Mc"},{name:"livermorium",symbol:"Lv"},{name:"tennessine",symbol:"Ts"},{name:"oganesson",symbol:"Og"}
 ];
+
+// Bonusspel level 2: zuren en zuurrestnamen. De gegevens volgen de tabel van de leerkracht.
+const ACID_REFERENCE_ITEMS = [
+ {formula:"HNO3",systematic:"waterstofnitraat",common:"salpeterzuur",residueFormula:"NO3-",residueName:"nitraat"},
+ {formula:"H2SO4",systematic:"diwaterstofsulfaat",common:"zwavelzuur",residueFormula:"SO42-",residueName:"sulfaat"},
+ {formula:"H2CO3",systematic:"diwaterstofcarbonaat",common:"koolzuur",residueFormula:"CO32-",residueName:"carbonaat"},
+ {formula:"H3PO4",systematic:"triwaterstoffosfaat",common:"fosforzuur",residueFormula:"PO43-",residueName:"fosfaat"},
+ {formula:"HClO3",systematic:"waterstofchloraat",common:"chloorzuur",residueFormula:"ClO3-",residueName:"chloraat"},
+ {formula:"HBrO3",systematic:"waterstofbromaat",common:"broomzuur",residueFormula:"BrO3-",residueName:"bromaat"},
+ {formula:"HIO3",systematic:"waterstofjodaat",common:"joodzuur",residueFormula:"IO3-",residueName:"jodaat"}
+];
+const ACID_FIELDS = [
+ {key:"formula",label:"de brutoformule van het zuur",answerLabel:"de brutoformule van het zuur",type:"formula"},
+ {key:"systematic",label:"de systematische naam van het zuur",answerLabel:"de systematische naam van het zuur",type:"name"},
+ {key:"common",label:"de gebruiksnaam van het zuur",answerLabel:"de gebruiksnaam van het zuur",type:"name"},
+ {key:"residueFormula",label:"de formule van de zuurrest",answerLabel:"de formule van de zuurrest",type:"formula"},
+ {key:"residueName",label:"de naam van de zuurrest",answerLabel:"de naam van de zuurrest",type:"name"}
+];
+function createAcidSprintQueue(){
+ const items=[];
+ for(const acid of ACID_REFERENCE_ITEMS){
+  for(const source of ACID_FIELDS){
+   for(const target of ACID_FIELDS){
+    if(source.key===target.key)continue;
+    items.push({
+     prompt_text:`Gegeven ${source.label}: ${acid[source.key]}. Wat is ${target.answerLabel}?`,
+     answer_type:target.type,
+     expected_answer:acid[target.key]
+    });
+   }
+  }
+ }
+ return shuffle(items);
+}
+function normaliseAcidAnswer(value,type){
+ let answer=String(value??"").trim().replace(/\s+/g,"");
+ if(type!=="formula")return answer.toLocaleLowerCase("nl-BE");
+ const sub={"₀":"0","₁":"1","₂":"2","₃":"3","₄":"4","₅":"5","₆":"6","₇":"7","₈":"8","₉":"9","⁰":"0","¹":"1","²":"2","³":"3","⁴":"4","⁵":"5","⁶":"6","⁷":"7","⁸":"8","⁹":"9","⁺":"+","⁻":"-","−":"-"};
+ return [...answer].map(ch=>sub[ch]??ch).join("");
+}
+
 const COSMETIC_SKINS=[
  {id:"starter",name:"Beginnende alchemist",emoji:"🧪",price:0,detail:"Je vertrouwde startuitrusting."},
  {id:"brass",name:"Messing Meester",emoji:"🥽",price:8,detail:"Een veiligheidsbril voor de echte laboprofessional."},
@@ -74,6 +115,8 @@ const COSMETIC_SKINS=[
 ];
 let labCoins=0, ownedSkins=new Set(["starter"]), equippedSkin="starter", sprintTimer=null, sprintTransitionTimer=null;
 let sprintState={running:false,startingCoins:0,correct:0,answered:0,startedAt:0,queue:[],index:0,current:null,best:0,onlineSessionId:null};
+let acidSprintTimer=null, acidSprintTransitionTimer=null;
+let acidSprintState={running:false,startingCoins:0,correct:0,answered:0,startedAt:0,queue:[],index:0,current:null,best:0,onlineSessionId:null};
 // Leerlingen krijgen geen hints: verberg de knop in alle soorten vensters.
 const hintButton=$("hint-button");
 if(hintButton){hintButton.style.setProperty("display","none","important");hintButton.setAttribute("aria-hidden","true");hintButton.disabled=true;}
@@ -447,9 +490,10 @@ function initEconomyUI(){
  panel.id="labcoins-panel";panel.className="labcoins-panel";
  panel.innerHTML=`
   <div class="labcoins-heading"><div><p class="economy-eyebrow">BONUSSPEL</p><h3>🪙 LabCoins</h3></div><div class="coin-count"><span id="labcoin-balance">0</span><small>coins</small></div></div>
-  <p class="labcoins-copy">Verdien munten met de optionele Elementensprint. Gewone puzzels geven alleen hun deurcijfer.</p>
+  <p class="labcoins-copy">Verdien munten met de Elementensprint in level 1 en de Zurenkennis-sprint in level 2. Gewone puzzels geven alleen hun deurcijfer.</p>
   <div class="skin-preview"><span class="skin-preview-icon" id="equipped-skin-icon">🧪</span><span><small>Huidige skin</small><strong id="equipped-skin-name">Beginnende alchemist</strong></span></div>
   <button type="button" class="primary full economy-action" id="element-sprint-open">⚡ Elementensprint · 60 sec</button>
+  <button type="button" class="primary full economy-action" id="acid-sprint-open">🧪 Zurenkennis · 60 sec</button>
   <button type="button" class="secondary full economy-action" id="skin-shop-open">🛍️ Open de skinwinkel</button>`;
  const inventory=side.querySelector(".inventory");
  if(inventory)inventory.insertAdjacentElement("afterend",panel);else side.append(panel);
@@ -461,23 +505,26 @@ function initEconomyUI(){
  style.id="economy-inline-styles";
  style.textContent=`
  .labcoins-panel{grid-column:1/-1;margin-top:13px;padding:14px;background:linear-gradient(145deg,#132f45,#234a60);border:1px solid #476b7b;border-radius:13px;color:#fff;box-shadow:0 8px 22px #172c4018}
- .labcoins-heading{display:flex;align-items:center;justify-content:space-between;gap:8px}.labcoins-heading h3{font-size:1rem;margin:0}.economy-eyebrow{font-size:.62rem;letter-spacing:.13em;color:#85d8dc;font-weight:900;margin:0 0 3px}.coin-count{min-width:60px;text-align:center;padding:5px 9px;border-radius:10px;background:#f5c86d;color:#44300a;font-weight:900;font-size:1.25rem;line-height:1.05}.coin-count small{display:block;font-size:.58rem;letter-spacing:.06em;text-transform:uppercase;margin-top:3px}.labcoins-copy{font-size:.75rem;line-height:1.45;color:#d6e7ee;margin:9px 0}.skin-preview{display:flex;align-items:center;gap:10px;border:1px solid #557382;background:#ffffff0d;border-radius:10px;padding:8px 10px;margin:10px 0}.skin-preview-icon{display:grid;place-items:center;width:42px;height:42px;flex-shrink:0;font-size:1.75rem;background:#ffffff12;border-radius:10px}.skin-preview small,.skin-preview strong{display:block}.skin-preview small{font-size:.65rem;color:#b8d1dc;margin-bottom:3px}.skin-preview strong{font-size:.78rem}.economy-action{margin-top:7px!important}.labcoins-panel .primary{background:#f5c86d;color:#42300c;box-shadow:0 3px 0 #b78d3d}.labcoins-panel .secondary{background:#e1eef3;color:#18394f}.economy-overlay{position:fixed;inset:0;z-index:30;display:grid;place-items:center;padding:15px;background:#0c2236e8;overflow:auto}.economy-dialog{position:relative;width:min(680px,100%);max-height:92vh;overflow:auto;background:#fffdf8;border:1px solid #e3d8c6;border-radius:19px;padding:25px;box-shadow:0 24px 90px #0006;color:#203b4c}.economy-dialog .close-button{position:absolute;z-index:2;right:10px;top:7px}.economy-title{font-size:1.45rem;margin:2px 38px 7px 0}.economy-lead{font-size:.88rem;line-height:1.55;color:#526a76;margin:0 0 16px}.sprint-hud{display:flex;gap:10px;justify-content:space-between;align-items:center;flex-wrap:wrap;margin:14px 0}.sprint-timer{font-size:1.65rem;font-weight:1000;color:#fff;background:#17364c;border-radius:10px;padding:8px 14px;font-variant-numeric:tabular-nums}.sprint-timer.urgent{background:#9c3445;animation:sprintPulse .7s infinite alternate}@keyframes sprintPulse{to{transform:scale(1.04)}}.sprint-score{font-size:.78rem;color:#4f6672;font-weight:800}.sprint-question{padding:18px 14px;border-radius:13px;background:#edf5f7;text-align:center;margin:11px 0}.sprint-question small{display:block;color:#52707e;font-weight:800;text-transform:uppercase;letter-spacing:.1em;font-size:.66rem;margin-bottom:8px}.sprint-element-name{font-size:clamp(1.65rem,5vw,2.5rem);font-weight:1000;line-height:1.15;color:#16384c}.sprint-form{display:flex;gap:8px;margin-top:12px}.sprint-input{flex:1;min-width:0;padding:12px;border:1px solid #bdd0d8;border-radius:9px;font:inherit;font-size:1.05rem}.sprint-feedback{min-height:24px;margin:10px 0 0;font-size:.85rem;font-weight:800}.sprint-feedback.good{color:#14754e}.sprint-feedback.bad{color:#a84b2c}.sprint-rules{font-size:.8rem;line-height:1.6;color:#506874;background:#f3f5f3;padding:11px 13px;border-radius:10px;margin:12px 0}.sprint-results{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:9px;margin:17px 0}.sprint-result{padding:13px 7px;text-align:center;border:1px solid #d8e4e8;background:#f0f7f8;border-radius:11px}.sprint-result strong{display:block;font-size:1.45rem;color:#153e53}.sprint-result small{font-size:.68rem;color:#526b78}.shop-grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:10px;margin-top:15px}.shop-item{display:flex;flex-direction:column;gap:8px;min-width:0;border:1px solid #dbe4e7;background:#f7faf9;border-radius:13px;padding:12px}.shop-item.equipped{border-color:#4aab8a;box-shadow:inset 0 0 0 1px #4aab8a;background:#eff9f4}.shop-item-top{display:flex;align-items:center;gap:10px}.shop-item-icon{display:grid;place-items:center;width:52px;height:52px;flex-shrink:0;border-radius:12px;background:linear-gradient(145deg,#e0eff2,#f6e9cf);font-size:2rem}.shop-item h3{font-size:.92rem;line-height:1.2;margin:0 0 4px}.shop-price{font-size:.75rem;font-weight:900;color:#8a6516}.shop-detail{font-size:.76rem;line-height:1.4;color:#5a707b;flex:1}.shop-item button{width:100%;font-size:.76rem;padding:9px 8px}.shop-item .primary{background:#176f96}.shop-item .secondary{background:#e6eff2}.shop-tag{display:inline-block;align-self:flex-start;background:#e2f4eb;color:#166448;padding:3px 7px;border-radius:5px;font-size:.62rem;font-weight:900}.economy-dialog .primary{background:#176f96;color:white}.economy-dialog button:disabled{opacity:.48}@media(max-width:560px){.economy-dialog{padding:22px 15px 17px}.shop-grid{grid-template-columns:1fr}.sprint-form{flex-direction:column}.sprint-form button{width:100%}.sprint-results{gap:5px}.sprint-result strong{font-size:1.25rem}}
+ .labcoins-heading{display:flex;align-items:center;justify-content:space-between;gap:8px}.labcoins-heading h3{font-size:1rem;margin:0}.economy-eyebrow{font-size:.62rem;letter-spacing:.13em;color:#85d8dc;font-weight:900;margin:0 0 3px}.coin-count{min-width:60px;text-align:center;padding:5px 9px;border-radius:10px;background:#f5c86d;color:#44300a;font-weight:900;font-size:1.25rem;line-height:1.05}.coin-count small{display:block;font-size:.58rem;letter-spacing:.06em;text-transform:uppercase;margin-top:3px}.labcoins-copy{font-size:.75rem;line-height:1.45;color:#d6e7ee;margin:9px 0}.skin-preview{display:flex;align-items:center;gap:10px;border:1px solid #557382;background:#ffffff0d;border-radius:10px;padding:8px 10px;margin:10px 0}.skin-preview-icon{display:grid;place-items:center;width:42px;height:42px;flex-shrink:0;font-size:1.75rem;background:#ffffff12;border-radius:10px}.skin-preview small,.skin-preview strong{display:block}.skin-preview small{font-size:.65rem;color:#b8d1dc;margin-bottom:3px}.skin-preview strong{font-size:.78rem}.economy-action{margin-top:7px!important}.labcoins-panel .primary{background:#f5c86d;color:#42300c;box-shadow:0 3px 0 #b78d3d}.labcoins-panel .secondary{background:#e1eef3;color:#18394f}.economy-overlay{position:fixed;inset:0;z-index:30;display:grid;place-items:center;padding:15px;background:#0c2236e8;overflow:auto}.economy-dialog{position:relative;width:min(680px,100%);max-height:92vh;overflow:auto;background:#fffdf8;border:1px solid #e3d8c6;border-radius:19px;padding:25px;box-shadow:0 24px 90px #0006;color:#203b4c}.economy-dialog .close-button{position:absolute;z-index:2;right:10px;top:7px}.economy-title{font-size:1.45rem;margin:2px 38px 7px 0}.economy-lead{font-size:.88rem;line-height:1.55;color:#526a76;margin:0 0 16px}.sprint-hud{display:flex;gap:10px;justify-content:space-between;align-items:center;flex-wrap:wrap;margin:14px 0}.sprint-timer{font-size:1.65rem;font-weight:1000;color:#fff;background:#17364c;border-radius:10px;padding:8px 14px;font-variant-numeric:tabular-nums}.sprint-timer.urgent{background:#9c3445;animation:sprintPulse .7s infinite alternate}@keyframes sprintPulse{to{transform:scale(1.04)}}.sprint-score{font-size:.78rem;color:#4f6672;font-weight:800}.sprint-question{padding:18px 14px;border-radius:13px;background:#edf5f7;text-align:center;margin:11px 0}.sprint-question small{display:block;color:#52707e;font-weight:800;text-transform:uppercase;letter-spacing:.1em;font-size:.66rem;margin-bottom:8px}.sprint-element-name{font-size:clamp(1.65rem,5vw,2.5rem);font-weight:1000;line-height:1.15;color:#16384c}.sprint-form{display:flex;gap:8px;margin-top:12px}.sprint-input{flex:1;min-width:0;padding:12px;border:1px solid #bdd0d8;border-radius:9px;font:inherit;font-size:1.05rem}.sprint-feedback{min-height:24px;margin:10px 0 0;font-size:.85rem;font-weight:800}.sprint-feedback.good{color:#14754e}.sprint-feedback.bad{color:#a84b2c}.sprint-rules{font-size:.8rem;line-height:1.6;color:#506874;background:#f3f5f3;padding:11px 13px;border-radius:10px;margin:12px 0}.acid-sprint-form{display:grid;gap:8px;margin-top:12px}.acid-answer-line{display:flex;gap:8px;align-items:stretch}.acid-answer-line .sprint-input{flex:1;min-width:0}.acid-answer-line button{flex-shrink:0}.acid-formula-tools{width:100%;min-width:0}.acid-formula-keypad{display:flex;flex-wrap:wrap;align-items:center;gap:6px;margin:9px 0}.acid-formula-keypad span{font-size:.72rem;color:#536c78;font-weight:800;margin-right:3px}.acid-formula-key{min-width:34px;padding:7px 9px!important;border:1px solid #b9ccd4!important;border-radius:7px!important;background:#eef5f6!important;color:#153e53!important;font-size:1rem!important;font-weight:900!important}.acid-format-hint{display:block;color:#526b78;font-size:.72rem;margin-top:5px}.acid-prompt{font-size:clamp(1.05rem,3.3vw,1.35rem);font-weight:900;line-height:1.45;color:#16384c;overflow-wrap:anywhere}.sprint-results{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:9px;margin:17px 0}.sprint-result{padding:13px 7px;text-align:center;border:1px solid #d8e4e8;background:#f0f7f8;border-radius:11px}.sprint-result strong{display:block;font-size:1.45rem;color:#153e53}.sprint-result small{font-size:.68rem;color:#526b78}.shop-grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:10px;margin-top:15px}.shop-item{display:flex;flex-direction:column;gap:8px;min-width:0;border:1px solid #dbe4e7;background:#f7faf9;border-radius:13px;padding:12px}.shop-item.equipped{border-color:#4aab8a;box-shadow:inset 0 0 0 1px #4aab8a;background:#eff9f4}.shop-item-top{display:flex;align-items:center;gap:10px}.shop-item-icon{display:grid;place-items:center;width:52px;height:52px;flex-shrink:0;border-radius:12px;background:linear-gradient(145deg,#e0eff2,#f6e9cf);font-size:2rem}.shop-item h3{font-size:.92rem;line-height:1.2;margin:0 0 4px}.shop-price{font-size:.75rem;font-weight:900;color:#8a6516}.shop-detail{font-size:.76rem;line-height:1.4;color:#5a707b;flex:1}.shop-item button{width:100%;font-size:.76rem;padding:9px 8px}.shop-item .primary{background:#176f96}.shop-item .secondary{background:#e6eff2}.shop-tag{display:inline-block;align-self:flex-start;background:#e2f4eb;color:#166448;padding:3px 7px;border-radius:5px;font-size:.62rem;font-weight:900}.economy-dialog .primary{background:#176f96;color:white}.economy-dialog button:disabled{opacity:.48}@media(max-width:560px){.economy-dialog{padding:22px 15px 17px}.shop-grid{grid-template-columns:1fr}.sprint-form{flex-direction:column}.sprint-form button{width:100%}.acid-answer-line{flex-direction:column}.acid-answer-line button{width:100%}.sprint-results{gap:5px}.sprint-result strong{font-size:1.25rem}}
  `;
  document.head.append(style);
  $("economy-close").addEventListener("click",closeEconomyOverlay);
  overlay.addEventListener("click",e=>{if(e.target===overlay)closeEconomyOverlay()});
  $("element-sprint-open").addEventListener("click",openElementSprint);
+ $("acid-sprint-open").addEventListener("click",openAcidSprint);
  $("skin-shop-open").addEventListener("click",openSkinShop);
  $("economy-content").addEventListener("click",handleEconomyClick);
- $("economy-content").addEventListener("submit",e=>{if(e.target&&e.target.id==="sprint-answer-form")submitSprintAnswer(e)});
- document.addEventListener("keydown",e=>{if(e.key==="Escape"&&!$("economy-overlay").classList.contains("hidden")){if(sprintState.running){setStatus("De Elementensprint loopt nog; sluit de opdracht pas na afloop.");return;}closeEconomyOverlay();}});
+ $("economy-content").addEventListener("submit",e=>{if(e.target&&e.target.id==="sprint-answer-form")submitSprintAnswer(e);else if(e.target&&e.target.id==="acid-sprint-answer-form")submitAcidSprintAnswer(e)});
+ document.addEventListener("keydown",e=>{if(e.key==="Escape"&&!$("economy-overlay").classList.contains("hidden")){if(sprintState.running||acidSprintState.running){setStatus("De bonusronde loopt nog; sluit de opdracht pas na afloop.");return;}closeEconomyOverlay();}});
  renderEconomyPanel();applyEquippedSkin();
 }
 function renderEconomyPanel(){
  const balance=$("labcoin-balance");if(balance)balance.textContent=String(labCoins);
  const icon=$("equipped-skin-icon"),name=$("equipped-skin-name"),skin=COSMETIC_SKINS.find(x=>x.id===equippedSkin)||COSMETIC_SKINS[0];
  if(icon)icon.textContent=skin.emoji;if(name)name.textContent=skin.name;
- const quest=$("element-sprint-open");if(quest){quest.disabled=currentLevel!=="medieval"||sprintState.running;quest.textContent=currentLevel==="medieval"?"⚡ Elementensprint · 60 sec":"⚡ Beschikbaar in level 1";quest.title=currentLevel==="medieval"?"Start de optionele quiz over elementsymbolen":"Keer terug naar het middeleeuwse labo voor de sidequest";}
+ const anySprintRunning=sprintState.running||acidSprintState.running;
+ const quest=$("element-sprint-open");if(quest){quest.disabled=currentLevel!=="medieval"||anySprintRunning;quest.textContent=currentLevel==="medieval"?"⚡ Elementensprint · 60 sec":"⚡ Beschikbaar in level 1";quest.title=currentLevel==="medieval"?"Start de optionele quiz over elementsymbolen":"Keer terug naar het middeleeuwse labo voor de sidequest";}
+ const acidQuest=$("acid-sprint-open");if(acidQuest){acidQuest.disabled=currentLevel!=="lavoisier"||anySprintRunning;acidQuest.textContent=currentLevel==="lavoisier"?"🧪 Zurenkennis · 60 sec":"🧪 Beschikbaar in level 2";acidQuest.title=currentLevel==="lavoisier"?"Start de open vragenronde over zuren en zuurrestnamen":"Keer terug naar het labo van Lavoisier voor deze sidequest";}
  applyEquippedSkin();
 }
 function applyEquippedSkin(){
@@ -486,9 +533,9 @@ function applyEquippedSkin(){
  const panelIcon=$("equipped-skin-icon"),panelName=$("equipped-skin-name");if(panelIcon)panelIcon.textContent=skin.emoji;if(panelName)panelName.textContent=skin.name;
 }
 function showEconomyOverlay(content){$("economy-content").innerHTML=content;$("economy-overlay").classList.remove("hidden");}
-function closeEconomyOverlay(){if(sprintState.running){setStatus("De Elementensprint loopt nog. De timer blijft lopen tot de minuut voorbij is.");return;}$("economy-overlay").classList.add("hidden");}
+function closeEconomyOverlay(){if(sprintState.running||acidSprintState.running){setStatus("De bonusronde loopt nog. De timer blijft lopen tot de minuut voorbij is.");return;}$("economy-overlay").classList.add("hidden");}
 function openSkinShop(){
- if(sprintState.running){setStatus("Maak eerst de Elementensprint af voor je naar de winkel gaat.");return;}
+ if(sprintState.running||acidSprintState.running){setStatus("Maak eerst de bonusronde af voor je naar de winkel gaat.");return;}
  renderShop();
 }
 function renderShop(){
@@ -506,12 +553,12 @@ function renderShop(){
 }
 function openElementSprint(){
  if(currentLevel!=="medieval"){setStatus("De Elementensprint is beschikbaar in het eerste, middeleeuwse labo.");return;}
- if(sprintState.running){setStatus("De Elementensprint loopt al.");return;}
+ if(sprintState.running||acidSprintState.running){setStatus("Er loopt al een bonusronde.");return;}
  showEconomyOverlay(`<p class="economy-eyebrow">OPTIONELE SIDEQUEST · LEVEL 1</p><h2 class="economy-title" id="economy-title">⚡ De Elementensprint</h2><p class="economy-lead">Je krijgt <strong>60 seconden</strong>. De naam van een element verschijnt; typ het juiste elementsymbool en let goed op hoofdletters. Bijvoorbeeld: lood → <strong>Pb</strong>, niet PB of pb.</p><div class="sprint-rules"><strong>Beloningen:</strong> juiste antwoorden 1–5 leveren elk 1 coin op; antwoorden 6–10 elk 2 coins; antwoorden 11–15 elk 3 coins, enzovoort. Een gewoon antwoord in de escape-roomquiz levert geen coins op.</div><button type="button" class="primary full" id="element-sprint-start">Start de 60 seconden</button><p class="muted">De sidequest is vrijwillig en verandert niets aan je deurcodes.</p>`);
 }
 async function startElementSprint(){
  if(currentLevel!=="medieval"){closeEconomyOverlay();setStatus("De Elementensprint is beschikbaar in het eerste labo.");return;}
- if(sprintState.running){setStatus("De Elementensprint loopt al.");return;}
+ if(sprintState.running||acidSprintState.running){setStatus("Er loopt al een bonusronde.");return;}
  if(sprintTimer)clearInterval(sprintTimer);if(sprintTransitionTimer)clearTimeout(sprintTransitionTimer);
  let onlineSessionId=null,questionQueue=null;
  if(window.ChemieOnline&&window.ChemieOnline.isAuthenticated()){
@@ -574,7 +621,95 @@ async function finishElementSprint(){
  setStatus(`Elementensprint klaar: ${sprintState.correct} juist, ${earned} coins verdiend.`);
  if(window.ChemieOnline)window.ChemieOnline.refreshDashboardSoon();
 }
+
+function openAcidSprint(){
+ if(currentLevel!=="lavoisier"){setStatus("De Zurenkennis-sprint is beschikbaar in level 2, het labo van Lavoisier.");return;}
+ if(acidSprintState.running||sprintState.running){setStatus("Er loopt al een bonusronde.");return;}
+ showEconomyOverlay(`<p class="economy-eyebrow">OPTIONELE SIDEQUEST · LEVEL 2</p><h2 class="economy-title" id="economy-title">🧪 Zurenkennis-sprint</h2><p class="economy-lead">Je krijgt <strong>60 seconden</strong>. Beantwoord open vragen over de brutoformule, systematische naam, gebruiksnaam en zuurrest. De vragen kunnen in alle richtingen voorkomen.</p><div class="sprint-rules"><strong>Formules invoeren:</strong> je mag gewone cijfers gebruiken, zoals <strong>H2SO4</strong> en <strong>SO42-</strong>, of de knoppen gebruiken om indices en ladingen in te voegen. Beide schrijfwijzen worden als hetzelfde antwoord herkend.<br><strong>Beloningen:</strong> juiste antwoorden 1–5 leveren elk 1 coin op; antwoorden 6–10 elk 2 coins; antwoorden 11–15 elk 3 coins, enzovoort.</div><button type="button" class="primary full" id="acid-sprint-start">Start de 60 seconden</button><p class="muted">De vragen zijn open invulvragen. De gewone puzzelcodes veranderen niet.</p>`);
+}
+function createLocalAcidSprintQueue(){return createAcidSprintQueue();}
+async function startAcidSprint(){
+ if(currentLevel!=="lavoisier"){closeEconomyOverlay();setStatus("De Zurenkennis-sprint is beschikbaar in level 2.");return;}
+ if(acidSprintState.running||sprintState.running){setStatus("Er loopt al een bonusronde.");return;}
+ if(acidSprintTimer)clearInterval(acidSprintTimer);if(acidSprintTransitionTimer)clearTimeout(acidSprintTransitionTimer);
+ let onlineSessionId=null,questionQueue=null;
+ if(window.ChemieOnline&&window.ChemieOnline.isAuthenticated()){
+  try{
+   const remote=await window.ChemieOnline.startAcidSprint();
+   if(!remote||!remote.ok)throw new Error(remote?.error||"De online Zurenkennis-sprint kon niet starten.");
+   onlineSessionId=remote.session_id||null;
+   if(Array.isArray(remote.items))questionQueue=remote.items.map(item=>({...item,sequence_number:Number(item.sequence_number)}));
+   if(remote.coins!==undefined)labCoins=Number(remote.coins)||0;
+  }catch(error){setStatus(error.message||"De online Zurenkennis-sprint kon niet starten. Controleer de Supabase-migratie.");return;}
+ }
+ const queue=questionQueue?.length?questionQueue:createLocalAcidSprintQueue();
+ if(!queue.length){setStatus("Er zijn geen zuurvragen beschikbaar.");return;}
+ acidSprintState={running:true,startingCoins:labCoins,correct:0,answered:0,startedAt:Date.now(),queue,index:0,current:null,best:acidSprintState.best||0,onlineSessionId};
+ renderEconomyPanel();renderAcidSprintQuestion();tickAcidSprintTimer();acidSprintTimer=setInterval(tickAcidSprintTimer,100);
+}
+function tickAcidSprintTimer(){
+ if(!acidSprintState.running)return;
+ const remaining=Math.max(0,60000-(Date.now()-acidSprintState.startedAt));
+ const timer=$("acid-sprint-time-left");if(timer){timer.textContent=`0:${String(Math.ceil(remaining/1000)).padStart(2,"0")}`;timer.classList.toggle("urgent",remaining<=10000);}
+ if(remaining<=0)finishAcidSprint();
+}
+function renderAcidSprintQuestion(){
+ if(!acidSprintState.running)return;
+ const item=acidSprintState.queue[acidSprintState.index%acidSprintState.queue.length];acidSprintState.current=item;acidSprintState.index++;
+ const formulaTools=item.answer_type==="formula"?`<div class="acid-formula-tools"><div class="acid-formula-keypad" aria-label="Formuletekens invoegen"><span>Indices en lading:</span>${["₀","₁","₂","₃","₄","₅","₆","₇","₈","₉","⁺","⁻"].map(ch=>`<button type="button" class="acid-formula-key" data-acid-char="${ch}" aria-label="Voeg ${ch} in">${ch}</button>`).join("")}</div><small class="acid-format-hint">Je mag ook gewone cijfers en een gewoon minteken typen, bijvoorbeeld SO42-. Hoofdletters in elementsymbolen moeten kloppen.</small></div>`:"";
+ showEconomyOverlay(`<p class="economy-eyebrow">ZURENKENNIS · LEVEL 2</p><h2 class="economy-title" id="economy-title">Geef het juiste antwoord</h2><div class="sprint-hud"><div class="sprint-timer" id="acid-sprint-time-left">1:00</div><div class="sprint-score"><span id="acid-sprint-correct-count">${acidSprintState.correct}</span> juist · <span id="acid-sprint-answered-count">${acidSprintState.answered}</span> beantwoord</div></div><div class="sprint-question"><small>Open vraag</small><div class="acid-prompt">${escapeHtml(item.prompt_text)}</div></div><form class="acid-sprint-form" id="acid-sprint-answer-form"><div class="acid-answer-line"><input class="sprint-input" id="acid-sprint-answer" name="answer" type="text" maxlength="60" placeholder="Typ je antwoord" autocomplete="off" autocapitalize="off" spellcheck="false" aria-label="Antwoord op de zuurvraag" required><button type="submit" class="primary">Controleer antwoord</button></div>${formulaTools}</form><p class="sprint-feedback" id="acid-sprint-feedback" aria-live="polite">Vul één antwoord in. Je krijgt meteen feedback.</p>`);
+ tickAcidSprintTimer();const input=$("acid-sprint-answer");if(input)input.focus({preventScroll:true});
+}
+function escapeHtml(value){return String(value??"").replace(/[&<>"']/g,ch=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[ch]));}
+function insertAcidCharacter(character){
+ const input=$("acid-sprint-answer");if(!input||input.disabled)return;
+ const start=Number.isInteger(input.selectionStart)?input.selectionStart:input.value.length;
+ const end=Number.isInteger(input.selectionEnd)?input.selectionEnd:input.value.length;
+ input.setRangeText(character,start,end,"end");input.focus();
+}
+async function submitAcidSprintAnswer(e){
+ e.preventDefault();if(!acidSprintState.running||!acidSprintState.current)return;
+ const input=$("acid-sprint-answer"),submit=$("acid-sprint-answer-form")?.querySelector('button[type="submit"]');
+ const typed=(input?.value||"").trim();if(!typed){input?.focus();return;}
+ const item=acidSprintState.current;let verified=null,message="",kind="bad";
+ if(acidSprintState.onlineSessionId&&window.ChemieOnline&&window.ChemieOnline.isAuthenticated()){
+  try{
+   verified=await window.ChemieOnline.submitAcidSprintAnswer(acidSprintState.onlineSessionId,Number(item.sequence_number),typed);
+   if(!verified||!verified.ok)throw new Error(verified?.error||"De online antwoordcontrole is mislukt.");
+   acidSprintState.correct=Number(verified.correct_count)||0;
+   acidSprintState.answered=Number(verified.answered_count)||acidSprintState.answered+1;
+   labCoins=Number(verified.coins)||0;
+   const expected=verified.expected_answer??"";
+   if(verified.correct){message=`Juist! ${expected}. +${verified.reward} ${Number(verified.reward)===1?"coin":"coins"}.`;kind="good";}
+   else{message=`Niet helemaal. Het juiste antwoord is: ${expected}. Geen coins deze keer.`;}
+   window.ChemieOnline.refreshDashboardSoon();
+  }catch(error){const note=$("acid-sprint-feedback");if(note){note.textContent=error.message||"De controle is mislukt. Probeer opnieuw.";note.className="sprint-feedback bad";}if(input)input.focus();return;}
+ }else{
+  acidSprintState.answered++;
+  const correct=normaliseAcidAnswer(typed,item.answer_type)===normaliseAcidAnswer(item.expected_answer,item.answer_type);
+  if(correct){const reward=Math.floor(acidSprintState.correct/5)+1;acidSprintState.correct++;labCoins+=reward;message=`Juist! ${item.expected_answer}. +${reward} ${reward===1?"coin":"coins"}.`;kind="good";}
+  else{message=`Niet helemaal. Het juiste antwoord is: ${item.expected_answer}. Geen coins deze keer.`;}
+ }
+ const note=$("acid-sprint-feedback");if(note){note.textContent=message;note.className=`sprint-feedback ${kind}`;}
+ if(input)input.disabled=true;if(submit)submit.disabled=true;
+ const correctEl=$("acid-sprint-correct-count"),answeredEl=$("acid-sprint-answered-count");if(correctEl)correctEl.textContent=String(acidSprintState.correct);if(answeredEl)answeredEl.textContent=String(acidSprintState.answered);
+ renderEconomyPanel();acidSprintTransitionTimer=setTimeout(()=>{if(acidSprintState.running)renderAcidSprintQuestion();},650);
+}
+async function finishAcidSprint(){
+ if(!acidSprintState.running)return;
+ acidSprintState.running=false;if(acidSprintTimer){clearInterval(acidSprintTimer);acidSprintTimer=null;}if(acidSprintTransitionTimer){clearTimeout(acidSprintTransitionTimer);acidSprintTransitionTimer=null;}
+ if(acidSprintState.onlineSessionId&&window.ChemieOnline&&window.ChemieOnline.isAuthenticated()){
+  try{const settled=await window.ChemieOnline.finishAcidSprint(acidSprintState.onlineSessionId);if(settled&&settled.ok){labCoins=Number(settled.coins)||0;acidSprintState.correct=Number(settled.correct_count)||acidSprintState.correct;acidSprintState.answered=Number(settled.answered_count)||acidSprintState.answered;}else if(settled?.error){setStatus(settled.error);}}catch(error){console.error("Zurenkennis-sprint afronden mislukt:",error);}
+ }
+ const earned=labCoins-acidSprintState.startingCoins;acidSprintState.best=Math.max(acidSprintState.best,acidSprintState.correct);renderEconomyPanel();
+ showEconomyOverlay(`<p class="economy-eyebrow">SIDEQUEST VOLTOOID · LEVEL 2</p><h2 class="economy-title" id="economy-title">⏱️ Tijd is om!</h2><p class="economy-lead">Goed gewerkt aan je zurenkennis. Je LabCoins zijn bijgewerkt.</p><div class="sprint-results"><div class="sprint-result"><strong>${acidSprintState.correct}</strong><small>Juiste antwoorden</small></div><div class="sprint-result"><strong>${acidSprintState.answered}</strong><small>Beantwoord</small></div><div class="sprint-result"><strong>+${earned}</strong><small>Verdiende coins</small></div></div><div class="sprint-rules">Je beste score in deze speelsessie: <strong>${acidSprintState.best}</strong> juiste antwoorden. Je kunt de Zurenkennis-sprint opnieuw spelen.</div><button type="button" class="primary full" id="acid-sprint-retry">Nog een ronde</button><button type="button" class="secondary full" id="economy-done">Terug naar het labo</button>`);
+ setStatus(`Zurenkennis-sprint klaar: ${acidSprintState.correct} juist, ${earned} coins verdiend.`);if(window.ChemieOnline)window.ChemieOnline.refreshDashboardSoon();
+}
+
 async function handleEconomyClick(e){
+ const formulaChar=e.target.closest("[data-acid-char]");if(formulaChar){e.preventDefault();insertAcidCharacter(formulaChar.dataset.acidChar);return;}
+ const acidStart=e.target.closest("#acid-sprint-start");if(acidStart){startAcidSprint();return;}
+ const acidRetry=e.target.closest("#acid-sprint-retry");if(acidRetry){startAcidSprint();return;}
  const start=e.target.closest("#element-sprint-start");if(start){startElementSprint();return;}
  const retry=e.target.closest("#element-sprint-retry");if(retry){startElementSprint();return;}
  const done=e.target.closest("#economy-done");if(done){closeEconomyOverlay();return;}
