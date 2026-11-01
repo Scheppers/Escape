@@ -1,0 +1,14 @@
+CHEMIE ESCAPE ROOM — ONLINE KLASVERSIE
+
+De map bevat de bestaande escape room en een voorbereid online portaal met:
+- door de leerkracht beheerde accounts;
+- XP-ranking per klas;
+- skins en kaartenwinkel;
+- beurtgebaseerde battles binnen de eigen klas;
+- Netlify Functions voor eenmalige leerkrachtsetup, leerlingaccounts en wachtwoordreset.
+
+Online instellen: lees NETLIFY_SUPABASE_START.txt volledig.
+Lokale speltest (alleen escape-roombasis): voer start_windows.bat uit en open de lokale server.
+Online accounts, ranking en battles vereisen een gedeployde Netlify-site + Supabase-project en werken niet via de eenvoudige Python-server.
+
+De service_role/secret key mag nooit in browserbestanden of een publieke Git-repository staan.

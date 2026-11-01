@@ -1,0 +1,28 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1200 690">
+<defs><linearGradient id="stone" x2="0" y2="1"><stop stop-color="#463a35"/><stop offset="1" stop-color="#211f28"/></linearGradient><linearGradient id="floor" x2="0" y2="1"><stop stop-color="#6d5140"/><stop offset="1" stop-color="#342c31"/></linearGradient></defs>
+<rect width="1200" height="690" fill="url(#stone)"/>
+<path d="M0 0H1200V510L0 550Z" fill="#514039"/>
+<g stroke="#2d292e" stroke-width="10" fill="none" opacity=".8"><path d="M0 140H1200M0 280H1200M0 420H1200M170 0V510M420 0V510M670 0V510M920 0V510M1140 0V510"/></g>
+<!-- arched window -->
+<path d="M430 35Q540 -35 650 35V260H430Z" fill="#171d2c" stroke="#a17b4d" stroke-width="12"/><path d="M445 54Q540 -5 635 54V246H445Z" fill="#425a75"/><path d="M540 20V255M445 145H635" stroke="#b4a079" stroke-width="9"/><circle cx="570" cy="82" r="35" fill="#c7b4a0" opacity=".25"/>
+<!-- shelves -->
+<g fill="#62452f" stroke="#291f1b" stroke-width="8"><path d="M35 90H330V115H35Z"/><path d="M35 210H330V235H35Z"/><path d="M850 105H1160V130H850Z"/><path d="M850 230H1160V255H850Z"/></g>
+<!-- jars -->
+<g stroke="#b3c2b4" stroke-width="5" fill="#7c9b91" fill-opacity=".35">
+<rect x="65" y="35" width="48" height="53" rx="9"/><rect x="137" y="55" width="55" height="34" rx="8"/><rect x="219" y="25" width="48" height="63" rx="9"/><rect x="890" y="49" width="49" height="50" rx="8"/><rect x="965" y="32" width="53" height="67" rx="9"/><rect x="1044" y="52" width="56" height="47" rx="8"/>
+<rect x="65" y="150" width="55" height="55" rx="8"/><rect x="145" y="161" width="47" height="44" rx="8"/><rect x="224" y="143" width="51" height="62" rx="8"/><rect x="880" y="165" width="50" height="56" rx="8"/><rect x="955" y="151" width="54" height="70" rx="8"/><rect x="1040" y="170" width="59" height="51" rx="8"/>
+</g>
+<!-- specimen silhouettes -->
+<g fill="#d6c3a0" opacity=".7"><circle cx="90" cy="174" r="13"/><path d="M80 187L72 202H109L101 187Z"/><circle cx="990" cy="174" r="14"/><path d="M979 188L971 211H1009L1001 188Z"/></g>
+<!-- cauldron and fire -->
+<path d="M335 330Q480 300 625 330L600 430Q580 485 480 485Q380 485 360 430Z" fill="#24272b" stroke="#171a1d" stroke-width="12"/><ellipse cx="480" cy="331" rx="145" ry="32" fill="#141b20" stroke="#9a7950" stroke-width="10"/><ellipse cx="480" cy="334" rx="119" ry="19" fill="#6a9b63"/><path d="M410 505Q375 455 430 428Q418 470 470 478Q451 439 492 410Q495 468 538 473Q571 456 553 430Q611 467 565 510Z" fill="#df6b36" stroke="#f3b44f" stroke-width="7"/><path d="M452 500Q431 470 465 451Q460 482 493 490Q482 463 510 443Q518 482 540 500Z" fill="#ffd06a"/>
+<!-- book -->
+<path d="M55 465L295 430L310 570L72 615Z" fill="#8a603d" stroke="#3a2721" stroke-width="10"/><path d="M72 476L180 460L192 594L85 607Z" fill="#d8c59b"/><path d="M195 459L278 447L293 566L207 583Z" fill="#e4d5ae"/><g stroke="#6e5539" stroke-width="4" fill="none"><path d="M91 501L165 490M94 525L167 512M98 550L170 537M211 488L266 478M214 513L270 501M218 539L273 526"/></g><text x="177" y="455" font-family="serif" font-size="18" font-weight="bold" fill="#f1dba6" text-anchor="middle">ARS ALCHEMICA</text>
+<!-- workbench -->
+<path d="M0 570L1200 535V620L0 665Z" fill="#805b3e" stroke="#3c2b24" stroke-width="8"/><path d="M0 618L1200 580V690H0Z" fill="url(#floor)"/>
+<!-- alembic -->
+<g stroke="#b8d8d2" stroke-width="8" fill="#7cbab2" fill-opacity=".35"><path d="M730 335H790V380L835 440Q847 465 815 472H705Q675 465 690 440L730 380Z"/><path d="M750 335V290H805V335"/><path d="M775 290V255H870V276H805"/></g>
+<path d="M704 442Q758 426 825 442L836 460Q840 469 814 470H705Q683 468 704 442Z" fill="#78c7bd" opacity=".8"/>
+<!-- candle -->
+<rect x="1070" y="350" width="30" height="100" rx="5" fill="#e7d6a4"/><path d="M1085 350Q1056 325 1085 295Q1110 328 1085 350Z" fill="#f4a94e"/><path d="M1085 342Q1074 325 1085 311Q1098 330 1085 342Z" fill="#fff0a5"/>
+</svg>

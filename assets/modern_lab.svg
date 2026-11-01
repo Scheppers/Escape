@@ -1,0 +1,95 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1200 690" role="img" aria-labelledby="title desc">
+<title id="title">Getekend chemielokaal</title><desc id="desc">Een kleurrijk chemielokaal met periodiek systeem, reageerbuizen, weegschaal, maatkolf en een gesloten deur.</desc>
+<defs>
+ <linearGradient id="wall" x2="0" y2="1"><stop stop-color="#e7f7f5"/><stop offset="1" stop-color="#c5e5e8"/></linearGradient>
+ <linearGradient id="floor" x2="0" y2="1"><stop stop-color="#c5d7d8"/><stop offset="1" stop-color="#8faeb8"/></linearGradient>
+ <linearGradient id="cab" x2="0" y2="1"><stop stop-color="#f4f2df"/><stop offset="1" stop-color="#d9dfd3"/></linearGradient>
+ <linearGradient id="blue" x2="0" y2="1"><stop stop-color="#2f7390"/><stop offset="1" stop-color="#17465f"/></linearGradient>
+ <filter id="shadow" x="-20%" y="-20%" width="140%" height="150%"><feDropShadow dx="0" dy="7" stdDeviation="6" flood-color="#234a58" flood-opacity=".22"/></filter>
+</defs>
+<!-- room -->
+<rect width="1200" height="690" fill="url(#wall)"/>
+<path d="M0 0H1200V485L0 530Z" fill="url(#wall)"/>
+<!-- left window -->
+<rect x="34" y="38" width="225" height="278" rx="8" fill="#f8ffff" stroke="#8eafb6" stroke-width="12"/>
+<rect x="48" y="52" width="197" height="250" fill="#9ddbe9"/>
+<path d="M48 235L120 135L170 203L210 155L245 214V302H48Z" fill="#c4e8d5"/>
+<path d="M48 271L108 226L157 261L205 226L245 250V302H48Z" fill="#83bba6"/>
+<path d="M146 52V302M48 176H245" stroke="#f7ffff" stroke-width="12"/>
+<!-- wall chart -->
+<rect x="320" y="55" width="385" height="202" rx="8" fill="#fffdf1" stroke="#7e9da5" stroke-width="6" filter="url(#shadow)"/>
+<text x="512" y="83" text-anchor="middle" font-family="Arial,sans-serif" font-size="21" font-weight="700" fill="#214a60">PERIODIEK SYSTEEM</text>
+<g transform="translate(342 98)">
+  <g fill="#71c6cf" stroke="#f7ffff" stroke-width="3">
+  <rect x="0" y="0" width="31" height="30" rx="3"/><rect x="35" y="0" width="31" height="30" rx="3"/><rect x="70" y="0" width="31" height="30" rx="3"/><rect x="105" y="0" width="31" height="30" rx="3"/><rect x="140" y="0" width="31" height="30" rx="3"/><rect x="175" y="0" width="31" height="30" rx="3"/><rect x="210" y="0" width="31" height="30" rx="3"/><rect x="245" y="0" width="31" height="30" rx="3"/><rect x="280" y="0" width="31" height="30" rx="3"/>
+  <rect x="0" y="34" width="31" height="30" rx="3"/><rect x="35" y="34" width="31" height="30" rx="3"/><rect x="70" y="34" width="31" height="30" rx="3"/><rect x="105" y="34" width="31" height="30" rx="3"/><rect x="140" y="34" width="31" height="30" rx="3"/><rect x="175" y="34" width="31" height="30" rx="3"/><rect x="210" y="34" width="31" height="30" rx="3"/><rect x="245" y="34" width="31" height="30" rx="3"/><rect x="280" y="34" width="31" height="30" rx="3"/>
+  <rect x="0" y="68" width="31" height="30" rx="3"/><rect x="35" y="68" width="31" height="30" rx="3"/><rect x="70" y="68" width="31" height="30" rx="3"/><rect x="105" y="68" width="31" height="30" rx="3"/><rect x="140" y="68" width="31" height="30" rx="3"/><rect x="175" y="68" width="31" height="30" rx="3"/><rect x="210" y="68" width="31" height="30" rx="3"/><rect x="245" y="68" width="31" height="30" rx="3"/><rect x="280" y="68" width="31" height="30" rx="3"/>
+  </g>
+  <g font-family="Arial,sans-serif" font-size="12" font-weight="700" fill="#17465f"><text x="8" y="20">H</text><text x="43" y="20">Li</text><text x="78" y="20">Na</text><text x="113" y="20">K</text><text x="148" y="20">Mg</text><text x="183" y="20">C</text><text x="218" y="20">N</text><text x="253" y="20">O</text><text x="288" y="20">Ne</text><text x="8" y="54">He</text><text x="43" y="54">Be</text><text x="78" y="54">Al</text><text x="113" y="54">Ca</text><text x="148" y="54">Fe</text><text x="183" y="54">S</text><text x="218" y="54">Cl</text><text x="253" y="54">Ar</text><text x="288" y="54">Zn</text></g>
+</g>
+<!-- right door and cabinet -->
+<rect x="975" y="83" width="184" height="396" rx="7" fill="#a4c5c7" stroke="#698d98" stroke-width="8"/>
+<rect x="993" y="101" width="148" height="360" rx="4" fill="url(#blue)" stroke="#d5e7e6" stroke-width="5"/>
+<rect x="1012" y="123" width="110" height="122" rx="3" fill="#4e8ba0" stroke="#8cb7bd" stroke-width="3"/>
+<path d="M1012 184H1122M1067 123V245" stroke="#8cb7bd" stroke-width="3"/>
+<circle cx="1110" cy="297" r="9" fill="#f3c95d" stroke="#9d7935" stroke-width="3"/>
+<rect x="1014" y="350" width="108" height="63" rx="4" fill="#214e66" stroke="#7da7b0" stroke-width="3"/>
+<text x="1068" y="375" text-anchor="middle" font-family="Arial,sans-serif" font-size="12" font-weight="700" fill="#f8ffff">LABO</text>
+<text x="1068" y="393" text-anchor="middle" font-family="Arial,sans-serif" font-size="10" fill="#c9e6e9">UITGANG</text>
+<!-- cabinet -->
+<rect x="760" y="168" width="173" height="255" rx="8" fill="url(#cab)" stroke="#8ea8a8" stroke-width="6" filter="url(#shadow)"/>
+<rect x="775" y="185" width="143" height="104" rx="4" fill="#a4d7de" stroke="#8ba7aa" stroke-width="4"/>
+<rect x="775" y="300" width="143" height="105" rx="4" fill="#a4d7de" stroke="#8ba7aa" stroke-width="4"/>
+<g fill="#f8f4df" stroke="#a7b9b5" stroke-width="3"><rect x="791" y="207" width="30" height="62" rx="10"/><rect x="833" y="199" width="29" height="70" rx="10"/><rect x="875" y="211" width="27" height="58" rx="10"/><rect x="791" y="324" width="30" height="62" rx="10"/><rect x="833" y="316" width="29" height="70" rx="10"/><rect x="875" y="328" width="27" height="58" rx="10"/></g>
+<g fill="#65bdc8"><path d="M793 242h26v25h-26z"/><path d="M835 235h25v34h-25z"/><path d="M877 245h23v24h-23z"/><path d="M793 359h26v27h-26z"/><path d="M835 352h25v34h-25z"/><path d="M877 362h23v24h-23z"/></g>
+<!-- back bench -->
+<path d="M0 397L1200 358V440L0 492Z" fill="#d7e1d7" stroke="#9cb9b7" stroke-width="5"/>
+<path d="M0 442L1200 401V440L0 482Z" fill="#b4c9c4"/>
+<!-- lower cabinets -->
+<path d="M0 480L1200 434V594L0 650Z" fill="#e8e8d8" stroke="#9db6b4" stroke-width="5"/>
+<path d="M0 535L1200 489M0 587L1200 541" stroke="#b5c8c0" stroke-width="5"/>
+<path d="M210 471L210 640M435 462L435 629M660 454L660 618M885 445L885 607M1085 437L1085 597" stroke="#a4bdb7" stroke-width="5"/>
+<g fill="#8ea9a7"><rect x="80" y="512" width="56" height="8" rx="4"/><rect x="290" y="503" width="56" height="8" rx="4"/><rect x="515" y="495" width="56" height="8" rx="4"/><rect x="740" y="486" width="56" height="8" rx="4"/><rect x="960" y="477" width="56" height="8" rx="4"/></g>
+<!-- foreground lab bench -->
+<path d="M80 454L760 430L925 482L236 526Z" fill="#f7f3df" stroke="#91adae" stroke-width="6" filter="url(#shadow)"/>
+<path d="M236 526L925 482L910 514L238 560Z" fill="#719ca7" stroke="#547e8b" stroke-width="5"/>
+<path d="M290 555L286 652M860 523L865 610" stroke="#547e8b" stroke-width="17"/>
+<!-- test tube rack -->
+<g transform="translate(215 386)" filter="url(#shadow)">
+ <path d="M0 45H165L154 77H12Z" fill="#587985" stroke="#315765" stroke-width="4"/>
+ <path d="M12 0H154V50H12Z" fill="#a7c8c9" stroke="#527986" stroke-width="5"/>
+ <g stroke="#f8ffff" stroke-width="4">
+ <path d="M25 4V58Q25 71 36 71Q47 71 47 58V4" fill="#54c9c2"/><path d="M58 4V58Q58 71 69 71Q80 71 80 58V4" fill="#e8c957"/><path d="M91 4V58Q91 71 102 71Q113 71 113 58V4" fill="#ed8a69"/><path d="M124 4V58Q124 71 135 71Q146 71 146 58V4" fill="#9daddd"/>
+ </g>
+</g>
+<!-- flask -->
+<g transform="translate(440 352)" filter="url(#shadow)">
+ <path d="M33 0H75V48L111 119Q119 139 98 145H10Q-9 139 1 119L33 48Z" fill="#eafafa" fill-opacity=".92" stroke="#548da1" stroke-width="5"/>
+ <path d="M20 101H93L109 126Q113 138 96 139H13Q0 137 6 125Z" fill="#5fc6d1" fill-opacity=".9"/>
+ <path d="M34 13H74M34 26H74" stroke="#8db9c1" stroke-width="4"/>
+ <path d="M23 111Q50 102 91 111" fill="none" stroke="#fff" stroke-width="4"/>
+</g>
+<!-- balance -->
+<g transform="translate(650 403)" filter="url(#shadow)">
+ <rect x="0" y="48" width="174" height="49" rx="9" fill="#2c637b" stroke="#19475c" stroke-width="5"/>
+ <rect x="18" y="59" width="62" height="25" rx="4" fill="#b6f0d3" stroke="#e4fff2" stroke-width="3"/>
+ <text x="49" y="77" text-anchor="middle" font-family="Arial,sans-serif" font-size="15" font-weight="700" fill="#1c5d50">0.00</text>
+ <rect x="93" y="59" width="65" height="25" rx="4" fill="#a2c8d0"/>
+ <path d="M20 43H154L145 27H29Z" fill="#dbe9e8" stroke="#668c96" stroke-width="4"/>
+ <path d="M45 25H130L117 8H58Z" fill="#f6f4e5" stroke="#829da3" stroke-width="4"/>
+</g>
+<!-- small notebook and pencil -->
+<g transform="translate(845 450) rotate(-7)">
+ <rect x="0" y="0" width="120" height="76" rx="5" fill="#fff9e7" stroke="#829da3" stroke-width="4"/>
+ <path d="M17 18H100M17 32H100M17 46H100M17 60H85" stroke="#b4c9c8" stroke-width="3"/>
+ <path d="M90 -12L106 -2L67 62L53 68L55 52Z" fill="#f1c65e" stroke="#9f7b34" stroke-width="3"/>
+</g>
+<!-- plant -->
+<g transform="translate(20 320)">
+ <path d="M0 50H62L54 103H9Z" fill="#e2a77c" stroke="#ad7657" stroke-width="4"/>
+ <path d="M31 52V0M31 28Q0 29 7 4Q30 5 31 28M31 37Q63 33 58 10Q34 12 31 37" fill="#4ca98b" stroke="#2f816b" stroke-width="4"/>
+</g>
+<!-- floor -->
+<path d="M0 650L1200 594V690H0Z" fill="url(#floor)"/>
+<path d="M0 672L1200 620M250 690L390 632M600 690L690 614M950 690L990 605" stroke="#7799a2" stroke-width="3" opacity=".65"/>
+</svg>

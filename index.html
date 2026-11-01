@@ -1,0 +1,101 @@
+<!doctype html>
+<html lang="nl"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>Chemie Escape Room 3.0</title><link rel="stylesheet" href="style.css"></head>
+<body>
+<header class="topbar"><div><p class="eyebrow">EEN CHEMISCHE TIJDREIS</p><h1>De Geheimen van het Alchemistenlabo</h1></div><div class="progress-wrap"><span id="progress-text">Level 1 van 3</span><div class="progress"><div id="progress-fill"></div></div></div></header>
+<main>
+<section class="story"><div class="story-mark">✦</div><div><h2>De Schaduw van de Tijd</h2><p>Een mysterieuze figuur doorkruist de laboratoria door de eeuwen heen. Los de vragen op, vind de verborgen opdrachten en verzamel de drie codes om het tijdslot te openen.</p></div></section>
+<nav class="level-tabs" aria-label="Kies level">
+<button class="level-tab active" data-level="medieval"><span>Ⅰ</span><b>Middeleeuwen</b><small>Alchemie</small></button>
+<button class="level-tab" data-level="lavoisier"><span>Ⅱ</span><b>Franse Revolutie</b><small>Lavoisier</small></button>
+<button class="level-tab" data-level="modern"><span>Ⅲ</span><b>Modern labo</b><small>Chemie vandaag</small></button>
+</nav>
+<section class="game-layout">
+<div class="scene-wrap"><div class="scene" id="scene">
+<img src="assets/medieval_lab.svg" class="lab-art" id="lab-art" alt="Getekend historisch laboratorium">
+<button class="hotspot h1" data-object="object1"><span>✦</span><small id="label1">Kookpot</small></button>
+<button class="hotspot h2" data-object="object2"><span>✦</span><small id="label2">Oud boek</small></button>
+<button class="hotspot h3" data-object="object3"><span>✦</span><small id="label3">Glazen potten</small></button>
+<button class="hotspot h4" data-object="object4"><span>✦</span><small id="label4">Werktafel</small></button>
+<button class="hotspot door-hotspot" data-object="door"><span>🚪</span><small>Uitgang / tijdslot</small></button>
+<button class="hotspot hidden-hotspot" data-object="hidden"><span>?</span><small>Verborgen opdracht</small></button>
+<button class="hotspot antagonist hidden" id="antagonist" data-object="antagonist"><span>👾</span><small>De Schaduw!</small></button>
+<div class="scene-caption" id="scene-caption">Onderzoek de voorwerpen. Een verborgen opdracht wacht ergens in het labo.</div>
+</div></div>
+<aside class="side-panel">
+<div class="panel-heading"><span>⌘</span><h2>Missieoverzicht</h2></div>
+<div class="level-status" id="level-status">Level 1: 0/3 vragen voltooid</div>
+
+<div class="status-box"><span class="status-dot"></span><p id="status-text">Klik op een voorwerp om te beginnen.</p></div>
+<div class="inventory"><h3>Inventaris</h3><div class="inventory-items" id="inventory-items"><div class="inv-item empty">🧪<small>Leeg</small></div><div class="inv-item empty">📜<small>Leeg</small></div><div class="inv-item empty">🗝️<small>Leeg</small></div></div><p class="muted" id="inventory-note">Vind verborgen voorwerpen in elk tijdperk.</p></div>
+<div class="antagonist-box"><h3>⚔️ De Schaduw</h3><div class="shadow-duel" aria-hidden="true"><span class="hero">🧪</span><span class="duel-spark">✨</span><span class="villain">👾</span></div><p id="antagonist-status">Nog niet gezien…</p><div class="shadow-meter"><div id="shadow-meter-fill"></div></div><button id="ward-button" class="secondary" disabled>Verdrijf de Schaduw</button></div>
+<button id="reset-button" class="secondary full">Spel opnieuw starten</button>
+</aside></section>
+<section class="bottom-grid"><article class="info-card"><h3>Hoe speel je?</h3><ol><li>Los per level vier puzzels op, elk met drie vragen. Elke puzzel levert één cijfer op.</li><li>Voer de viercijferige code zelf in bij de volgende tijdpoort.</li><li>Let op: de Schaduw verschijnt en verdwijnt onverwacht.</li><li>Verzamel de drie symbolische ingrediënten om de Schaduw te verdrijven.</li></ol></article><article class="info-card"><h3>Tijdreislogboek</h3><div id="logbook" class="logbook">Je avontuur begint in het middeleeuwse alchemistenlabo.</div></article></section>
+<footer>Educatief prototype · De ingrediënten zijn abstracte spelobjecten; het spel bevat geen echt recept of bereidingsinstructies.</footer>
+</main>
+
+<section class="online-section" id="online-root" aria-labelledby="online-title">
+  <div class="online-section-heading">
+    <p class="eyebrow">ONLINE CHEMIE-ARENA</p>
+    <h2 id="online-title">Jouw klas, jouw ranking, jouw battles</h2>
+    <p>Log in met de gebruikersnaam en het wachtwoord die je van je leerkracht kreeg. De online arena staat los van de codes van de gewone escape room.</p>
+  </div>
+  <div id="online-notice" class="online-notice hidden" role="status"></div>
+  <section id="online-auth-box" class="online-auth-layout">
+    <article class="online-auth-card">
+      <div class="online-card-symbol">⚗</div>
+      <h3>Inloggen voor leerlingen en leerkracht</h3>
+      <p>Je kunt niet zelf een account registreren. Vraag je leerkracht om een account of een nieuw wachtwoord.</p>
+      <form id="online-auth-form" class="online-form">
+        <label for="online-username">Gebruikersnaam</label>
+        <input id="online-username" name="username" minlength="3" maxlength="20" autocomplete="username" pattern="[a-zA-Z0-9_-]{3,20}" placeholder="bv. chemicus_12" required>
+        <label for="online-password">Wachtwoord</label>
+        <input id="online-password" name="password" type="password" minlength="8" autocomplete="current-password" required>
+        <button type="button" id="online-login" class="online-primary">Inloggen</button>
+      </form>
+    </article>
+    <article class="online-auth-card teacher-setup-card">
+      <div class="online-card-symbol">🧑‍🏫</div>
+      <h3>Eerste leerkracht instellen</h3>
+      <p>Gebruik dit slechts één keer. De sitebeheerder moet vooraf <code>TEACHER_SETUP_SECRET</code> in de Netlify-omgevingsvariabelen instellen. Na het aanmaken logt de leerkracht hier in met de gebruikersnaam en het wachtwoord.</p>
+      <details>
+        <summary>Eenmalige setup openen</summary>
+        <form id="online-teacher-setup-form" class="online-form">
+          <label for="online-setup-secret">Setupcode van de beheerder</label>
+          <input id="online-setup-secret" type="password" autocomplete="off" required>
+          <label for="online-setup-class">Klasnaam</label>
+          <input id="online-setup-class" minlength="2" maxlength="80" placeholder="bv. 3ChemieA" required>
+          <label for="online-setup-username">Leerkrachtgebruikersnaam</label>
+          <input id="online-setup-username" minlength="3" maxlength="20" pattern="[a-zA-Z0-9_-]{3,20}" required>
+          <label for="online-setup-password">Leerkrachtwachtwoord (minstens 10 tekens)</label>
+          <input id="online-setup-password" type="password" minlength="10" autocomplete="new-password" required>
+          <button type="submit" class="online-secondary">Maak leerkrachtaccount</button>
+        </form>
+      </details>
+    </article>
+  </section>
+  <section id="online-dashboard" class="hidden">
+    <div class="online-dashboard-top">
+      <div id="online-summary"></div>
+      <button id="online-logout" class="online-logout" data-online-logout>Uitloggen</button>
+    </div>
+    <nav id="online-nav" class="online-nav" aria-label="Online arena">
+      <button data-online-view="home" class="active">Overzicht</button>
+      <button data-online-view="leaderboard">XP-ranking</button>
+      <button data-online-view="cards">Kaartenwinkel</button>
+      <button data-online-view="skins">Skins</button>
+      <button data-online-view="battles">Battles</button>
+      <button data-online-view="teacher" id="online-teacher-nav" class="hidden">Klasbeheer</button>
+    </nav>
+    <div id="online-view" class="online-view"></div>
+  </section>
+  <p id="online-auth-status" class="online-status" role="status" aria-live="polite"></p>
+  <div class="online-privacy-note"><strong>Privacy in de klas:</strong> in de ranking zien leerlingen alleen gebruikersnamen en XP van hun eigen klas. Gebruik geen echte namen als gebruikersnaam. Accountgegevens, coins, kaartaankopen en battle-uitkomsten worden server-side bijgehouden.</div>
+</section>
+
+<div class="modal-backdrop hidden" id="modal-backdrop" role="dialog" aria-modal="true" aria-labelledby="modal-title"><section class="question-modal"><button class="close-button" id="close-modal" aria-label="Sluiten">×</button><p class="eyebrow" id="modal-category">CHEMIEPUZZEL</p><h2 id="modal-title">Vraag</h2><p id="question-text" class="question-text"></p><form id="answer-form"><div id="answer-area"></div><div class="modal-actions"><button type="button" class="secondary hidden" id="hint-button" tabindex="-1" aria-hidden="true">Hint</button><button type="submit" class="primary" id="check-button">Controleer antwoord</button></div></form><div class="feedback hidden" id="feedback" role="status"></div></section></div>
+<div class="win-screen hidden" id="win-screen"><div class="win-card"><div class="win-icon">⌛</div><p class="eyebrow">TIJDSLOT GEOPEND</p><h2>De tijdlijn is hersteld!</h2><p>Je hebt de drie laboratoria onderzocht, de codes verzameld en de Schaduw verdreven.</p><button class="primary" id="play-again">Speel opnieuw</button></div></div>
+<script src="game.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<script src="config.js"></script>
+<script src="online.js"></script></body></html>

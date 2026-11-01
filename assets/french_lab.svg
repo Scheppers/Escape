@@ -1,0 +1,28 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1200 690">
+<defs><linearGradient id="wall" x2="0" y2="1"><stop stop-color="#e8dfc9"/><stop offset="1" stop-color="#c9c2ad"/></linearGradient><linearGradient id="wood" x2="0" y2="1"><stop stop-color="#956b49"/><stop offset="1" stop-color="#5e422f"/></linearGradient></defs>
+<rect width="1200" height="690" fill="url(#wall)"/>
+<!-- tall french windows -->
+<g stroke="#7d5c42" stroke-width="12" fill="#b7d8df"><path d="M55 35H295V310H55Z"/><path d="M325 35H565V310H325Z"/></g><g stroke="#f4f0e2" stroke-width="10"><path d="M175 35V310M55 170H295M445 35V310M325 170H565"/></g>
+<path d="M55 260L110 190L170 235L230 150L295 240V310H55Z" fill="#9bc6b4" opacity=".8"/><path d="M325 260L380 195L440 245L500 160L565 238V310H325Z" fill="#9bc6b4" opacity=".8"/>
+<!-- wall chalkboard -->
+<rect x="690" y="48" width="365" height="245" rx="5" fill="#243d3a" stroke="#6c5037" stroke-width="12"/>
+<text x="872" y="89" fill="#f5ead1" text-anchor="middle" font-family="serif" font-size="30" font-weight="bold">LAVOISIER</text>
+<g fill="none" stroke="#d8e0c7" stroke-width="4"><path d="M735 130H1008M735 166H960M735 202H990M735 238H925"/></g>
+<text x="870" y="157" fill="#f5ead1" text-anchor="middle" font-family="serif" font-size="25">O₂ + 2H₂ → 2H₂O</text>
+<!-- cabinet -->
+<rect x="1070" y="70" width="100" height="385" fill="#b98b5c" stroke="#62452f" stroke-width="9"/><path d="M1070 195H1170M1070 320H1170" stroke="#62452f" stroke-width="8"/><g fill="#d7e7df" stroke="#72918b" stroke-width="4"><rect x="1085" y="90" width="22" height="80" rx="8"/><rect x="1120" y="102" width="32" height="68" rx="8"/><rect x="1085" y="215" width="25" height="85" rx="8"/><rect x="1120" y="220" width="32" height="80" rx="8"/><rect x="1085" y="340" width="25" height="85" rx="8"/><rect x="1120" y="347" width="32" height="78" rx="8"/></g>
+<!-- back bench -->
+<path d="M0 390L1200 365V465L0 505Z" fill="#d8c7a8" stroke="#8f7555" stroke-width="8"/>
+<path d="M0 465L1200 435V620L0 665Z" fill="url(#wood)" stroke="#4f3828" stroke-width="8"/>
+<!-- balance -->
+<g transform="translate(145 300)" stroke="#5b4734" stroke-width="7" fill="none"><path d="M100 0V150M35 150H165M100 0L30 38M100 0L170 38M30 38L10 95H50ZM170 38L150 95H190Z"/><path d="M10 95Q30 120 50 95M150 95Q170 120 190 95" fill="#d2b46d"/></g>
+<!-- glassware -->
+<g stroke="#668b8c" stroke-width="7" fill="#e8f6f0" fill-opacity=".7">
+<path d="M400 275H450V330L490 390Q500 412 475 417H375Q350 412 362 390L400 330Z"/><path d="M520 290H560V345L600 400Q612 423 585 428H495Q473 423 486 400L520 345Z"/><path d="M655 270H700V330L735 390Q745 410 720 415H635Q610 410 622 390L655 330Z"/><path d="M810 315H850V360L882 410Q895 432 870 437H790Q768 432 780 410L810 360Z"/>
+</g><g fill="#82c6c2" opacity=".8"><path d="M368 385H480L492 408H359Z"/><path d="M491 395H600L611 418H480Z"/><path d="M627 385H730L740 407H615Z"/><path d="M784 404H879L888 427H772Z"/></g>
+<!-- notebooks and weights -->
+<path d="M910 390L1040 383L1055 455L925 462Z" fill="#e9dfc5" stroke="#7d6246" stroke-width="5"/><g stroke="#b8a78a" stroke-width="3"><path d="M930 410L1028 404M934 429L1032 423M938 447L1037 441"/></g>
+<g fill="#b8b6ad" stroke="#666b6a" stroke-width="4"><rect x="235" y="430" width="35" height="27" rx="4"/><rect x="278" y="422" width="35" height="35" rx="4"/><rect x="321" y="414" width="35" height="43" rx="4"/></g>
+<!-- floor -->
+<path d="M0 630L1200 590V690H0Z" fill="#9b8b76"/><path d="M0 655L1200 618M250 690L340 648M650 690L720 634M1000 690L1030 625" stroke="#786b5c" stroke-width="4"/>
+</svg>

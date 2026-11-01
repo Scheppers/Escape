@@ -1,0 +1,548 @@
+[
+  {
+    "id": "m1",
+    "level": "medieval",
+    "object": "object1",
+    "type": "multiple_choice",
+    "topic": "stoffen",
+    "question": "Welke omschrijving past het best bij een mengsel?",
+    "options": [
+      "Een stof met maar één soort deeltje",
+      "Twee of meer stoffen samen",
+      "Altijd een vaste stof",
+      "Een stof die niet kan veranderen"
+    ],
+    "answer": 1,
+    "hint": "Denk aan verschillende stoffen die samen aanwezig zijn.",
+    "reward": 3
+  },
+  {
+    "id": "m2",
+    "level": "medieval",
+    "object": "object1",
+    "type": "multiple_choice",
+    "topic": "alchemie",
+    "question": "Wat was een belangrijk doel van veel alchemisten?",
+    "options": [
+      "Elektriciteit opwekken",
+      "Metalen proberen om te zetten in goud",
+      "Kunststoffen maken",
+      "Atomen fotograferen"
+    ],
+    "answer": 1,
+    "hint": "Alchemisten zochten onder meer naar de steen der wijzen.",
+    "reward": 3
+  },
+  {
+    "id": "m3",
+    "level": "medieval",
+    "object": "object1",
+    "type": "numeric",
+    "topic": "symbolen",
+    "question": "Hoeveel elementen staan er in de formule H₂O?",
+    "answer": 2,
+    "hint": "Tel de verschillende soorten atomen, niet alle atomen samen.",
+    "reward": 3
+  },
+  {
+    "id": "l1",
+    "level": "lavoisier",
+    "object": "object1",
+    "type": "multiple_choice",
+    "topic": "meten",
+    "question": "Welke grootheid meet je met een balans?",
+    "options": [
+      "Temperatuur",
+      "Massa",
+      "Volume",
+      "Tijd"
+    ],
+    "answer": 1,
+    "hint": "Een balans vergelijkt hoe zwaar voorwerpen zijn.",
+    "reward": 8
+  },
+  {
+    "id": "l2",
+    "level": "lavoisier",
+    "object": "object1",
+    "type": "multiple_choice",
+    "topic": "lavoisier",
+    "question": "Welke uitspraak past bij de wet van behoud van massa in een gesloten systeem?",
+    "options": [
+      "Massa verdwijnt bij verbranding",
+      "Massa ontstaat uit niets",
+      "De totale massa blijft gelijk",
+      "Alle stoffen worden gas"
+    ],
+    "answer": 2,
+    "hint": "Tel de massa van alle stoffen vóór en na de reactie samen.",
+    "reward": 8
+  },
+  {
+    "id": "l3",
+    "level": "lavoisier",
+    "object": "object1",
+    "type": "numeric",
+    "topic": "rekenen",
+    "question": "Een gesloten proefopstelling heeft vóór een reactie een totale massa van 125 g. Wat is de totale massa na de reactie?",
+    "answer": 125,
+    "hint": "In een gesloten systeem blijft de totale massa behouden.",
+    "reward": 8
+  },
+  {
+    "id": "n1",
+    "level": "modern",
+    "object": "object1",
+    "type": "multiple_choice",
+    "topic": "deeltjes",
+    "question": "Welk deeltje heeft een negatieve elektrische lading?",
+    "options": [
+      "Proton",
+      "Neutron",
+      "Elektron",
+      "Atoomkern"
+    ],
+    "answer": 2,
+    "hint": "Dit deeltje bevindt zich rond de atoomkern.",
+    "reward": 6
+  },
+  {
+    "id": "n2",
+    "level": "modern",
+    "object": "object1",
+    "type": "numeric",
+    "topic": "molrekenen",
+    "question": "Hoeveel mol water is 36 g water? Gebruik M(H₂O) = 18 g/mol.",
+    "answer": 2,
+    "hint": "Deel de massa door de molaire massa.",
+    "reward": 6
+  },
+  {
+    "id": "n3",
+    "level": "modern",
+    "object": "object1",
+    "type": "multiple_choice",
+    "topic": "periodiek-systeem",
+    "question": "Welk symbool hoort bij natrium?",
+    "options": [
+      "N",
+      "Na",
+      "Ne",
+      "Ni"
+    ],
+    "answer": 1,
+    "hint": "Het symbool komt van de Latijnse naam natrium.",
+    "reward": 6
+  },
+  {
+    "id": "mx4",
+    "level": "medieval",
+    "object": "object2",
+    "topic": "chemie",
+    "question": "Wat is een zuivere stof?",
+    "type": "multiple_choice",
+    "answer": 0,
+    "hint": "Een zuivere stof heeft één soort deeltjes.",
+    "reward": 1,
+    "options": [
+      "Een stof met één soort deeltjes",
+      "Een mengsel van drie vloeistoffen",
+      "Altijd een gas",
+      "Een oplossing met zout"
+    ]
+  },
+  {
+    "id": "mx5",
+    "level": "medieval",
+    "object": "object2",
+    "topic": "chemie",
+    "question": "Welke toestandsverandering is smelten?",
+    "type": "multiple_choice",
+    "answer": 0,
+    "hint": "Denk aan ijs dat water wordt.",
+    "reward": 1,
+    "options": [
+      "Vast naar vloeibaar",
+      "Vloeibaar naar gas",
+      "Gas naar vloeibaar",
+      "Vloeibaar naar vast"
+    ]
+  },
+  {
+    "id": "mx6",
+    "level": "medieval",
+    "object": "object2",
+    "topic": "chemie",
+    "question": "Welk materiaal is een metaal?",
+    "type": "multiple_choice",
+    "answer": 0,
+    "hint": "IJzer wordt vaak gebruikt om gereedschap te maken.",
+    "reward": 1,
+    "options": [
+      "IJzer",
+      "Hout",
+      "Glas",
+      "Wol"
+    ]
+  },
+  {
+    "id": "mx7",
+    "level": "medieval",
+    "object": "object3",
+    "topic": "chemie",
+    "question": "Hoe noemen we een vloeistof waarin een stof is opgelost?",
+    "type": "multiple_choice",
+    "answer": 0,
+    "hint": "Denk aan zout opgelost in water.",
+    "reward": 1,
+    "options": [
+      "Oplossing",
+      "Suspensie",
+      "Legering",
+      "Element"
+    ]
+  },
+  {
+    "id": "mx8",
+    "level": "medieval",
+    "object": "object3",
+    "topic": "chemie",
+    "question": "Welk symbool hoort bij zuurstof?",
+    "type": "multiple_choice",
+    "answer": 0,
+    "hint": "Het symbool bestaat uit één letter.",
+    "reward": 1,
+    "options": [
+      "O",
+      "Z",
+      "Zu",
+      "Ox"
+    ]
+  },
+  {
+    "id": "mx9",
+    "level": "medieval",
+    "object": "object3",
+    "topic": "chemie",
+    "question": "Hoeveel atomen zitten er in één molecuul O₂?",
+    "type": "numeric",
+    "answer": 2,
+    "hint": "De kleine 2 geeft het aantal zuurstofatomen aan.",
+    "reward": 1
+  },
+  {
+    "id": "mx10",
+    "level": "medieval",
+    "object": "object4",
+    "topic": "chemie",
+    "question": "Welke methode kan zand van water scheiden?",
+    "type": "multiple_choice",
+    "answer": 0,
+    "hint": "Een filter houdt vaste zanddeeltjes tegen.",
+    "reward": 1,
+    "options": [
+      "Filtreren",
+      "Smelten",
+      "Magnetiseren",
+      "Verdampen van het zand"
+    ]
+  },
+  {
+    "id": "mx11",
+    "level": "medieval",
+    "object": "object4",
+    "topic": "chemie",
+    "question": "Wat gebeurt er met de massa bij een chemische reactie in een gesloten systeem?",
+    "type": "multiple_choice",
+    "answer": 0,
+    "hint": "De totale massa blijft gelijk.",
+    "reward": 1,
+    "options": [
+      "Ze blijft behouden",
+      "Ze verdwijnt altijd",
+      "Ze verdubbelt",
+      "Ze wordt altijd nul"
+    ]
+  },
+  {
+    "id": "lx4",
+    "level": "lavoisier",
+    "object": "object2",
+    "topic": "chemie",
+    "question": "Welke eenheid gebruik je meestal voor massa in het labo?",
+    "type": "multiple_choice",
+    "answer": 0,
+    "hint": "Een balans meet massa.",
+    "reward": 1,
+    "options": [
+      "Gram",
+      "Liter",
+      "Seconde",
+      "Graad Celsius"
+    ]
+  },
+  {
+    "id": "lx5",
+    "level": "lavoisier",
+    "object": "object2",
+    "topic": "chemie",
+    "question": "Wat meet een thermometer?",
+    "type": "multiple_choice",
+    "answer": 0,
+    "hint": "Een thermometer geeft aan hoe warm iets is.",
+    "reward": 1,
+    "options": [
+      "Temperatuur",
+      "Massa",
+      "Volume",
+      "Lengte"
+    ]
+  },
+  {
+    "id": "lx6",
+    "level": "lavoisier",
+    "object": "object2",
+    "topic": "chemie",
+    "question": "Welke grootheid druk je vaak uit in milliliter?",
+    "type": "multiple_choice",
+    "answer": 0,
+    "hint": "Milliliter is een eenheid voor inhoud.",
+    "reward": 1,
+    "options": [
+      "Volume",
+      "Massa",
+      "Tijd",
+      "Temperatuur"
+    ]
+  },
+  {
+    "id": "lx7",
+    "level": "lavoisier",
+    "object": "object3",
+    "topic": "chemie",
+    "question": "Een monster heeft 40 g en je voegt 15 g toe. Wat is de totale massa?",
+    "type": "numeric",
+    "answer": 55,
+    "hint": "Tel de massa’s op.",
+    "reward": 1
+  },
+  {
+    "id": "lx8",
+    "level": "lavoisier",
+    "object": "object3",
+    "topic": "chemie",
+    "question": "Wat is een waarneming in een experiment?",
+    "type": "multiple_choice",
+    "answer": 0,
+    "hint": "Een waarneming is gebaseerd op zien of meten.",
+    "reward": 1,
+    "options": [
+      "Wat je ziet of meet",
+      "Een willekeurige gok",
+      "Een verborgen code",
+      "Een conclusie zonder gegevens"
+    ]
+  },
+  {
+    "id": "lx9",
+    "level": "lavoisier",
+    "object": "object3",
+    "topic": "chemie",
+    "question": "Welke handeling verhoogt de betrouwbaarheid van een meting?",
+    "type": "multiple_choice",
+    "answer": 0,
+    "hint": "Herhalen helpt toevallige fouten herkennen.",
+    "reward": 1,
+    "options": [
+      "De meting herhalen",
+      "Eenheden weglaten",
+      "Alle resultaten wissen",
+      "Alleen de beste uitkomst noteren"
+    ]
+  },
+  {
+    "id": "lx10",
+    "level": "lavoisier",
+    "object": "object4",
+    "topic": "chemie",
+    "question": "Wat is de correcte eenheid voor temperatuur in het SI-stelsel?",
+    "type": "multiple_choice",
+    "answer": 0,
+    "hint": "De SI-eenheid voor temperatuur is kelvin.",
+    "reward": 1,
+    "options": [
+      "Kelvin",
+      "Liter",
+      "Gram",
+      "Meter"
+    ]
+  },
+  {
+    "id": "lx11",
+    "level": "lavoisier",
+    "object": "object4",
+    "topic": "chemie",
+    "question": "Een maatcilinder bevat 25 mL en je voegt 10 mL toe. Wat is het volume?",
+    "type": "numeric",
+    "answer": 35,
+    "hint": "Tel de volumes op als er geen verlies is.",
+    "reward": 1
+  },
+  {
+    "id": "mx12",
+    "level": "medieval",
+    "object": "object4",
+    "topic": "chemie",
+    "question": "Wat is het symbool voor goud?",
+    "type": "multiple_choice",
+    "answer": 0,
+    "hint": "Het symbool komt van het Latijnse aurum.",
+    "reward": 1,
+    "options": [
+      "Au",
+      "Ag",
+      "Gd",
+      "Go"
+    ]
+  },
+  {
+    "id": "lx12",
+    "level": "lavoisier",
+    "object": "object4",
+    "topic": "chemie",
+    "question": "Hoeveel milligram is 1 gram?",
+    "type": "numeric",
+    "answer": 1000,
+    "hint": "Eén gram is duizend milligram.",
+    "reward": 1
+  },
+  {
+    "id": "modernx4",
+    "level": "modern",
+    "object": "object2",
+    "topic": "chemie",
+    "question": "Wat is het symbool voor koolstof?",
+    "type": "multiple_choice",
+    "answer": 0,
+    "hint": "Koolstof heeft een enkelletterig symbool.",
+    "reward": 1,
+    "options": [
+      "C",
+      "K",
+      "Co",
+      "Ca"
+    ]
+  },
+  {
+    "id": "modernx5",
+    "level": "modern",
+    "object": "object2",
+    "topic": "chemie",
+    "question": "Welke deeltjes bevinden zich in de atoomkern?",
+    "type": "multiple_choice",
+    "answer": 0,
+    "hint": "De kern bevat protonen en meestal neutronen.",
+    "reward": 1,
+    "options": [
+      "Protonen en neutronen",
+      "Alleen elektronen",
+      "Alleen moleculen",
+      "Elektronen en fotonen"
+    ]
+  },
+  {
+    "id": "modernx6",
+    "level": "modern",
+    "object": "object2",
+    "topic": "chemie",
+    "question": "Wat is de lading van een neutron?",
+    "type": "multiple_choice",
+    "answer": 0,
+    "hint": "Een neutron heeft geen elektrische lading.",
+    "reward": 1,
+    "options": [
+      "Neutraal",
+      "Positief",
+      "Negatief",
+      "Wisselt voortdurend"
+    ]
+  },
+  {
+    "id": "modernx7",
+    "level": "modern",
+    "object": "object3",
+    "topic": "chemie",
+    "question": "Hoeveel protonen heeft een koolstofatoom?",
+    "type": "numeric",
+    "answer": 6,
+    "hint": "Het atoomnummer van koolstof is 6.",
+    "reward": 1
+  },
+  {
+    "id": "modernx8",
+    "level": "modern",
+    "object": "object3",
+    "topic": "chemie",
+    "question": "Welke formule hoort bij koolstofdioxide?",
+    "type": "multiple_choice",
+    "answer": 0,
+    "hint": "Eén koolstofatoom en twee zuurstofatomen.",
+    "reward": 1,
+    "options": [
+      "CO₂",
+      "Co₂",
+      "C₂O",
+      "CaO"
+    ]
+  },
+  {
+    "id": "modernx9",
+    "level": "modern",
+    "object": "object3",
+    "topic": "chemie",
+    "question": "Wat is de pH van een neutrale oplossing bij kamertemperatuur?",
+    "type": "numeric",
+    "answer": 7,
+    "hint": "Neutraal ligt rond pH 7.",
+    "reward": 1
+  },
+  {
+    "id": "modernx10",
+    "level": "modern",
+    "object": "object4",
+    "topic": "chemie",
+    "question": "Welke techniek scheidt vloeistoffen met verschillende kookpunten?",
+    "type": "multiple_choice",
+    "answer": 0,
+    "hint": "Destillatie gebruikt verschillen in kookpunt.",
+    "reward": 1,
+    "options": [
+      "Destillatie",
+      "Filtratie",
+      "Zeven",
+      "Magnetisme"
+    ]
+  },
+  {
+    "id": "modernx11",
+    "level": "modern",
+    "object": "object4",
+    "topic": "chemie",
+    "question": "Een oplossing bevat 2 mol stof in 1 L. Wat is de concentratie in mol/L?",
+    "type": "numeric",
+    "answer": 2,
+    "hint": "Concentratie is hoeveelheid stof gedeeld door volume.",
+    "reward": 1
+  },
+  {
+    "id": "modernx12",
+    "level": "modern",
+    "object": "object4",
+    "topic": "chemie",
+    "question": "Hoeveel neutronen heeft koolstof-12?",
+    "type": "numeric",
+    "answer": 6,
+    "hint": "Massagetal min atoomnummer: 12 − 6.",
+    "reward": 1
+  }
+]

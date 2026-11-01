@@ -1,0 +1,81 @@
+CHEMIE ESCAPE ROOM — ONLINE MET KLASBEHEER (NETLIFY + SUPABASE)
+================================================================
+
+WAT IS NIEUW?
+- De bestaande escape room met de drie labs blijft behouden.
+- Leerlingen loggen in met een gebruikersnaam en wachtwoord; ze kunnen zelf geen account maken.
+- Een eerste leerkrachtaccount wordt eenmalig gemaakt met een setupcode.
+- Leerkrachten maken leerlingaccounts aan en kunnen leerlingwachtwoorden resetten.
+- XP-ranking is alleen zichtbaar binnen de eigen klas (gebruikersnaam, level en XP).
+- Battles kunnen alleen tussen leerlingen uit dezelfde klas plaatsvinden.
+- Kaarten, skins, LabCoins, XP en battle-resultaten worden door Supabase bewaard en gecontroleerd.
+- LabCoins blijven los van gewone puzzels; de Elementensprint blijft de muntenbron.
+
+DEEL A — SUPABASE
+1. Maak een project aan via https://supabase.com/.
+2. Open SQL Editor en voer supabase/schema.sql volledig uit.
+3. In Authentication > Sign In / Providers: schakel openbare sign-ups uit (Allow new users to sign up = OFF). Accounts worden via de leerkrachtfunctie gemaakt.
+4. Kopieer Project URL en de publieke anon/publishable key naar config.js.
+5. De standaard Supabase-auth e-mailbevestiging is niet nodig voor de schoolaccounts: accounts worden server-side bevestigd aangemaakt. Leerlingen loggen met een lokale interne login-alias in; er is geen e-mailadres van leerlingen nodig.
+
+DEEL B — NETLIFY
+Aanbevolen: verbind de projectmap via een GitHub-repository met Netlify, zodat Netlify de website én serverless functies samen bouwt.
+1. Maak een privé-repository op GitHub aan en upload de volledige inhoud van deze projectmap.
+2. Kies in Netlify “Add new project” → “Import an existing project” en verbind de repository.
+3. De meegeleverde netlify.toml bouwt de browserbestanden naar dist/ en houdt de geheime servercode in netlify/functions/ buiten de publieke map.
+4. Ga in Netlify naar Site configuration > Environment variables en stel deze variabelen in:
+   SUPABASE_URL = jouw Supabase Project URL
+   SUPABASE_ANON_KEY = jouw publieke anon/publishable key
+   SUPABASE_SERVICE_ROLE_KEY = jouw geheime service_role/secret key
+   TEACHER_SETUP_SECRET = een lange willekeurige setupcode van minstens 16 tekens
+   Zet de geheime sleutels alleen in Netlify, nooit in config.js, game.js of GitHub.
+5. Na instellen/wijzigen van variabelen, maak een nieuwe deploy.
+6. Stel config.js in met uitsluitend Supabase Project URL en de publieke anon key; commit/deploy de wijziging.
+
+Alternatief zonder GitHub: installeer Node.js en Netlify CLI, voer in de projectmap `npm install -g netlify-cli` en `netlify login` uit, koppel de site met `netlify link` en publiceer met `netlify deploy --build --prod`. Gebruik niet enkel een statische drag-and-drop-upload als de Netlify Functions niet mee worden gebouwd; de accountbeheer-endpoints moeten ook online staan.
+
+DEEL C — EERSTE LEERKRACHTACCOUNT
+1. Open de gedeployde Netlify-site.
+2. Open onder de sectie Online Chemie-Arena de tegel “Eerste leerkracht instellen”.
+3. Vul de TEACHER_SETUP_SECRET in, kies een klasnaam, leerkrachtgebruikersnaam en sterk wachtwoord.
+4. Deze eenmalige endpoint kan maar één leerkrachtaccount in dit Supabase-project aanmaken. Zodra het account is aangemaakt, wordt verdere setup geblokkeerd.
+5. Log in met de gebruikersnaam en het wachtwoord. Ga naar Klasbeheer.
+
+DEEL D — LEERLINGEN AANMAKEN
+1. In Klasbeheer vult de leerkracht één leerling per regel in als:
+   gebruikersnaam;wachtwoord
+   bijvoorbeeld:
+   chemicus01;TijdelijkWachtwoord1
+   chemicus02;TijdelijkWachtwoord2
+2. Klik op Maak leerlingaccounts. Maximaal 30 per keer; gebruikersnamen moeten 3–20 kleine letters, cijfers, _ of - bevatten; wachtwoorden minstens 8 tekens.
+3. Deel de inloggegevens rechtstreeks en veilig met de leerlingen.
+4. Voor een vergeten wachtwoord gebruik je in Klasbeheer “Leerlingwachtwoord resetten”.
+
+PRIVACY EN BEVEILIGING
+- Gebruik pseudoniemen; geen echte volledige namen in gebruikersnamen.
+- Supabase-service-role/secret key en teacher setup-code zijn geheim. Zet ze alleen in de Netlify Environment Variables.
+- Leerlingen zien alleen klasgenoten in de XP-ranking. De database-RPC laat alleen eigen-klas-leerlingen zien.
+- Battles worden in de database geweigerd als spelers niet in dezelfde klas zitten.
+- Leerlingen kunnen geen eigen account registreren of hun coins/XP rechtstreeks aanpassen.
+- Accounts gebruiken geen persoonlijk e-mailadres. Dat betekent ook dat leerlingen niet zelf hun wachtwoord via e-mail kunnen herstellen; de leerkracht doet dat in Klasbeheer.
+
+BELANGRIJK BIJ EEN BESTAANDE DATABASE
+Als je de oudere online-MVP al in Supabase had uitgevoerd, voer dit schema opnieuw uit om de nieuwe tabellen/functies toe te voegen. Oude profielen blijven mogelijk zonder class_id. Zet zulke accounts aan de klas van de leerkracht, of maak nieuwe testaccounts aan. SQL-voorbeeld na de leerkrachtsetup (pas de klasnaam aan):
+  update public.profiles set class_id=(select id from public.classes where name='3ChemieA') where class_id is null;
+Gebruik dit alleen als je zeker weet dat alle oude profielen naar die klas horen.
+
+BATTLE-REGELS
+- Een speler daagt een klasgenoot uit via diens gebruikersnaam.
+- De tegenstander aanvaardt of weigert.
+- Bij een actieve battle spelen de spelers om de beurt een kaart uit hun collectie.
+- De server controleert beurten, kaartbezit, schade, HP en XP.
+- De battle-interface vernieuwt de status periodiek; een continu realtime-animatiespel is dit niet.
+
+HANDIG
+- README: LEESMIJ.txt
+- Database: supabase/schema.sql
+- Netlify functies: netlify/functions/
+- Browserconfiguratie: config.js (publieke key alleen)
+- Vragen: vragen.json
+
+De bestanden zijn een voorbereid MVP-startpakket. Ik kan jouw Netlify/Supabase-accounts niet zelf publiceren of configureren; voer de stappen hierboven uit en test met een leerkracht en twee testleerlingen vóór gebruik in de klas.
