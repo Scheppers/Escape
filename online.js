@@ -370,6 +370,7 @@ Optie D"></textarea></label>
     } catch (materialError) { console.warn('Grondstoffeninventaris kon niet worden geladen.', materialError); }
     try { const puzzleProgress = await rpc('get_my_puzzle_progress'); window.ChemieGameBridge?.applyOnlinePuzzleProgress?.(puzzleProgress); } catch (progressError) { console.warn('Puzzelvoortgang kon niet worden geladen.', progressError); }
     try { const levelUnlocks = await rpc('get_my_level_unlocks'); window.ChemieGameBridge?.applyOnlineLevelUnlocks?.(levelUnlocks); } catch (unlockError) { console.warn('Tijdpoortvoortgang kon niet worden geladen.', unlockError); }
+    window.ChemieGameBridge?.onOnlineLogin?.();
     setView('home');
     if (refreshTimer) clearInterval(refreshTimer);
     refreshTimer = setInterval(async () => { if (currentUser && currentView === 'battles' && !view?.querySelector(':focus')) { try { await renderBattles(); } catch(e) { console.warn(e); } } }, 8000);
@@ -382,6 +383,7 @@ Optie D"></textarea></label>
       window.ChemieGameBridge.applyOnlineEconomy({ coins: 0, ownedSkins: ['starter'], equippedSkin: 'starter' });
       window.ChemieGameBridge.clearMaterials?.();
       window.ChemieGameBridge.clearOnlinePuzzleProgress?.();
+      window.ChemieGameBridge.onOnlineLogout?.();
     }
   }
   async function handleClick(e) {
@@ -436,6 +438,7 @@ Optie D"></textarea></label>
   window.ChemieOnline = {
     isAuthenticated: () => Boolean(currentUser),
     async startPuzzleAttempt(levelId, objectId, difficulty) { requireLogin(); return rpc('start_puzzle_attempt', { p_level_id: levelId, p_object_id: objectId, p_difficulty: difficulty }); },
+    async getActivePuzzleAttempt(levelId, objectId) { requireLogin(); return rpc('get_my_active_puzzle_attempt', { p_level_id: levelId, p_object_id: objectId }); },
     async unlockLevel(levelId, code) { requireLogin(); return rpc('unlock_level_with_code', { p_target_level: levelId, p_code: code }); },
     async submitPuzzleAnswer(attemptId, questionId, answer) {
       requireLogin();
