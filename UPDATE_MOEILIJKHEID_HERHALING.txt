@@ -1,0 +1,115 @@
+CHEMIE ESCAPE ROOM — MOEILIJKHEID, VRAGEN PER PUZZEL EN HERHALINGEN
+===================================================================
+
+WAT IS NIEUW?
+-------------
+- Leerlingen kunnen bij elke puzzel zelf Basis, Gemiddeld of Moeilijk kiezen.
+- De vraagselectie wordt strikt gefilterd op drie onderdelen tegelijk:
+  leerjaar + puzzelplek + moeilijkheidsgraad.
+  Vragen uit bijvoorbeeld Chemisch rekenen verschijnen dus niet bij een andere puzzel.
+- De leerkracht bepaalt per puzzelplek hoeveel vragen nodig zijn: 3, 5 of 10.
+- De leerkracht kan bij iedere vraag de moeilijkheid instellen in Klasbeheer.
+- In het leerkrachtgedeelte wordt per puzzelplek het aantal actieve vragen per moeilijkheid getoond.
+- De vraagselectie geeft voorrang aan vragen die een leerling nog niet eerder in
+  die specifieke puzzel en moeilijkheid heeft gekregen. Wanneer de volledige
+  subset al gebruikt is, kan de selectie opnieuw uit de volledige subset putten.
+- Een onvoltooide poging wordt server-side bewaard. Na opnieuw inloggen of op een
+  ander toestel kan de leerling dezelfde moeilijkheid kiezen en verdergaan met
+  dezelfde geselecteerde vragen. Een vraag die in een actieve poging zit, kan de
+  leerkracht tijdelijk niet wijzigen of archiveren; zo verandert de inhoud of het
+  correcte antwoord niet midden in een poging.
+- Een puzzel kan opnieuw opgelost worden nadat het codecijfer verdiend is.
+  Het codecijfer blijft zichtbaar en blijft geldig.
+- De eerste volledige oplossing geeft het codecijfer. Elke volledige herhaling
+  daarna geeft 10 LabCoins.
+- De XP-beloning van 5 XP per unieke vraag blijft bestaan; dezelfde vraag geeft
+  niet telkens opnieuw XP.
+- Antwoorden worden op de server gecontroleerd. Correcte antwoorden worden niet
+  naar de leerlingbrowser meegestuurd.
+- Alleen reeds vrijgespeelde labo's kunnen via de server gestart worden.
+
+INSTALLATIE IN JE BESTAANDE GITHUB-PROJECT
+-----------------------------------------
+1. Maak eerst een back-up of commit van je huidige project.
+2. Pak het updatepakket uit.
+3. Vervang in de hoofdmap van je GitHub-project:
+   - index.html
+   - game.js
+   - online.js
+   - style.css
+4. Voeg de nieuwe migratie toe op exact dit pad:
+   supabase/migrations/2026_11_question_difficulty_and_puzzle_replays.sql
+5. Behoud je eigen config.js, netlify.toml, Netlify Functions en bestaande
+   omgevingsvariabelen. Die hoeven voor deze update niet aangepast te worden.
+6. Commit de bestanden naar GitHub. Netlify zal de website opnieuw bouwen.
+
+SUPABASE-MIGRATIE (VERPLICHT)
+-----------------------------
+1. Open Supabase > SQL Editor.
+2. Open de nieuwe migratie:
+   supabase/migrations/2026_11_question_difficulty_and_puzzle_replays.sql
+3. Kopieer de volledige inhoud en voer deze één keer uit.
+4. Voer niet opnieuw schema.sql of een eerdere migratie uit.
+
+Voorwaarden: de bestaande database moet al schema.sql en de vier-level-
+migratie 2026_11_add_fourth_level_and_teacher_question_editor.sql bevatten.
+Deze nieuwe migratie is aanvullend en verwijdert geen accounts, coins, kaarten,
+skins, grondstoffen of bestaande quizvragen.
+
+VRAGEN LABELEN EN BEHEREN
+-------------------------
+1. Meld aan met het leerkrachtaccount.
+2. Open Klasbeheer > Vragenbeheer per leerjaar.
+3. Kies het gewenste leerjaar.
+4. Kies bij een nieuwe of bestaande vraag de puzzelplek en de moeilijkheid:
+   Basis, Gemiddeld of Moeilijk.
+5. Sla de vraag op. Je ziet per puzzelplek hoeveel actieve vragen in elke
+   moeilijkheid beschikbaar zijn.
+6. Stel bovenaan per puzzelplek het aantal vereiste vragen in op 3, 5 of 10.
+
+Alle oude vragen krijgen bij de migratie automatisch het label Basis. Pas de
+labels zelf aan in het leerkrachtgedeelte. De update genereert of herschrijft
+geen vragen en verplaatst geen vragen tussen puzzels.
+
+BELANGRIJK BIJ HET INSTELLEN VAN AANTALLEN
+-----------------------------------------
+Het ingestelde aantal geldt voor elke moeilijkheid bij die puzzel. Als voor een
+puzzel 5 vragen zijn ingesteld, moet de gekozen subset dus minstens 5 actieve
+vragen bevatten. Als er onvoldoende vragen zijn, meldt het spel dit en start
+het geen onvolledige poging. Voeg dan vragen toe aan die specifieke puzzel en
+moeilijkheid, of stel tijdelijk een lager aantal in.
+
+VOORTGANG EN HERHALINGEN
+------------------------
+- Een onvoltooide poging blijft gekoppeld aan het account, het leerjaar, de
+  puzzel en de gekozen moeilijkheid.
+- Om te hervatten kiest de leerling opnieuw dezelfde moeilijkheid.
+- Het codecijfer wordt na de eerste voltooiing bewaard.
+- Na de eerste voltooiing geeft elke volgende volledige poging 10 LabCoins.
+- Een wissel naar een andere moeilijkheid start of hervat een afzonderlijke
+  poging voor die moeilijkheid.
+- Als de leerkracht het vereiste aantal wijzigt terwijl een poging al bezig is,
+  houdt die bestaande poging het oorspronkelijke aantal. De nieuwe instelling
+  geldt vanaf de volgende nieuwe poging.
+
+TEST NA DEPLOY
+--------------
+Test met een leerlingaccount:
+1. Open één puzzel en kies Basis.
+2. Controleer dat alleen vragen van hetzelfde leerjaar, dezelfde puzzelplek
+   en Basis verschijnen.
+3. Beantwoord één vraag juist, herlaad de website en kies dezelfde moeilijkheid.
+   Dezelfde poging moet hervatten en de volgende open vraag tonen.
+4. Voltooi de puzzel; het codecijfer moet verschijnen.
+5. Open dezelfde puzzel opnieuw en kies Gemiddeld. Er moet een aparte poging
+   met uitsluitend gemiddelde vragen starten.
+6. Voltooi een herhaling van een reeds eerder voltooide puzzel. Het saldo moet
+   met precies 10 LabCoins stijgen.
+7. Probeer een moeilijkheid te kiezen met minder vragen dan vereist. Het spel
+   moet duidelijk melden dat er onvoldoende vragen zijn; er wordt niets
+   voltooid en er worden geen coins toegekend.
+
+De JavaScript-syntaxis en statische Netlify-build zijn lokaal gecontroleerd.
+De SQL-migratie en de RPC's moeten na installatie nog in je eigen Supabase-
+project getest worden. Er is vanuit deze werkruimte geen toegang tot jouw live
+Supabase-database of Netlify-account.

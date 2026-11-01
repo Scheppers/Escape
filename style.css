@@ -84,3 +84,26 @@
 @keyframes shadowPulse{from{transform:scale(.95);filter:drop-shadow(0 0 2px #b7a2ff)}to{transform:scale(1.08);filter:drop-shadow(0 0 10px #b7a2ff)}}
 .antagonist-box p{margin-bottom:7px}
 @media(max-width:560px){.materials-inventory .inventory-items{grid-template-columns:repeat(3,minmax(0,1fr))}.material-item{padding:8px 3px}.material-item strong{font-size:.62rem}.material-item b{font-size:.8rem}}
+
+/* Moeilijkheidskeuze per puzzel en aantallen per subset */
+.difficulty-choice{display:flex;flex-direction:column;align-items:flex-start;gap:4px;width:100%;padding:14px 15px;text-align:left;border:1px solid #cbd9df;background:#f7fafb;color:#17364c;transition:transform .12s ease,border-color .12s ease,background .12s ease}
+.difficulty-choice:hover{transform:translateY(-1px);background:#fff}
+.difficulty-choice strong{font-size:1rem}
+.difficulty-choice small{font-size:.78rem;font-weight:600;color:#607784}
+.difficulty-basis{border-left:5px solid #269b64}
+.difficulty-gemiddeld{border-left:5px solid #d69a32}
+.difficulty-moeilijk{border-left:5px solid #d65b55}
+.teacher-puzzle-settings{margin:12px 0;padding:14px;border:1px solid #294b60;border-radius:12px;background:#102333}
+.teacher-puzzle-settings h4{margin:0 0 5px;color:#f3f8fb}
+.teacher-puzzle-settings>p{margin:0 0 12px;color:#a9c2ce;font-size:.82rem}
+.teacher-puzzle-settings-grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:9px}
+.teacher-puzzle-setting{display:flex;align-items:center;justify-content:space-between;gap:12px;padding:11px;border:1px solid #294b60;border-radius:9px;background:#0b1b29}
+.teacher-puzzle-setting>div{display:grid;gap:4px;min-width:0}
+.teacher-puzzle-setting strong{color:#eaf5f8}
+.teacher-puzzle-setting small{color:#9ebac8;font-size:.75rem}
+.teacher-puzzle-setting label{min-width:105px;max-width:130px;color:#b6cbd4;font-size:.75rem}
+.difficulty-tag{display:inline-block;padding:2px 7px;border-radius:20px;font-size:.7rem}
+.difficulty-tag-basis{background:#1d503d;color:#a5ebc3}
+.difficulty-tag-gemiddeld{background:#5b461d;color:#f5d58e}
+.difficulty-tag-moeilijk{background:#5a2c36;color:#ffc1cb}
+@media(max-width:700px){.teacher-puzzle-settings-grid{grid-template-columns:1fr}.teacher-puzzle-setting{align-items:flex-start;flex-direction:column}.teacher-puzzle-setting label{max-width:none;width:100%}}

@@ -38,21 +38,12 @@
     return result;
   }
   const LEVELS_FOR_QUESTIONS = [
-    { id: 'medieval', name: 'Leerjaar 1 · Middeleeuws labo' },
-    { id: 'lavoisier', name: 'Leerjaar 2 · Lavoisierlabo' },
-    { id: 'modern', name: 'Leerjaar 3 · Modern labo' },
-    { id: 'future', name: 'Leerjaar 4 · Futuristisch labo' }
+    { id: 'medieval', name: 'Leerjaar 1 · Middeleeuws labo', objects: { object1:'Kookpot', object2:'Oud boek', object3:'Glazen potten', object4:'Werktafel' } },
+    { id: 'lavoisier', name: 'Leerjaar 2 · Lavoisierlabo', objects: { object1:'Balans', object2:'Notities van Lavoisier', object3:'Glaswerk', object4:'Proefopstelling' } },
+    { id: 'modern', name: 'Leerjaar 3 · Modern labo', objects: { object1:'Reageerbuizen', object2:'Weegschaal', object3:'Maatkolf', object4:'Periodiek systeem' } },
+    { id: 'future', name: 'Leerjaar 4 · Futuristisch labo', objects: { object1:'Robotarm', object2:'Hologram', object3:'Reactor', object4:'Tijdpoort' } }
   ];
-  async function syncQuestionBank() {
-    requireLogin();
-    const all = [];
-    for (const level of LEVELS_FOR_QUESTIONS) {
-      const rows = await rpc('get_level_questions', { p_level_id: level.id });
-      all.push(...(Array.isArray(rows) ? rows : []));
-    }
-    if (all.length && window.ChemieGameBridge?.setQuestionBank) window.ChemieGameBridge.setQuestionBank(all);
-    return all;
-  }
+
 
   function showAuth() {
     authBox?.classList.remove('hidden'); dashboard?.classList.add('hidden');
@@ -146,9 +137,11 @@ chemicus02;TijdelijkWachtwoord2" required></textarea><button type="submit" class
       <article class="online-auth-card"><h3>Leerlingwachtwoord resetten</h3><p>Gebruik dit wanneer een leerling het wachtwoord vergeten is. Het nieuwe wachtwoord wordt onmiddellijk actief.</p><form id="teacher-reset-form" class="online-form"><label for="teacher-reset-username">Gebruikersnaam</label><input id="teacher-reset-username" pattern="[a-zA-Z0-9_-]{3,20}" required><label for="teacher-reset-password">Nieuw wachtwoord (minstens 8 tekens)</label><input id="teacher-reset-password" type="password" minlength="8" autocomplete="new-password" required><button type="submit" class="online-secondary">Reset wachtwoord</button></form><p class="teacher-warn">Deel tijdelijke wachtwoorden alleen rechtstreeks met de leerling. Zet ze niet in een publiek klasdocument.</p></article></div>
       <section class="teacher-student-list"><div class="online-view-heading"><div><h3>👥 Leerlingen in jouw klas</h3><p>${students.length} leerlingaccount${students.length === 1 ? '' : 's'} gevonden.</p></div></div><div class="online-table-wrap"><table class="online-table"><thead><tr><th>Gebruikersnaam</th><th>XP</th><th>Level</th><th>Accountbeheer</th></tr></thead><tbody>${studentRows || '<tr><td colspan="4">Er zijn nog geen leerlingaccounts in jouw klas.</td></tr>'}</tbody></table></div><p class="teacher-warn">Let op: verwijderen is definitief. Ook XP, LabCoins, kaarten, skins, sprintresultaten en battlegeschiedenis van die leerling worden verwijderd.</p></section>
       <section class="teacher-question-manager"><div class="online-view-heading"><div><h3>🧪 Vragenbeheer per leerjaar</h3><p>Elk leerjaar heeft een eigen vragenbank. Wijzigingen gelden voor leerlingen zodra ze de game opnieuw laden.</p></div></div>
-        <div class="teacher-question-toolbar"><label for="teacher-question-level">Vragenset kiezen<select id="teacher-question-level">${LEVELS_FOR_QUESTIONS.map(l=>`<option value="${l.id}">${esc(l.name)}</option>`).join('')}</select></label><div id="teacher-question-counts" class="teacher-question-counts"></div></div>
+        <div class="teacher-question-toolbar"><label for="teacher-question-level">Vragenset kiezen<select id="teacher-question-level">${LEVELS_FOR_QUESTIONS.map(l=>`<option value="${l.id}">${esc(l.name)}</option>`).join('')}</select></label></div>
+        <div id="teacher-puzzle-settings" class="teacher-puzzle-settings"></div>
         <div id="teacher-question-status" class="teacher-question-status" role="status">Vragen worden geladen…</div><div id="teacher-question-list" class="teacher-question-grid"></div>
         <form id="teacher-question-form" class="teacher-question-form"><input id="teacher-question-id" type="hidden"><label for="teacher-question-object">Puzzelplek<select id="teacher-question-object"><option value="object1">Puzzelplek 1</option><option value="object2">Puzzelplek 2</option><option value="object3">Puzzelplek 3</option><option value="object4">Puzzelplek 4</option></select></label>
+        <label for="teacher-question-difficulty">Moeilijkheid<select id="teacher-question-difficulty"><option value="basis">Basis</option><option value="gemiddeld">Gemiddeld</option><option value="moeilijk">Moeilijk</option></select></label>
         <label for="teacher-question-type">Vraagtype<select id="teacher-question-type"><option value="multiple_choice">Meerkeuzevraag</option><option value="numeric">Rekenvraag (geheel getal)</option></select></label>
         <label for="teacher-question-text" class="span-all">Vraag<textarea id="teacher-question-text" rows="3" maxlength="1000" required placeholder="Typ hier de vraag…"></textarea></label>
         <label for="teacher-question-options" id="teacher-question-options-wrap" class="span-all">Vier antwoordopties (één per regel)<textarea id="teacher-question-options" rows="4" placeholder="Optie A
@@ -157,7 +150,7 @@ Optie C
 Optie D"></textarea></label>
         <label for="teacher-question-answer" id="teacher-question-answer-label">Correct antwoord<select id="teacher-question-answer"><option value="1">Optie 1</option><option value="2">Optie 2</option><option value="3">Optie 3</option><option value="4">Optie 4</option></select></label>
         <div class="span-all" style="display:flex;gap:9px;flex-wrap:wrap"><button type="submit" class="online-primary" id="teacher-question-save">Vraag opslaan</button><button type="button" class="online-secondary" id="teacher-question-new">Nieuwe vraag / formulier leegmaken</button></div>
-        <p class="teacher-question-status span-all">Per puzzelplek worden drie vragen gebruikt. Zorg dat elke plek minstens drie actieve vragen heeft. Bij een rekenvraag vul je het gehele getal als antwoord in.</p>
+        <p class="teacher-question-status span-all">Label elke vraag als Basis, Gemiddeld of Moeilijk. Het aantal vragen (3, 5 of 10) stel je bovenaan per puzzelplek in. Zorg dat de gekozen moeilijkheid voldoende actieve vragen bevat.</p>
         </form></section>`;
     try { await renderTeacherQuestions('medieval'); } catch (questionError) { console.error(questionError); const status=document.getElementById('teacher-question-status'); if(status) status.textContent='Vragenbeheer is nog niet geactiveerd. Voer de SQL-migratie uit die in het updatepakket staat.'; const list=document.getElementById('teacher-question-list'); if(list) list.innerHTML='<p class="online-help">Voer eerst de meegeleverde Supabase-migratie uit om vragensets online te beheren.</p>'; }
   }
@@ -181,17 +174,38 @@ Optie D"></textarea></label>
     const select = document.getElementById('teacher-question-level'); if (select) select.value = level;
     const status = document.getElementById('teacher-question-status');
     const list = document.getElementById('teacher-question-list');
-    const counts = document.getElementById('teacher-question-counts');
-    if (status) status.textContent = 'Vragen worden opgehaald…';
-    const rows = await rpc('get_level_questions', { p_level_id: level });
+    const settingsBox = document.getElementById('teacher-puzzle-settings');
+    const levelConfig = LEVELS_FOR_QUESTIONS.find(item => item.id === level);
+    const labels = levelConfig?.objects || { object1: 'Puzzelplek 1', object2: 'Puzzelplek 2', object3: 'Puzzelplek 3', object4: 'Puzzelplek 4' };
+    const objectSelect = document.getElementById('teacher-question-object');
+    if (objectSelect) {
+      const selectedObject = objectSelect.value || 'object1';
+      objectSelect.innerHTML = Object.entries(labels).map(([id,label]) => `<option value="${id}">${esc(label)}</option>`).join('');
+      objectSelect.value = selectedObject in labels ? selectedObject : 'object1';
+    }
+    if (status) status.textContent = 'Vragen en instellingen worden opgehaald…';
+    const [rows, settings] = await Promise.all([
+      rpc('get_level_questions', { p_level_id: level }),
+      rpc('get_level_puzzle_settings', { p_level_id: level })
+    ]);
     teacherQuestionCache = Array.isArray(rows) ? rows : [];
-    const labels = { object1: 'Puzzelplek 1', object2: 'Puzzelplek 2', object3: 'Puzzelplek 3', object4: 'Puzzelplek 4' };
-    const tally = Object.fromEntries(Object.keys(labels).map(k=>[k,teacherQuestionCache.filter(q=>q.object_id===k).length]));
-    if (counts) counts.innerHTML = Object.entries(tally).map(([k,v])=>`<span>${labels[k]}: ${v}/3 minimum</span>`).join('');
-    if (status) status.textContent = `Deze vragenbank bevat ${teacherQuestionCache.length} actieve vragen. De game gebruikt maximaal drie willekeurige vragen per puzzelplek.`;
+    const settingsMap = Object.fromEntries((Array.isArray(settings) ? settings : []).map(row => [row.object_id, Number(row.questions_required)]));
+    const difficulties = ['basis','gemiddeld','moeilijk'];
+    const difficultyLabels = { basis:'Basis', gemiddeld:'Gemiddeld', moeilijk:'Moeilijk' };
+    const counts = {};
+    for (const objectId of Object.keys(labels)) {
+      counts[objectId] = Object.fromEntries(difficulties.map(d => [d, teacherQuestionCache.filter(q => q.object_id === objectId && q.difficulty === d).length]));
+    }
+    if (settingsBox) settingsBox.innerHTML = `<h4>Aantal vragen per puzzel</h4><p>Dit aantal bepaalt de leerkracht. Leerlingen kiezen alleen de moeilijkheidsgraad.</p><div class="teacher-puzzle-settings-grid">${Object.entries(labels).map(([objectId,label]) => {
+      const required = settingsMap[objectId] || 3;
+      const tally = counts[objectId];
+      return `<article class="teacher-puzzle-setting"><div><strong>${label}</strong><small>Basis: ${tally.basis} · Gemiddeld: ${tally.gemiddeld} · Moeilijk: ${tally.moeilijk}</small></div><label>Aantal vragen<select data-puzzle-count="${objectId}"><option value="3" ${required===3?'selected':''}>3 vragen</option><option value="5" ${required===5?'selected':''}>5 vragen</option><option value="10" ${required===10?'selected':''}>10 vragen</option></select></label></article>`;
+    }).join('')}</div>`;
+    const total = teacherQuestionCache.length;
+    if (status) status.textContent = `${total} actieve vragen in ${LEVELS_FOR_QUESTIONS.find(l=>l.id===level)?.name || level}. Elke vraag behoort tot één puzzelplek én één moeilijkheidsgraad.`;
     if (list) list.innerHTML = teacherQuestionCache.map(q => {
       const answer = q.question_type === 'numeric' ? String(q.correct_answer) : (q.options?.[Number(q.correct_answer)] ?? '—');
-      return `<article class="teacher-question-item"><small>${esc(labels[q.object_id] || q.object_id)} · ${q.question_type === 'numeric' ? 'Rekenvraag' : 'Meerkeuze'}</small><p>${esc(q.question_text)}</p><small>Correct antwoord: <strong>${esc(answer)}</strong></small><div class="teacher-question-actions"><button type="button" data-q-edit="${esc(q.question_id)}">Bewerken</button><button type="button" class="danger" data-q-delete="${esc(q.question_id)}">Archiveren</button></div></article>`;
+      return `<article class="teacher-question-item"><small>${esc(labels[q.object_id] || q.object_id)} · ${q.question_type === 'numeric' ? 'Rekenvraag' : 'Meerkeuze'} · <b class="difficulty-tag difficulty-tag-${esc(q.difficulty)}">${esc(difficultyLabels[q.difficulty] || q.difficulty)}</b></small><p>${esc(q.question_text)}</p><small>Correct antwoord: <strong>${esc(answer)}</strong></small><div class="teacher-question-actions"><button type="button" data-q-edit="${esc(q.question_id)}">Bewerken</button><button type="button" class="danger" data-q-delete="${esc(q.question_id)}">Archiveren</button></div></article>`;
     }).join('') || '<p class="online-help">Nog geen vragen voor dit leerjaar.</p>';
     resetTeacherQuestionForm();
     return teacherQuestionCache;
@@ -200,6 +214,7 @@ Optie D"></textarea></label>
     const q = teacherQuestionCache.find(x=>x.question_id===id); if (!q) return;
     document.getElementById('teacher-question-id').value = q.question_id;
     document.getElementById('teacher-question-object').value = q.object_id;
+    document.getElementById('teacher-question-difficulty').value = q.difficulty || 'basis';
     document.getElementById('teacher-question-type').value = q.question_type;
     document.getElementById('teacher-question-text').value = q.question_text;
     document.getElementById('teacher-question-options').value = (q.options || []).join('\n');
@@ -215,6 +230,7 @@ Optie D"></textarea></label>
     const level = document.getElementById('teacher-question-level').value;
     const object = document.getElementById('teacher-question-object').value;
     const type = document.getElementById('teacher-question-type').value;
+    const difficulty = document.getElementById('teacher-question-difficulty').value;
     const question = document.getElementById('teacher-question-text').value.trim();
     let options = [], answer;
     if (!question) throw new Error('Vul de vraagtekst in.');
@@ -230,10 +246,9 @@ Optie D"></textarea></label>
     }
     let id = document.getElementById('teacher-question-id').value.trim();
     if (!id) id = `t_${level}_${(window.crypto?.randomUUID?.() || `${Date.now()}_${Math.random().toString(36).slice(2,9)}`).replace(/-/g,'').slice(0,30)}`;
-    await rpc('teacher_save_quiz_question', { p_question_id:id, p_level_id:level, p_object_id:object, p_question_text:question, p_options:options, p_correct_answer:answer, p_question_type:type });
+    await rpc('teacher_save_quiz_question', { p_question_id:id, p_level_id:level, p_object_id:object, p_question_text:question, p_options:options, p_correct_answer:answer, p_question_type:type, p_difficulty:difficulty });
     await renderTeacherQuestions(level);
-    await syncQuestionBank();
-    msg('De vraag is opgeslagen. Leerlingen zien de wijziging bij hun volgende herlaadbeurt.', 'good');
+    msg('De vraag is opgeslagen onder de gekozen puzzel en moeilijkheidsgraad.', 'good');
   }
   async function handleTeacherQuestionArchive(id) {
     requireLogin();
@@ -243,7 +258,6 @@ Optie D"></textarea></label>
     if (!window.confirm('Deze vraag archiveren? Ze verdwijnt uit de actieve vragenset, maar de historische XP-registratie blijft bewaard.')) return;
     await rpc('teacher_archive_quiz_question', { p_question_id:id });
     await renderTeacherQuestions(teacherQuestionLevel);
-    await syncQuestionBank();
     msg('Vraag gearchiveerd.', 'good');
   }
 
@@ -354,7 +368,8 @@ Optie D"></textarea></label>
       const materials = await rpc('get_my_materials');
       window.ChemieGameBridge?.applyMaterials?.(materials);
     } catch (materialError) { console.warn('Grondstoffeninventaris kon niet worden geladen.', materialError); }
-    try { await syncQuestionBank(); } catch (questionError) { console.warn('Online vragenbank kon niet worden geladen; lokale vragen blijven actief.', questionError); }
+    try { const puzzleProgress = await rpc('get_my_puzzle_progress'); window.ChemieGameBridge?.applyOnlinePuzzleProgress?.(puzzleProgress); } catch (progressError) { console.warn('Puzzelvoortgang kon niet worden geladen.', progressError); }
+    try { const levelUnlocks = await rpc('get_my_level_unlocks'); window.ChemieGameBridge?.applyOnlineLevelUnlocks?.(levelUnlocks); } catch (unlockError) { console.warn('Tijdpoortvoortgang kon niet worden geladen.', unlockError); }
     setView('home');
     if (refreshTimer) clearInterval(refreshTimer);
     refreshTimer = setInterval(async () => { if (currentUser && currentView === 'battles' && !view?.querySelector(':focus')) { try { await renderBattles(); } catch(e) { console.warn(e); } } }, 8000);
@@ -366,6 +381,7 @@ Optie D"></textarea></label>
     if (window.ChemieGameBridge) {
       window.ChemieGameBridge.applyOnlineEconomy({ coins: 0, ownedSkins: ['starter'], equippedSkin: 'starter' });
       window.ChemieGameBridge.clearMaterials?.();
+      window.ChemieGameBridge.clearOnlinePuzzleProgress?.();
     }
   }
   async function handleClick(e) {
@@ -401,6 +417,12 @@ Optie D"></textarea></label>
     view?.addEventListener('change', e => {
       if (e.target.id === 'teacher-question-level') renderTeacherQuestions(e.target.value).catch(err => { console.error(err); msg(err.message || 'Vragenset laden is mislukt.', 'bad'); });
       if (e.target.id === 'teacher-question-type') toggleQuestionEditorType();
+      if (e.target.matches('[data-puzzle-count]')) action(async () => {
+        const objectId = e.target.dataset.puzzleCount, required = Number(e.target.value);
+        await rpc('teacher_set_puzzle_questions', { p_level_id: teacherQuestionLevel, p_object_id: objectId, p_questions_required: required });
+        msg(`${required} vragen ingesteld voor ${objectId}.`, 'good');
+        await renderTeacherQuestions(teacherQuestionLevel);
+      });
     });
     document.getElementById('online-logout')?.addEventListener('click', () => action(signOut));
     view?.addEventListener('submit', e => {
@@ -413,7 +435,14 @@ Optie D"></textarea></label>
   // Compatibility API used by the existing escape-room game.
   window.ChemieOnline = {
     isAuthenticated: () => Boolean(currentUser),
-    async recordQuizAnswer(questionId, answer) { requireLogin(); return rpc('record_quiz_answer', { p_question_id: questionId, p_answer: answer }); },
+    async startPuzzleAttempt(levelId, objectId, difficulty) { requireLogin(); return rpc('start_puzzle_attempt', { p_level_id: levelId, p_object_id: objectId, p_difficulty: difficulty }); },
+    async unlockLevel(levelId, code) { requireLogin(); return rpc('unlock_level_with_code', { p_target_level: levelId, p_code: code }); },
+    async submitPuzzleAnswer(attemptId, questionId, answer) {
+      requireLogin();
+      const result = await rpc('submit_puzzle_attempt_answer', { p_attempt_id: attemptId, p_question_id: questionId, p_answer: answer });
+      if (result?.completed && result?.coins_awarded) result.economy = await getEconomy();
+      return result;
+    },
     async getMaterials() { requireLogin(); return rpc('get_my_materials'); },
     async startShadowEncounter(levelId) { requireLogin(); return rpc('start_shadow_encounter', { p_level_id: levelId }); },
     async collectShadowDrop(encounterId) { requireLogin(); return rpc('collect_shadow_drop', { p_encounter_id: encounterId }); },
