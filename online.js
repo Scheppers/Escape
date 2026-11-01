@@ -13,6 +13,7 @@
   const AUTH_DOMAIN = 'accounts.chemieescape.invalid';
   const authEmail = (username) => `${String(username || '').trim().toLowerCase()}@${AUTH_DOMAIN}`;
   let refreshTimer = null, lastBattleIds = '';
+  let teacherQuestionCache = [], teacherQuestionLevel = 'medieval';
   const esc = (s) => String(s ?? '').replace(/[&<>"']/g, ch => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[ch]));
   const msg = (text, kind = '') => { if (authStatus) { authStatus.textContent = text; authStatus.className = `online-status ${kind}`; } };
   const configured = Boolean(config.url && config.anonKey && !/VUL|YOUR_|PASTE/i.test(config.url + config.anonKey));
@@ -30,14 +31,27 @@
     if (!session?.access_token) throw new Error('Je sessie is verlopen. Log opnieuw in.');
     const headers = { Authorization: `Bearer ${session.access_token}` };
     const options = { method, headers };
-    if (body !== undefined) {
-      headers['Content-Type'] = 'application/json';
-      options.body = JSON.stringify(body);
-    }
+    if (body !== undefined) { headers['Content-Type'] = 'application/json'; options.body = JSON.stringify(body); }
     const response = await fetch(`/.netlify/functions/${name}`, options);
     const result = await response.json().catch(() => ({}));
     if (!response.ok) throw new Error(result.error || `De bewerking ${name} is mislukt.`);
     return result;
+  }
+  const LEVELS_FOR_QUESTIONS = [
+    { id: 'medieval', name: 'Leerjaar 1 · Middeleeuws labo' },
+    { id: 'lavoisier', name: 'Leerjaar 2 · Lavoisierlabo' },
+    { id: 'modern', name: 'Leerjaar 3 · Modern labo' },
+    { id: 'future', name: 'Leerjaar 4 · Futuristisch labo' }
+  ];
+  async function syncQuestionBank() {
+    requireLogin();
+    const all = [];
+    for (const level of LEVELS_FOR_QUESTIONS) {
+      const rows = await rpc('get_level_questions', { p_level_id: level.id });
+      all.push(...(Array.isArray(rows) ? rows : []));
+    }
+    if (all.length && window.ChemieGameBridge?.setQuestionBank) window.ChemieGameBridge.setQuestionBank(all);
+    return all;
   }
 
   function showAuth() {
@@ -123,16 +137,114 @@
     if (currentProfile?.role !== 'teacher') throw new Error('Alleen de leerkracht heeft toegang tot klasbeheer.');
     const { students = [] } = await teacherFunction('teacher-list-students', { method: 'GET' });
     const studentRows = students.map(student => {
-      const username = esc(student.username);
-      const xp = Number(student.xp || 0);
-      const level = Math.floor(xp / 100) + 1;
+      const username = esc(student.username); const xp = Number(student.xp || 0); const level = Math.floor(xp / 100) + 1;
       return `<tr><td><strong>${username}</strong></td><td>${xp}</td><td>${level}</td><td><button type="button" class="teacher-delete-btn" data-teacher-delete-student="${username}">Verwijderen</button></td></tr>`;
     }).join('');
     view.innerHTML = `<div class="online-view-heading"><div><h3>🏫 Klasbeheer</h3><p>Accounts zijn gekoppeld aan jouw klas. Leerlingen kunnen zelf geen account registreren.</p></div><button class="online-small-btn" data-online-refresh>Vernieuwen</button></div>
       <div class="online-auth-layout"><article class="online-auth-card"><h3>Leerlingaccounts aanmaken</h3><p>Voer één leerling per regel in als <code>gebruikersnaam;wachtwoord</code>. De gebruikersnaam gebruikt 3–20 kleine letters, cijfers, _ of -. Wachtwoorden zijn minstens 8 tekens. Maximaal 30 per keer.</p><form id="teacher-create-accounts-form" class="online-form"><label for="teacher-student-lines">Leerlingen (gebruikersnaam;wachtwoord)</label><textarea id="teacher-student-lines" rows="8" placeholder="chemicus01;TijdelijkWachtwoord1
 chemicus02;TijdelijkWachtwoord2" required></textarea><button type="submit" class="online-primary">Maak leerlingaccounts</button></form><div id="teacher-account-results" class="teacher-results hidden" aria-live="polite"></div></article>
       <article class="online-auth-card"><h3>Leerlingwachtwoord resetten</h3><p>Gebruik dit wanneer een leerling het wachtwoord vergeten is. Het nieuwe wachtwoord wordt onmiddellijk actief.</p><form id="teacher-reset-form" class="online-form"><label for="teacher-reset-username">Gebruikersnaam</label><input id="teacher-reset-username" pattern="[a-zA-Z0-9_-]{3,20}" required><label for="teacher-reset-password">Nieuw wachtwoord (minstens 8 tekens)</label><input id="teacher-reset-password" type="password" minlength="8" autocomplete="new-password" required><button type="submit" class="online-secondary">Reset wachtwoord</button></form><p class="teacher-warn">Deel tijdelijke wachtwoorden alleen rechtstreeks met de leerling. Zet ze niet in een publiek klasdocument.</p></article></div>
-      <section class="teacher-student-list"><div class="online-view-heading"><div><h3>👥 Leerlingen in jouw klas</h3><p>${students.length} leerlingaccount${students.length === 1 ? '' : 's'} gevonden.</p></div></div><div class="online-table-wrap"><table class="online-table"><thead><tr><th>Gebruikersnaam</th><th>XP</th><th>Level</th><th>Accountbeheer</th></tr></thead><tbody>${studentRows || '<tr><td colspan="4">Er zijn nog geen leerlingaccounts in jouw klas.</td></tr>'}</tbody></table></div><p class="teacher-warn">Let op: verwijderen is definitief. Ook XP, LabCoins, kaarten, skins, sprintresultaten en battlegeschiedenis van die leerling worden verwijderd.</p></section>`;
+      <section class="teacher-student-list"><div class="online-view-heading"><div><h3>👥 Leerlingen in jouw klas</h3><p>${students.length} leerlingaccount${students.length === 1 ? '' : 's'} gevonden.</p></div></div><div class="online-table-wrap"><table class="online-table"><thead><tr><th>Gebruikersnaam</th><th>XP</th><th>Level</th><th>Accountbeheer</th></tr></thead><tbody>${studentRows || '<tr><td colspan="4">Er zijn nog geen leerlingaccounts in jouw klas.</td></tr>'}</tbody></table></div><p class="teacher-warn">Let op: verwijderen is definitief. Ook XP, LabCoins, kaarten, skins, sprintresultaten en battlegeschiedenis van die leerling worden verwijderd.</p></section>
+      <section class="teacher-question-manager"><div class="online-view-heading"><div><h3>🧪 Vragenbeheer per leerjaar</h3><p>Elk leerjaar heeft een eigen vragenbank. Wijzigingen gelden voor leerlingen zodra ze de game opnieuw laden.</p></div></div>
+        <div class="teacher-question-toolbar"><label for="teacher-question-level">Vragenset kiezen<select id="teacher-question-level">${LEVELS_FOR_QUESTIONS.map(l=>`<option value="${l.id}">${esc(l.name)}</option>`).join('')}</select></label><div id="teacher-question-counts" class="teacher-question-counts"></div></div>
+        <div id="teacher-question-status" class="teacher-question-status" role="status">Vragen worden geladen…</div><div id="teacher-question-list" class="teacher-question-grid"></div>
+        <form id="teacher-question-form" class="teacher-question-form"><input id="teacher-question-id" type="hidden"><label for="teacher-question-object">Puzzelplek<select id="teacher-question-object"><option value="object1">Puzzelplek 1</option><option value="object2">Puzzelplek 2</option><option value="object3">Puzzelplek 3</option><option value="object4">Puzzelplek 4</option></select></label>
+        <label for="teacher-question-type">Vraagtype<select id="teacher-question-type"><option value="multiple_choice">Meerkeuzevraag</option><option value="numeric">Rekenvraag (geheel getal)</option></select></label>
+        <label for="teacher-question-text" class="span-all">Vraag<textarea id="teacher-question-text" rows="3" maxlength="1000" required placeholder="Typ hier de vraag…"></textarea></label>
+        <label for="teacher-question-options" id="teacher-question-options-wrap" class="span-all">Vier antwoordopties (één per regel)<textarea id="teacher-question-options" rows="4" placeholder="Optie A
+Optie B
+Optie C
+Optie D"></textarea></label>
+        <label for="teacher-question-answer" id="teacher-question-answer-label">Correct antwoord<select id="teacher-question-answer"><option value="1">Optie 1</option><option value="2">Optie 2</option><option value="3">Optie 3</option><option value="4">Optie 4</option></select></label>
+        <div class="span-all" style="display:flex;gap:9px;flex-wrap:wrap"><button type="submit" class="online-primary" id="teacher-question-save">Vraag opslaan</button><button type="button" class="online-secondary" id="teacher-question-new">Nieuwe vraag / formulier leegmaken</button></div>
+        <p class="teacher-question-status span-all">Per puzzelplek worden drie vragen gebruikt. Zorg dat elke plek minstens drie actieve vragen heeft. Bij een rekenvraag vul je het gehele getal als antwoord in.</p>
+        </form></section>`;
+    try { await renderTeacherQuestions('medieval'); } catch (questionError) { console.error(questionError); const status=document.getElementById('teacher-question-status'); if(status) status.textContent='Vragenbeheer is nog niet geactiveerd. Voer de SQL-migratie uit die in het updatepakket staat.'; const list=document.getElementById('teacher-question-list'); if(list) list.innerHTML='<p class="online-help">Voer eerst de meegeleverde Supabase-migratie uit om vragensets online te beheren.</p>'; }
+  }
+
+  function resetTeacherQuestionForm() {
+    document.getElementById('teacher-question-form')?.reset();
+    const id = document.getElementById('teacher-question-id'); if (id) id.value = '';
+    const save = document.getElementById('teacher-question-save'); if (save) save.textContent = 'Vraag toevoegen';
+    toggleQuestionEditorType();
+  }
+  function toggleQuestionEditorType() {
+    const type = document.getElementById('teacher-question-type')?.value || 'multiple_choice';
+    const opts = document.getElementById('teacher-question-options-wrap');
+    const answer = document.getElementById('teacher-question-answer-label');
+    if (opts) opts.classList.toggle('hidden', type !== 'multiple_choice');
+    if (type === 'numeric' && answer) answer.innerHTML = '<span>Correct antwoord (geheel getal)</span><input id="teacher-question-answer" type="number" step="1" required placeholder="bv. 42">';
+    if (type === 'multiple_choice' && answer) answer.innerHTML = '<span>Correct antwoord</span><select id="teacher-question-answer"><option value="1">Optie 1</option><option value="2">Optie 2</option><option value="3">Optie 3</option><option value="4">Optie 4</option></select>';
+  }
+  async function renderTeacherQuestions(level) {
+    teacherQuestionLevel = level;
+    const select = document.getElementById('teacher-question-level'); if (select) select.value = level;
+    const status = document.getElementById('teacher-question-status');
+    const list = document.getElementById('teacher-question-list');
+    const counts = document.getElementById('teacher-question-counts');
+    if (status) status.textContent = 'Vragen worden opgehaald…';
+    const rows = await rpc('get_level_questions', { p_level_id: level });
+    teacherQuestionCache = Array.isArray(rows) ? rows : [];
+    const labels = { object1: 'Puzzelplek 1', object2: 'Puzzelplek 2', object3: 'Puzzelplek 3', object4: 'Puzzelplek 4' };
+    const tally = Object.fromEntries(Object.keys(labels).map(k=>[k,teacherQuestionCache.filter(q=>q.object_id===k).length]));
+    if (counts) counts.innerHTML = Object.entries(tally).map(([k,v])=>`<span>${labels[k]}: ${v}/3 minimum</span>`).join('');
+    if (status) status.textContent = `Deze vragenbank bevat ${teacherQuestionCache.length} actieve vragen. De game gebruikt maximaal drie willekeurige vragen per puzzelplek.`;
+    if (list) list.innerHTML = teacherQuestionCache.map(q => {
+      const answer = q.question_type === 'numeric' ? String(q.correct_answer) : (q.options?.[Number(q.correct_answer)] ?? '—');
+      return `<article class="teacher-question-item"><small>${esc(labels[q.object_id] || q.object_id)} · ${q.question_type === 'numeric' ? 'Rekenvraag' : 'Meerkeuze'}</small><p>${esc(q.question_text)}</p><small>Correct antwoord: <strong>${esc(answer)}</strong></small><div class="teacher-question-actions"><button type="button" data-q-edit="${esc(q.question_id)}">Bewerken</button><button type="button" class="danger" data-q-delete="${esc(q.question_id)}">Archiveren</button></div></article>`;
+    }).join('') || '<p class="online-help">Nog geen vragen voor dit leerjaar.</p>';
+    resetTeacherQuestionForm();
+    return teacherQuestionCache;
+  }
+  function editTeacherQuestion(id) {
+    const q = teacherQuestionCache.find(x=>x.question_id===id); if (!q) return;
+    document.getElementById('teacher-question-id').value = q.question_id;
+    document.getElementById('teacher-question-object').value = q.object_id;
+    document.getElementById('teacher-question-type').value = q.question_type;
+    document.getElementById('teacher-question-text').value = q.question_text;
+    document.getElementById('teacher-question-options').value = (q.options || []).join('\n');
+    toggleQuestionEditorType();
+    const answer = document.getElementById('teacher-question-answer');
+    if (answer) answer.value = q.question_type === 'numeric' ? q.correct_answer : Number(q.correct_answer)+1;
+    const save = document.getElementById('teacher-question-save'); if (save) save.textContent = 'Wijzigingen opslaan';
+    document.getElementById('teacher-question-form')?.scrollIntoView({behavior:'smooth',block:'center'});
+  }
+  async function handleTeacherQuestionSave(e) {
+    e.preventDefault(); requireLogin();
+    if (currentProfile?.role !== 'teacher') throw new Error('Alleen de leerkracht kan vragen aanpassen.');
+    const level = document.getElementById('teacher-question-level').value;
+    const object = document.getElementById('teacher-question-object').value;
+    const type = document.getElementById('teacher-question-type').value;
+    const question = document.getElementById('teacher-question-text').value.trim();
+    let options = [], answer;
+    if (!question) throw new Error('Vul de vraagtekst in.');
+    if (type === 'multiple_choice') {
+      options = document.getElementById('teacher-question-options').value.split(/\r?\n/).map(x=>x.trim()).filter(Boolean);
+      if (options.length !== 4) throw new Error('Een meerkeuzevraag moet precies vier niet-lege antwoordopties hebben.');
+      const index = Number(document.getElementById('teacher-question-answer').value);
+      if (!Number.isInteger(index) || index < 1 || index > 4) throw new Error('Kies het juiste antwoord uit optie 1 tot en met 4.');
+      answer = index - 1;
+    } else {
+      answer = Number(document.getElementById('teacher-question-answer').value);
+      if (!Number.isSafeInteger(answer)) throw new Error('Vul bij een rekenvraag een geheel getal in.');
+    }
+    let id = document.getElementById('teacher-question-id').value.trim();
+    if (!id) id = `t_${level}_${(window.crypto?.randomUUID?.() || `${Date.now()}_${Math.random().toString(36).slice(2,9)}`).replace(/-/g,'').slice(0,30)}`;
+    await rpc('teacher_save_quiz_question', { p_question_id:id, p_level_id:level, p_object_id:object, p_question_text:question, p_options:options, p_correct_answer:answer, p_question_type:type });
+    await renderTeacherQuestions(level);
+    await syncQuestionBank();
+    msg('De vraag is opgeslagen. Leerlingen zien de wijziging bij hun volgende herlaadbeurt.', 'good');
+  }
+  async function handleTeacherQuestionArchive(id) {
+    requireLogin();
+    if (currentProfile?.role !== 'teacher') throw new Error('Alleen de leerkracht kan vragen archiveren.');
+    const q = teacherQuestionCache.find(x=>x.question_id===id);
+    if (!q) return;
+    if (!window.confirm('Deze vraag archiveren? Ze verdwijnt uit de actieve vragenset, maar de historische XP-registratie blijft bewaard.')) return;
+    await rpc('teacher_archive_quiz_question', { p_question_id:id });
+    await renderTeacherQuestions(teacherQuestionLevel);
+    await syncQuestionBank();
+    msg('Vraag gearchiveerd.', 'good');
   }
 
 
@@ -237,7 +349,9 @@ chemicus02;TijdelijkWachtwoord2" required></textarea><button type="submit" class
     currentUser = data.user; await afterAuth(); msg('Je bent aangemeld.', 'good');
   }
   async function afterAuth() {
-    showDashboard(); await loadProfile(); setView('home');
+    showDashboard(); await loadProfile();
+    try { await syncQuestionBank(); } catch (questionError) { console.warn('Online vragenbank kon niet worden geladen; lokale vragen blijven actief.', questionError); }
+    setView('home');
     if (refreshTimer) clearInterval(refreshTimer);
     refreshTimer = setInterval(async () => { if (currentUser && currentView === 'battles' && !view?.querySelector(':focus')) { try { await renderBattles(); } catch(e) { console.warn(e); } } }, 8000);
   }
@@ -249,19 +363,19 @@ chemicus02;TijdelijkWachtwoord2" required></textarea><button type="submit" class
   }
   async function handleClick(e) {
     const viewButton = e.target.closest('[data-online-view]'); if (viewButton) { setView(viewButton.dataset.onlineView); return; }
-    if (e.target.closest('[data-online-refresh]')) { await action(async () => { await refreshDashboard(); }); return; }
-    if (e.target.closest('[data-online-logout]')) { await action(signOut); return; }
+    const qEdit = e.target.closest('[data-q-edit]'); if (qEdit) { editTeacherQuestion(qEdit.dataset.qEdit); return; }
     const deleteStudent = e.target.closest('[data-teacher-delete-student]');
     if (deleteStudent) {
       const username = deleteStudent.dataset.teacherDeleteStudent;
-      const confirmed = window.confirm(`Leerlingaccount '${username}' definitief verwijderen? Alle XP, LabCoins, kaarten, skins en spelgeschiedenis van deze leerling verdwijnen ook. Dit kan niet ongedaan worden gemaakt.`);
+      const confirmed = window.confirm(`Leerlingaccount '${username}' definitief verwijderen? Alle XP, LabCoins, kaarten, skins en spelgeschiedenis verdwijnen ook. Dit kan niet ongedaan worden gemaakt.`);
       if (!confirmed) return;
-      await action(async () => {
-        await teacherFunction('teacher-delete-student', { body: { username } });
-        msg(`Leerlingaccount '${username}' is verwijderd.`, 'good');
-      });
+      await action(async () => { await teacherFunction('teacher-delete-student', { body: { username } }); msg(`Leerlingaccount '${username}' is verwijderd.`, 'good'); });
       return;
     }
+    const qDelete = e.target.closest('[data-q-delete]'); if (qDelete) { try { await handleTeacherQuestionArchive(qDelete.dataset.qDelete); } catch(err) { console.error(err); msg(err.message || 'Vraag archiveren is mislukt.', 'bad'); } return; }
+    if (e.target.closest('#teacher-question-new')) { resetTeacherQuestionForm(); return; }
+    if (e.target.closest('[data-online-refresh]')) { await action(async () => { await refreshDashboard(); }); return; }
+    if (e.target.closest('[data-online-logout]')) { await action(signOut); return; }
     const skin = e.target.closest('[data-skin-action]'); if (skin) { await action(async () => { if (skin.dataset.skinAction === 'buy') await rpc('buy_skin', { p_skin_id: skin.dataset.id }); else await rpc('equip_skin', { p_skin_id: skin.dataset.id }); }); return; }
     const card = e.target.closest('[data-card-buy]'); if (card) { await action(async () => { await rpc('buy_card', { p_card_id: card.dataset.cardBuy }); }); return; }
     const response = e.target.closest('[data-battle-response]'); if (response) { await action(async () => { await rpc('respond_to_battle', { p_battle_id: response.dataset.id, p_accept: response.dataset.battleResponse === 'accept' }); }); return; }
@@ -275,6 +389,11 @@ chemicus02;TijdelijkWachtwoord2" required></textarea><button type="submit" class
     view?.addEventListener('submit', e => {
       if (e.target.id === 'teacher-create-accounts-form') { action(() => handleCreateStudentAccounts(e)); return; }
       if (e.target.id === 'teacher-reset-form') { action(() => handleTeacherPasswordReset(e)); return; }
+      if (e.target.id === 'teacher-question-form') { e.preventDefault(); handleTeacherQuestionSave(e).catch(err => { console.error(err); msg(err.message || 'Vraag opslaan is mislukt.', 'bad'); }); return; }
+    });
+    view?.addEventListener('change', e => {
+      if (e.target.id === 'teacher-question-level') renderTeacherQuestions(e.target.value).catch(err => { console.error(err); msg(err.message || 'Vragenset laden is mislukt.', 'bad'); });
+      if (e.target.id === 'teacher-question-type') toggleQuestionEditorType();
     });
     document.getElementById('online-logout')?.addEventListener('click', () => action(signOut));
     view?.addEventListener('submit', e => {

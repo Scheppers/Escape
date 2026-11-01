@@ -1,0 +1,91 @@
+CHEMIE ESCAPE ROOM — UPDATE 4 LEERJAREN EN VRAGENBEHEER
+========================================================
+
+WAT IS NIEUW?
+-------------
+- Vier leerjaren/levels: Middeleeuws alchemistenlabo, Lavoisierlabo,
+  modern chemielabo en futuristisch chemielabo.
+- Het futuristische labo komt na het moderne labo en heeft een eigen
+  illustratieve SVG-achtergrond en vier hotspot-puzzelplekken.
+- Elk level heeft een eigen vragenbank met twaalf startvragen (3 per
+  puzzelplek). De eerste drie vragensets blijven behouden.
+- Het leerkrachtgedeelte bevat nu Vragenbeheer per leerjaar: vragen
+  bewerken, toevoegen en archiveren. Archiveren bewaart de oude
+  XP-geschiedenis. Er blijven minstens drie actieve vragen per puzzelplek.
+- Leerlingen laden de actuele vragen uit Supabase wanneer ze aanmelden.
+  Leerlingen die al bezig zijn, behouden de vragen van het lopende level;
+  nieuwe vragensets gelden meteen voor levels die ze nog niet gestart zijn.
+- Accountlijst en accountverwijdering voor leerkrachten blijven aanwezig.
+
+INSTALLATIE IN JE BESTAANDE GITHUB-PROJECT
+-----------------------------------------
+1. Maak voor de zekerheid eerst een commit of kopie van je huidige project.
+2. Pak deze update uit.
+3. Kopieer naar de overeenkomstige locaties in je bestaande GitHub-project:
+   - index.html
+   - game.js
+   - online.js
+   - style.css
+   - vragen.json
+   - assets/futuristic_lab.svg (nieuw bestand)
+   - de mapinhoud van netlify/functions/ (inclusief de nieuwe
+     teacher-list-students.mjs en teacher-delete-student.mjs)
+   - supabase/migrations/2026_11_add_fourth_level_and_teacher_question_editor.sql
+4. BEHOUD je eigen config.js met je Supabase Project URL en publieke key.
+   Overschrijf config.js niet met een voorbeeldbestand.
+5. Behoud netlify.toml en je bestaande Netlify-omgevingsvariabelen.
+6. Commit de bestanden naar GitHub. Netlify start daarna een nieuwe deploy.
+
+SUPABASE-MIGRATIE (VERPLICHT VOOR ONLINE VRAGENBEHEER)
+------------------------------------------------------
+1. Open Supabase > SQL Editor.
+2. Open het bestand:
+   supabase/migrations/2026_11_add_fourth_level_and_teacher_question_editor.sql
+3. Kopieer de volledige inhoud en voer die EENMALIG uit.
+4. Controleer onder Table Editor > quiz_questions of rijen met level_id
+   'future' aanwezig zijn.
+
+Gebruik deze migratie voor de bestaande database. Voer niet opnieuw het
+volledige schema.sql uit op een database met leerlingaccounts en voortgang.
+Bij een volledig nieuwe installatie voer je eerst schema.sql uit en daarna
+ook deze migratie.
+
+VRAGEN AANPASSEN
+----------------
+1. Meld je aan als leerkracht.
+2. Open Klasbeheer.
+3. Scrol naar 'Vragenbeheer per leerjaar'.
+4. Kies Leerjaar 1, 2, 3 of 4.
+5. Bewerk een bestaande vraag of maak een nieuwe vraag.
+   - Meerkeuze: precies vier antwoordopties, één per regel; kies het
+     correcte antwoord via Optie 1 t.e.m. 4.
+   - Reken-vraag: vul het correcte gehele getal in.
+6. Om een vraag uit de actieve set te halen, archiveer je die. Een puzzelplek
+   moet minstens drie actieve vragen behouden.
+
+INHOUDELIJKE OPMERKING
+---------------------
+De twaalf vragen voor leerjaar 4 zijn een startset met bindingen,
+reactiesnelheid/energie, reactievergelijkingen, molrekenen en zuren/basen.
+Stem de onderwerpen en moeilijkheid nog af op de leerplandoelen van het
+vierde leerjaar. Alle vragen per leerjaar kunnen afzonderlijk aangepast worden.
+
+VRAGENSOORTEN
+-------------
+De editor ondersteunt momenteel meerkeuzevragen met vier opties en
+rekenvragen met een geheel getal als antwoord. Decimale antwoorden,
+meerdere juiste antwoorden, afbeeldingen bij vragen en punten per vraag
+worden nog niet ondersteund.
+
+TEST NA DEPLOY
+--------------
+- Open de website en meld je aan als leerkracht.
+- Open Klasbeheer: de leerlingenlijst en de vrageneditor moeten verschijnen.
+- Kies elk leerjaar; controleer de vragenaantallen (minstens 3 per plek).
+- Wijzig een testvraag in een leerjaar en sla op.
+- Meld aan met een testleerling en herlaad de website om de aangepaste
+  vragenset te laden.
+
+De JavaScript-syntaxis is gecontroleerd en de statische Netlify-build is
+lokaal uitgevoerd. De SQL-migratie en online accountflows moeten nog in
+jouw eigen Supabase/Netlify-project getest worden.

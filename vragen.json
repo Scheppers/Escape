@@ -544,5 +544,173 @@
     "answer": 6,
     "hint": "Massagetal min atoomnummer: 12 − 6.",
     "reward": 1
+  },
+  {
+    "id": "f1",
+    "level": "future",
+    "object": "object1",
+    "type": "multiple_choice",
+    "topic": "bindingen",
+    "question": "Welke binding ontstaat wanneer twee niet-metaalatomen elektronenparen delen?",
+    "options": [
+      "Ionbinding",
+      "Atoombinding",
+      "Metaalbinding",
+      "Waterstofbrug"
+    ],
+    "answer": 1,
+    "reward": 10
+  },
+  {
+    "id": "f2",
+    "level": "future",
+    "object": "object1",
+    "type": "multiple_choice",
+    "topic": "bindingen",
+    "question": "Welke deeltjes ontstaan wanneer een natriumatoom één elektron afstaat?",
+    "options": [
+      "Een natriumion met lading +1",
+      "Een natriumion met lading −1",
+      "Een neutraal natriumatoom",
+      "Een natriummolecuul"
+    ],
+    "answer": 0,
+    "reward": 10
+  },
+  {
+    "id": "f3",
+    "level": "future",
+    "object": "object1",
+    "type": "multiple_choice",
+    "topic": "bindingen",
+    "question": "Welke formule hoort bij de ionverbinding tussen Mg²⁺ en Cl⁻?",
+    "options": [
+      "MgCl",
+      "MgCl₂",
+      "Mg₂Cl",
+      "Mg₂Cl₂"
+    ],
+    "answer": 1,
+    "reward": 10
+  },
+  {
+    "id": "f4",
+    "level": "future",
+    "object": "object2",
+    "type": "multiple_choice",
+    "topic": "reactiesnelheid",
+    "question": "Wat doet een katalysator met een chemische reactie?",
+    "options": [
+      "Hij verhoogt de activeringsenergie",
+      "Hij wordt volledig opgebruikt",
+      "Hij verlaagt de activeringsenergie",
+      "Hij verandert de reactieproducten"
+    ],
+    "answer": 2,
+    "reward": 10
+  },
+  {
+    "id": "f5",
+    "level": "future",
+    "object": "object2",
+    "type": "multiple_choice",
+    "topic": "energie",
+    "question": "Hoe noem je een reactie waarbij energie aan de omgeving wordt afgegeven?",
+    "options": [
+      "Endotherm",
+      "Exotherm",
+      "Neutraal",
+      "Fotolytisch"
+    ],
+    "answer": 1,
+    "reward": 10
+  },
+  {
+    "id": "f6",
+    "level": "future",
+    "object": "object2",
+    "type": "numeric",
+    "topic": "reactiesnelheid",
+    "question": "Een reactie duurt bij 20 °C 40 seconden. Bij hogere temperatuur duurt ze 20 seconden. Hoeveel keer sneller verloopt ze?",
+    "answer": 2,
+    "reward": 10
+  },
+  {
+    "id": "f7",
+    "level": "future",
+    "object": "object3",
+    "type": "multiple_choice",
+    "topic": "reactievergelijkingen",
+    "question": "Welke vergelijking is correct kloppend gemaakt voor de vorming van water?",
+    "options": [
+      "H₂ + O₂ → H₂O",
+      "2 H₂ + O₂ → 2 H₂O",
+      "H₂ + 2 O₂ → H₂O",
+      "2 H₂ + 2 O₂ → H₂O"
+    ],
+    "answer": 1,
+    "reward": 10
+  },
+  {
+    "id": "f8",
+    "level": "future",
+    "object": "object3",
+    "type": "numeric",
+    "topic": "molrekenen",
+    "question": "Hoeveel mol is 44 g koolstofdioxide? Gebruik M(CO₂) = 44 g/mol.",
+    "answer": 1,
+    "reward": 10
+  },
+  {
+    "id": "f9",
+    "level": "future",
+    "object": "object3",
+    "type": "numeric",
+    "topic": "molrekenen",
+    "question": "Hoeveel gram water is 2 mol water? Gebruik M(H₂O) = 18 g/mol.",
+    "answer": 36,
+    "reward": 10
+  },
+  {
+    "id": "f10",
+    "level": "future",
+    "object": "object4",
+    "type": "multiple_choice",
+    "topic": "zuren en basen",
+    "question": "Welke pH-waarde past bij een zure oplossing bij kamertemperatuur?",
+    "options": [
+      "pH 2",
+      "pH 7",
+      "pH 9",
+      "pH 14"
+    ],
+    "answer": 0,
+    "reward": 10
+  },
+  {
+    "id": "f11",
+    "level": "future",
+    "object": "object4",
+    "type": "multiple_choice",
+    "topic": "zuren en basen",
+    "question": "Wat ontstaat er bij de reactie tussen een zuur en een hydroxidebase?",
+    "options": [
+      "Alleen zuurstof",
+      "Een zout en water",
+      "Een metaal en waterstof",
+      "Altijd koolstofdioxide"
+    ],
+    "answer": 1,
+    "reward": 10
+  },
+  {
+    "id": "f12",
+    "level": "future",
+    "object": "object4",
+    "type": "numeric",
+    "topic": "zuren en basen",
+    "question": "Een neutrale oplossing heeft bij 25 °C een pH van hoeveel?",
+    "answer": 7,
+    "reward": 10
   }
 ]
