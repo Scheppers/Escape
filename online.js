@@ -23,6 +23,23 @@
   };
   const requireLogin = () => { if (!currentUser) throw new Error('Meld je eerst aan om deze functie te gebruiken.'); };
 
+  async function teacherFunction(name, { method = 'POST', body } = {}) {
+    requireLogin();
+    if (currentProfile?.role !== 'teacher') throw new Error('Alleen de leerkracht kan dit doen.');
+    const { data: { session } } = await supabase.auth.getSession();
+    if (!session?.access_token) throw new Error('Je sessie is verlopen. Log opnieuw in.');
+    const headers = { Authorization: `Bearer ${session.access_token}` };
+    const options = { method, headers };
+    if (body !== undefined) {
+      headers['Content-Type'] = 'application/json';
+      options.body = JSON.stringify(body);
+    }
+    const response = await fetch(`/.netlify/functions/${name}`, options);
+    const result = await response.json().catch(() => ({}));
+    if (!response.ok) throw new Error(result.error || `De bewerking ${name} is mislukt.`);
+    return result;
+  }
+
   function showAuth() {
     authBox?.classList.remove('hidden'); dashboard?.classList.add('hidden');
     summary && (summary.innerHTML = '<span class="online-muted">Log in met je door de leerkracht uitgedeelde gebruikersnaam en wachtwoord.</span>');
@@ -104,11 +121,20 @@
   }
   async function renderTeacher() {
     if (currentProfile?.role !== 'teacher') throw new Error('Alleen de leerkracht heeft toegang tot klasbeheer.');
+    const { students = [] } = await teacherFunction('teacher-list-students', { method: 'GET' });
+    const studentRows = students.map(student => {
+      const username = esc(student.username);
+      const xp = Number(student.xp || 0);
+      const level = Math.floor(xp / 100) + 1;
+      return `<tr><td><strong>${username}</strong></td><td>${xp}</td><td>${level}</td><td><button type="button" class="teacher-delete-btn" data-teacher-delete-student="${username}">Verwijderen</button></td></tr>`;
+    }).join('');
     view.innerHTML = `<div class="online-view-heading"><div><h3>🏫 Klasbeheer</h3><p>Accounts zijn gekoppeld aan jouw klas. Leerlingen kunnen zelf geen account registreren.</p></div><button class="online-small-btn" data-online-refresh>Vernieuwen</button></div>
       <div class="online-auth-layout"><article class="online-auth-card"><h3>Leerlingaccounts aanmaken</h3><p>Voer één leerling per regel in als <code>gebruikersnaam;wachtwoord</code>. De gebruikersnaam gebruikt 3–20 kleine letters, cijfers, _ of -. Wachtwoorden zijn minstens 8 tekens. Maximaal 30 per keer.</p><form id="teacher-create-accounts-form" class="online-form"><label for="teacher-student-lines">Leerlingen (gebruikersnaam;wachtwoord)</label><textarea id="teacher-student-lines" rows="8" placeholder="chemicus01;TijdelijkWachtwoord1
 chemicus02;TijdelijkWachtwoord2" required></textarea><button type="submit" class="online-primary">Maak leerlingaccounts</button></form><div id="teacher-account-results" class="teacher-results hidden" aria-live="polite"></div></article>
-      <article class="online-auth-card"><h3>Leerlingwachtwoord resetten</h3><p>Gebruik dit wanneer een leerling het wachtwoord vergeten is. Het nieuwe wachtwoord wordt onmiddellijk actief.</p><form id="teacher-reset-form" class="online-form"><label for="teacher-reset-username">Gebruikersnaam</label><input id="teacher-reset-username" pattern="[a-zA-Z0-9_-]{3,20}" required><label for="teacher-reset-password">Nieuw wachtwoord (minstens 8 tekens)</label><input id="teacher-reset-password" type="password" minlength="8" autocomplete="new-password" required><button type="submit" class="online-secondary">Reset wachtwoord</button></form><p class="teacher-warn">Deel tijdelijke wachtwoorden alleen rechtstreeks met de leerling. Zet ze niet in een publiek klasdocument.</p></article></div>`;
+      <article class="online-auth-card"><h3>Leerlingwachtwoord resetten</h3><p>Gebruik dit wanneer een leerling het wachtwoord vergeten is. Het nieuwe wachtwoord wordt onmiddellijk actief.</p><form id="teacher-reset-form" class="online-form"><label for="teacher-reset-username">Gebruikersnaam</label><input id="teacher-reset-username" pattern="[a-zA-Z0-9_-]{3,20}" required><label for="teacher-reset-password">Nieuw wachtwoord (minstens 8 tekens)</label><input id="teacher-reset-password" type="password" minlength="8" autocomplete="new-password" required><button type="submit" class="online-secondary">Reset wachtwoord</button></form><p class="teacher-warn">Deel tijdelijke wachtwoorden alleen rechtstreeks met de leerling. Zet ze niet in een publiek klasdocument.</p></article></div>
+      <section class="teacher-student-list"><div class="online-view-heading"><div><h3>👥 Leerlingen in jouw klas</h3><p>${students.length} leerlingaccount${students.length === 1 ? '' : 's'} gevonden.</p></div></div><div class="online-table-wrap"><table class="online-table"><thead><tr><th>Gebruikersnaam</th><th>XP</th><th>Level</th><th>Accountbeheer</th></tr></thead><tbody>${studentRows || '<tr><td colspan="4">Er zijn nog geen leerlingaccounts in jouw klas.</td></tr>'}</tbody></table></div><p class="teacher-warn">Let op: verwijderen is definitief. Ook XP, LabCoins, kaarten, skins, sprintresultaten en battlegeschiedenis van die leerling worden verwijderd.</p></section>`;
   }
+
 
   async function getMyBattles() { const data = await rpc('get_my_battles'); return Array.isArray(data) ? data : []; }
   async function renderBattles() {
@@ -225,6 +251,17 @@ chemicus02;TijdelijkWachtwoord2" required></textarea><button type="submit" class
     const viewButton = e.target.closest('[data-online-view]'); if (viewButton) { setView(viewButton.dataset.onlineView); return; }
     if (e.target.closest('[data-online-refresh]')) { await action(async () => { await refreshDashboard(); }); return; }
     if (e.target.closest('[data-online-logout]')) { await action(signOut); return; }
+    const deleteStudent = e.target.closest('[data-teacher-delete-student]');
+    if (deleteStudent) {
+      const username = deleteStudent.dataset.teacherDeleteStudent;
+      const confirmed = window.confirm(`Leerlingaccount '${username}' definitief verwijderen? Alle XP, LabCoins, kaarten, skins en spelgeschiedenis van deze leerling verdwijnen ook. Dit kan niet ongedaan worden gemaakt.`);
+      if (!confirmed) return;
+      await action(async () => {
+        await teacherFunction('teacher-delete-student', { body: { username } });
+        msg(`Leerlingaccount '${username}' is verwijderd.`, 'good');
+      });
+      return;
+    }
     const skin = e.target.closest('[data-skin-action]'); if (skin) { await action(async () => { if (skin.dataset.skinAction === 'buy') await rpc('buy_skin', { p_skin_id: skin.dataset.id }); else await rpc('equip_skin', { p_skin_id: skin.dataset.id }); }); return; }
     const card = e.target.closest('[data-card-buy]'); if (card) { await action(async () => { await rpc('buy_card', { p_card_id: card.dataset.cardBuy }); }); return; }
     const response = e.target.closest('[data-battle-response]'); if (response) { await action(async () => { await rpc('respond_to_battle', { p_battle_id: response.dataset.id, p_accept: response.dataset.battleResponse === 'accept' }); }); return; }
