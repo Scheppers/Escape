@@ -1,7 +1,7 @@
 <!doctype html>
-<html lang="nl"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>Chemie Escape Room · 4 leerjaren</title><link rel="stylesheet" href="style.css"></head>
+<html lang="nl"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>Een chemische tijdreis</title><link rel="stylesheet" href="style.css"></head>
 <body>
-<header class="topbar"><div><p class="eyebrow">EEN CHEMISCHE TIJDREIS</p><h1>De Geheimen van het Alchemistenlabo</h1></div><div class="progress-wrap"><span id="progress-text">Level 1 van 4</span><div class="progress"><div id="progress-fill"></div></div></div></header>
+<header class="topbar"><div><h1>Een chemische tijdreis</h1></div><div class="progress-wrap"><span id="progress-text">Level 1 van 4</span><div class="progress"><div id="progress-fill"></div></div></div></header>
 <main>
 <section class="story"><div class="story-mark">✦</div><div><h2>De Schaduw van de Tijd</h2><p>Een mysterieuze Schaduw doorkruist de laboratoria. Los de vragen op, verzamel de vier codes en probeer de Schaduw te vangen wanneer hij verschijnt. Verzamel grondstoffen om de kluis te openen!</p></div></section>
 <nav class="level-tabs" aria-label="Kies leerjaar/level">
@@ -28,10 +28,10 @@
 <div class="status-box"><span class="status-dot"></span><p id="status-text">Klik op een voorwerp om te beginnen.</p></div>
 <div class="inventory materials-inventory"><h3>🧺 Grondstoffeninventaris</h3><div class="inventory-items" id="inventory-items"><div class="material-item empty"><span class="material-icon">🧂</span><strong>Kaliumnitraat</strong><b>0 mol</b><small>KNO3</small></div><div class="material-item empty"><span class="material-icon">⚫</span><strong>Koolstof</strong><b>0 mol</b><small>C</small></div><div class="material-item empty"><span class="material-icon">🟡</span><strong>Zwavel</strong><b>0 mol</b><small>S</small></div></div><p class="muted" id="inventory-note">Elke keer dat je de Schaduw op tijd aantikt, laat hij 1 mol van één grondstof vallen.</p></div>
 <div class="safe-box"><h3>🔐 De kluis</h3><p>Heb je voldoende grondstoffen verzameld? Voer de virtuele spelreactie uit en verdien 30 LabCoins.</p><button id="blow-safe-button" class="primary full">Blaas de kluis op</button><div id="safe-feedback" class="safe-feedback hidden" role="status" aria-live="polite"></div></div>
-<div class="antagonist-box"><h3>👤 De Schaduw</h3><p id="antagonist-status">Nog niet gezien… Hij verschijnt onverwacht. Klik snel op hem om 1 mol grondstof te verzamelen.</p><div class="shadow-meter"><div id="shadow-meter-fill"></div></div></div>
+
 <button id="reset-button" class="secondary full">Spel opnieuw starten</button>
 </aside></section>
-<section class="bottom-grid"><article class="info-card"><h3>Hoe speel je?</h3><ol><li>Los per leerjaar vier puzzels op. De leerkracht stelt per puzzel 3, 5 of 10 vragen in. Jij kiest Basis, Gemiddeld of Moeilijk. Elke puzzel levert één cijfer op bij de eerste voltooiing.</li><li>Voer de viercijferige code zelf in bij de volgende tijdpoort. Je kunt een opgeloste puzzel blijven herhalen; na elke volledige herhaling verdien je 10 LabCoins.</li><li>De Schaduw verschijnt willekeurig in elk labo. Klik op hem voordat hij verdwijnt om 1 mol kaliumnitraat, koolstof of zwavel te verzamelen.</li><li>Verzamel 2 mol KNO3, 3 mol C en 1 mol S. Klik op <b>Blaas de kluis op</b> om de virtuele reactie uit te voeren en 30 LabCoins te verdienen.</li></ol></article><article class="info-card"><h3>Tijdreislogboek</h3><div id="logbook" class="logbook">Je avontuur begint in het middeleeuwse alchemistenlabo.</div></article></section>
+<div id="logbook" hidden aria-hidden="true"></div>
 <footer>Educatief spel · De kluisreactie is uitsluitend een virtuele spelhandeling. Verzamel of meng deze stoffen nooit in het echt.</footer>
 </main>
 
@@ -96,7 +96,7 @@
 
 <div class="modal-backdrop hidden" id="modal-backdrop" role="dialog" aria-modal="true" aria-labelledby="modal-title"><section class="question-modal"><button class="close-button" id="close-modal" aria-label="Sluiten">×</button><p class="eyebrow" id="modal-category">CHEMIEPUZZEL</p><h2 id="modal-title">Vraag</h2><p id="question-text" class="question-text"></p><form id="answer-form"><div id="answer-area"></div><div class="modal-actions"><button type="button" class="secondary hidden" id="hint-button" tabindex="-1" aria-hidden="true">Hint</button><button type="submit" class="primary" id="check-button">Controleer antwoord</button></div></form><div class="feedback hidden" id="feedback" role="status"></div></section></div>
 <div class="win-screen hidden" id="win-screen"><div class="win-card"><div class="win-icon">⌛</div><p class="eyebrow">TIJDSLOT GEOPEND</p><h2>De tijdlijn is hersteld!</h2><p>Je hebt de vier laboratoria onderzocht, de codes verzameld en de kluis geopend.</p><button class="primary" id="play-again">Speel opnieuw</button></div></div>
-<script src="game.js?v=20261101-renderinventory-nextquestion-fix1"></script>
+<script src="game.js?v=20261101-clean-ui-1"></script>
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 <script src="config.js"></script>
 <script src="online.js?v=20261101-renderinventory-nextquestion-fix1"></script></body></html>

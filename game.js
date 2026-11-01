@@ -520,7 +520,11 @@ function initEconomyUI(){
   <button type="button" class="primary full economy-action" id="acid-sprint-open">🧪 Zurenkennis · 60 sec</button>
   <button type="button" class="secondary full economy-action" id="skin-shop-open">🛍️ Open de skinwinkel</button>`;
  const inventory=side.querySelector(".inventory");
- if(inventory)inventory.insertAdjacentElement("afterend",panel);else side.append(panel);
+ const safeBox=side.querySelector(".safe-box");
+ // Houd de kluis boven het Bonusspel; alleen de visuele volgorde verandert.
+ if(safeBox)safeBox.insertAdjacentElement("afterend",panel);
+ else if(inventory)inventory.insertAdjacentElement("afterend",panel);
+ else side.append(panel);
  const overlay=document.createElement("div");
  overlay.id="economy-overlay";overlay.className="economy-overlay hidden";overlay.setAttribute("role","dialog");overlay.setAttribute("aria-modal","true");overlay.setAttribute("aria-labelledby","economy-title");
  overlay.innerHTML=`<section class="economy-dialog"><button type="button" class="close-button" id="economy-close" aria-label="Sluiten">×</button><div id="economy-content"></div></section>`;
