@@ -105,7 +105,7 @@
       view.innerHTML = `<div class="online-home-grid"><article class="online-mini-card"><span>🏫</span><strong>Klasbeheer</strong><small>Maak leerlingaccounts aan en reset wachtwoorden via het tabblad Klasbeheer.</small></article><article class="online-mini-card"><span>🏆</span><strong>XP-ranking van je klas</strong><small>Je ziet de voortgang van de leerlingen uit jouw klas.</small></article><article class="online-mini-card"><span>🔐</span><strong>Geen zelfregistratie</strong><small>Leerlingen kunnen alleen inloggen met een account dat jij aanmaakt.</small></article></div><p class="online-help">De leerkracht beheert de accounts. Leerlingen zien elkaars gebruikersnamen en XP binnen dezelfde klas; andere klassen blijven afgeschermd.</p>`;
       return;
     }
-    view.innerHTML = `<div class="online-home-grid"><article class="online-mini-card"><span>⭐</span><strong>${xp} XP</strong><small>${rem}/100 XP tot level ${level + 1}</small><div class="online-xp-bar"><i style="width:${rem}%"></i></div></article><article class="online-mini-card"><span>🪙</span><strong>${Number(currentProfile.coins)} LabCoins</strong><small>Verdien coins met de Elementensprint.</small></article><article class="online-mini-card"><span>🧬</span><strong>Kaartenbataljon</strong><small>Koop stofkaarten en daag een klasgenoot uit.</small></article></div><p class="online-help">De gewone puzzels geven XP. LabCoins verdien je via de optionele Elementensprint. Met coins koop je kaarten en skins. De ranking en battles zijn beperkt tot jouw klas.</p>`;
+    view.innerHTML = `<div class="online-home-grid"><article class="online-mini-card"><span>⭐</span><strong>${xp} XP</strong><small>${rem}/100 XP tot level ${level + 1}</small><div class="online-xp-bar"><i style="width:${rem}%"></i></div></article><article class="online-mini-card"><span>🪙</span><strong>${Number(currentProfile.coins)} LabCoins</strong><small>Verdien coins met de Elementensprint en de virtuele kluisreactie.</small></article><article class="online-mini-card"><span>🧬</span><strong>Kaartenbataljon</strong><small>Koop stofkaarten en daag een klasgenoot uit.</small></article></div><p class="online-help">De gewone puzzels geven XP. LabCoins verdien je via de optionele Elementensprint en de virtuele kluisreactie. Met coins koop je kaarten en skins. De ranking en battles zijn beperkt tot jouw klas.</p>`;
   }
   async function renderLeaderboard() {
     const rows = await rpc('get_leaderboard', { p_limit: 20 });
@@ -350,6 +350,10 @@ Optie D"></textarea></label>
   }
   async function afterAuth() {
     showDashboard(); await loadProfile();
+    try {
+      const materials = await rpc('get_my_materials');
+      window.ChemieGameBridge?.applyMaterials?.(materials);
+    } catch (materialError) { console.warn('Grondstoffeninventaris kon niet worden geladen.', materialError); }
     try { await syncQuestionBank(); } catch (questionError) { console.warn('Online vragenbank kon niet worden geladen; lokale vragen blijven actief.', questionError); }
     setView('home');
     if (refreshTimer) clearInterval(refreshTimer);
@@ -359,7 +363,10 @@ Optie D"></textarea></label>
     const { error } = await supabase.auth.signOut(); if (error) throw error;
     currentUser = null; currentProfile = null; showAuth(); msg('Je bent afgemeld.');
     if (refreshTimer) clearInterval(refreshTimer);
-    if (window.ChemieGameBridge) window.ChemieGameBridge.applyOnlineEconomy({ coins: 0, ownedSkins: ['starter'], equippedSkin: 'starter' });
+    if (window.ChemieGameBridge) {
+      window.ChemieGameBridge.applyOnlineEconomy({ coins: 0, ownedSkins: ['starter'], equippedSkin: 'starter' });
+      window.ChemieGameBridge.clearMaterials?.();
+    }
   }
   async function handleClick(e) {
     const viewButton = e.target.closest('[data-online-view]'); if (viewButton) { setView(viewButton.dataset.onlineView); return; }
@@ -407,6 +414,15 @@ Optie D"></textarea></label>
   window.ChemieOnline = {
     isAuthenticated: () => Boolean(currentUser),
     async recordQuizAnswer(questionId, answer) { requireLogin(); return rpc('record_quiz_answer', { p_question_id: questionId, p_answer: answer }); },
+    async getMaterials() { requireLogin(); return rpc('get_my_materials'); },
+    async startShadowEncounter(levelId) { requireLogin(); return rpc('start_shadow_encounter', { p_level_id: levelId }); },
+    async collectShadowDrop(encounterId) { requireLogin(); return rpc('collect_shadow_drop', { p_encounter_id: encounterId }); },
+    async blowSafe() {
+      requireLogin();
+      const result = await rpc('blow_safe');
+      if (result?.ok) result.economy = await getEconomy();
+      return result;
+    },
     async startSprint() { requireLogin(); return rpc('start_element_sprint'); },
     async submitSprintAnswer(sessionId, elementName, symbol) { requireLogin(); return rpc('submit_element_answer', { p_session_id: sessionId, p_element_name: elementName, p_symbol: symbol }); },
     async finishSprint(sessionId) { requireLogin(); return rpc('finish_element_sprint', { p_session_id: sessionId }); },

@@ -1,0 +1,62 @@
+CHEMIE ESCAPE ROOM — UPDATE SCHADUW & KLUIS
+===========================================
+
+WAT VERANDERT ER?
+-----------------
+- De Schaduw verschijnt op willekeurige momenten in het actieve labo.
+- Je hebt ongeveer 10 seconden om op de Schaduw te klikken.
+- Bij een geslaagde klik valt precies 1 mol kaliumnitraat (KNO3), koolstof (C)
+  of zwavel (S). De materiaalkeuze gebeurt server-side en is willekeurig.
+- Elke leerling heeft een eigen voorraad. De voorraad blijft na uitloggen en
+  opnieuw aanmelden bewaard in Supabase.
+- De knop 'Blaas de kluis op' staat in elk level.
+- Bij te weinig voorraad toont de game de vergelijking en de tekst:
+  'Weet je zeker dat je de juiste ingrediënten hebt?' Er wordt niets verbruikt.
+- Bij voldoende voorraad verbruikt de game 2 mol KNO3, 3 mol C en 1 mol S,
+  en kent hij 30 LabCoins toe. Dit gebeurt atomair in Supabase.
+- De Schaduw wordt niet meer verslagen en de oude verborgen-grondstofopdracht
+  is verwijderd. De vier levels en de tijdpoortcodes blijven behouden.
+
+INSTALLATIE IN JE BESTAANDE GITHUB-PROJECT
+-----------------------------------------
+1. Maak eerst een commit/back-up van je huidige werkende project.
+2. Kopieer deze bestanden naar de hoofdmap van je GitHub-project en overschrijf
+   de bestaande versies:
+   - index.html
+   - game.js
+   - online.js
+   - style.css
+3. Kopieer het SQL-bestand uit deze update naar:
+   supabase/migrations/2026_11_shadow_materials_and_safe_reaction.sql
+4. Open Supabase > SQL Editor. Kopieer de volledige inhoud van dit SQL-bestand
+   en voer die één keer uit. Je hoeft geen bestaande tabellen te verwijderen.
+5. Commit de wijzigingen in GitHub. Netlify zal daarna automatisch opnieuw deployen.
+
+BELANGRIJK
+----------
+- Behoud je bestaande config.js, netlify.toml en Netlify Environment Variables.
+- De update voegt geen nieuwe Netlify Functions of geheime sleutels toe.
+- De database-migratie is wel verplicht voor de online Schaduw, inventaris en
+  kluisbeloning.
+- De kluisreactie is uitsluitend een virtuele spelhandeling. Verzamel of meng
+  deze stoffen nooit in het echt.
+
+CONTROLE NA DEPLOY
+------------------
+1. Meld aan als leerling. De inventaris toont Kaliumnitraat, Koolstof en Zwavel
+   met afzonderlijke molhoeveelheden.
+2. Wacht tot de Schaduw verschijnt en klik erop voordat hij verdwijnt.
+3. Controleer dat exact 1 mol van één stof bij de voorraad komt.
+4. Klik bij onvoldoende voorraad op 'Blaas de kluis op'. De vergelijking en
+   de vraag 'Weet je zeker dat je de juiste ingrediënten hebt?' verschijnen.
+   De voorraad mag daarbij niet veranderen.
+5. Verzamel minstens 2 mol KNO3, 3 mol C en 1 mol S. Klik opnieuw: er moet
+   exact 30 LabCoins bijkomen en alleen de vereiste molhoeveelheden worden
+   afgetrokken.
+6. Log uit en opnieuw in. De voorraad moet behouden blijven.
+
+TECHNISCHE TESTS
+----------------
+De JavaScript-syntaxis is gecontroleerd en de statische Netlify-build is lokaal
+uitgevoerd. De SQL-migratie en de online beloningsflows moeten nog in het eigen
+Supabase-project getest worden.

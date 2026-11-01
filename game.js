@@ -1,15 +1,27 @@
 const LEVELS={
- medieval:{name:"Middeleeuws alchemistenlabo",art:"assets/medieval_lab.svg",labels:["Kookpot","Oud boek","Glazen potten","Werktafel"],ingredient:"Zwavel-symbool",ingredientIcon:"🟡",code:[3,7,2,4],hiddenText:"In de as naast de kookpot ontdek je een verborgen alchemistisch teken. Je verzamelt het eerste symbool: zwavel.",intro:"Je bent aangekomen in een middeleeuws alchemistenlabo."},
- lavoisier:{name:"Labo tijdens de Franse Revolutie",art:"assets/french_lab.svg",labels:["Balans","Notities van Lavoisier","Glaswerk","Proefopstelling"],ingredient:"Koolstof-symbool",ingredientIcon:"⚫",code:[8,1,5,6],hiddenText:"Achter een lade met meetinstrumenten vind je een zwart koolstofsymbool.",intro:"De tijdreis brengt je naar het labo van Lavoisier."},
- modern:{name:"Modern chemielabo",art:"assets/modern_lab.svg",labels:["Reageerbuizen","Weegschaal","Maatkolf","Periodiek systeem"],ingredient:"Nitraat-symbool",ingredientIcon:"⚪",code:[6,4,9,2],hiddenText:"In het laboschrift staat een abstract nitraat-symbool. Je derde ingrediënt is gevonden.",intro:"Je bereikt het moderne chemielabo."},
- future:{name:"Futuristisch chemielabo",art:"assets/futuristic_lab.svg",labels:["Robotarm","Hologram","Reactor","Tijdpoort"],ingredient:"Silicium-symbool",ingredientIcon:"🔷",code:[5,2,8,1],hiddenText:"In de holografische kern ontdek je het laatste symbool: silicium.",intro:"Je stapt de toekomst binnen. Het futuristische labo bewaakt de laatste tijdcode."}
+ medieval:{name:"Middeleeuws alchemistenlabo",art:"assets/medieval_lab.svg",labels:["Kookpot","Oud boek","Glazen potten","Werktafel"],code:[3,7,2,4],intro:"Je bent aangekomen in een middeleeuws alchemistenlabo."},
+ lavoisier:{name:"Labo tijdens de Franse Revolutie",art:"assets/french_lab.svg",labels:["Balans","Notities van Lavoisier","Glaswerk","Proefopstelling"],code:[8,1,5,6],intro:"De tijdreis brengt je naar het labo van Lavoisier."},
+ modern:{name:"Modern chemielabo",art:"assets/modern_lab.svg",labels:["Reageerbuizen","Weegschaal","Maatkolf","Periodiek systeem"],code:[6,4,9,2],intro:"Je bereikt het moderne chemielabo."},
+ future:{name:"Futuristisch chemielabo",art:"assets/futuristic_lab.svg",labels:["Robotarm","Hologram","Reactor","Tijdpoort"],code:[5,2,8,1],intro:"Je stapt de toekomst binnen. Het futuristische labo bewaakt de laatste tijdcode."}
 };
 const LEVEL_ORDER=Object.keys(LEVELS);
 const LEVEL_TOTAL=LEVEL_ORDER.length;
 const QUESTIONS_PER_LEVEL=12, QUESTIONS_PER_PUZZLE=3, PENALTY=60;
 let codeEntered=Object.fromEntries(Object.keys(LEVELS).map(k=>[k,false]));
-let questions=[], pendingOnlineQuestionBank=null, objectProgress={}, currentLevel="medieval", progress={}, levelSolved={}, levelQuestions={}, lockouts={}, inventory=new Set(), activeQuestion=null, activeObject=null, activeKind="question", shadowVisible=false, shadowRepelled=false, shadowTimer=null, appearanceTimer=null, codes={}, unlocked=Object.fromEntries(Object.keys(LEVELS).map((k,i)=>[k,i===0]));
+let questions=[], pendingOnlineQuestionBank=null, objectProgress={}, currentLevel="medieval", progress={}, levelSolved={}, levelQuestions={}, lockouts={}, inventory={kno3:0,carbon:0,sulfur:0}, activeQuestion=null, activeObject=null, activeKind="question", shadowVisible=false, shadowTimer=null, appearanceTimer=null, shadowEncounterId=null, localShadowMaterial=null, codes={}, unlocked=Object.fromEntries(Object.keys(LEVELS).map((k,i)=>[k,i===0]));
 const $=id=>document.getElementById(id);
+
+const MATERIAL_INFO={
+ kno3:{name:"kaliumnitraat",formula:"KNO3",emoji:"🧂"},
+ carbon:{name:"koolstof",formula:"C",emoji:"⚫"},
+ sulfur:{name:"zwavel",formula:"S",emoji:"🟡"}
+};
+const EMPTY_MATERIALS=()=>({kno3:0,carbon:0,sulfur:0});
+function normalizeMaterials(value){const source=value?.inventory||value||{};return {kno3:Math.max(0,Math.floor(Number(source.kno3??source.kno3_mol)||0)),carbon:Math.max(0,Math.floor(Number(source.carbon??source.carbon_mol)||0)),sulfur:Math.max(0,Math.floor(Number(source.sulfur??source.sulfur_mol)||0))};}
+function readLocalMaterials(){try{return normalizeMaterials(JSON.parse(localStorage.getItem("chemie-escape-materials")||"{}"));}catch{return EMPTY_MATERIALS();}}
+function saveLocalMaterials(){try{localStorage.setItem("chemie-escape-materials",JSON.stringify(inventory));}catch{}}
+function applyMaterials(value){inventory=normalizeMaterials(value);saveLocalMaterials();renderInventory();}
+
 
 // Optionele sidequest: elementnamen omzetten naar exact gespelde elementsymbolen.
 // De vergelijking is hoofdlettergevoelig (bv. Pb is juist; PB en pb zijn fout).
@@ -43,24 +55,30 @@ if(hintButton){hintButton.style.setProperty("display","none","important");hintBu
 async function init(){try{const r=await fetch("vragen.json");if(!r.ok)throw Error("JSON niet geladen");questions=await r.json();if(pendingOnlineQuestionBank)questions=pendingOnlineQuestionBank;resetState();log(LEVELS.medieval.intro);setStatus("Klik op een voorwerp om te beginnen.");scheduleShadow();}catch(e){setStatus("Vragen niet geladen. Start via start_windows.bat; zie LEESMIJ.txt.");console.error(e)}}
 function shuffle(a){a=[...a];for(let i=a.length-1;i>0;i--){let j=Math.floor(Math.random()*(i+1));[a[i],a[j]]=[a[j],a[i]]}return a}
 function rebuildQuestionSets(){Object.keys(LEVELS).forEach(level=>{levelQuestions[level]=[];["object1","object2","object3","object4"].forEach(obj=>levelQuestions[level].push(...shuffle(questions.filter(q=>q.level===level&&q.object===obj)).slice(0,3)));});}
-function resetState(){progress=Object.fromEntries(LEVEL_ORDER.map(l=>[l,0]));objectProgress=Object.fromEntries(LEVEL_ORDER.map(l=>[l,{object1:0,object2:0,object3:0,object4:0}]));levelSolved=Object.fromEntries(LEVEL_ORDER.map(l=>[l,false]));lockouts={};inventory=new Set();codes={};codeEntered=Object.fromEntries(LEVEL_ORDER.map(l=>[l,false]));unlocked=Object.fromEntries(LEVEL_ORDER.map((l,i)=>[l,i===0]));rebuildQuestionSets();renderInventory();renderLevel();updateProgress();renderEconomyPanel();applyEquippedSkin()}
+function resetState(){progress=Object.fromEntries(LEVEL_ORDER.map(l=>[l,0]));objectProgress=Object.fromEntries(LEVEL_ORDER.map(l=>[l,{object1:0,object2:0,object3:0,object4:0}]));levelSolved=Object.fromEntries(LEVEL_ORDER.map(l=>[l,false]));lockouts={};inventory=readLocalMaterials();shadowVisible=false;shadowEncounterId=null;localShadowMaterial=null;codes={};codeEntered=Object.fromEntries(LEVEL_ORDER.map(l=>[l,false]));unlocked=Object.fromEntries(LEVEL_ORDER.map((l,i)=>[l,i===0]));rebuildQuestionSets();renderInventory();renderLevel();updateProgress();renderEconomyPanel();applyEquippedSkin()}
 function setStatus(s){$("status-text").textContent=s}
 function log(s){const el=$("logbook");el.textContent=s+"\n"+el.textContent}
-function renderLevel(){const l=LEVELS[currentLevel];$("lab-art").src=l.art;$("lab-art").alt=l.name;document.querySelectorAll(".level-tab").forEach(b=>{b.classList.toggle("active",b.dataset.level===currentLevel);b.disabled=false;b.title=unlocked[b.dataset.level]?"Open dit tijdperk":"Voltooi eerst het vorige tijdperk en de verborgen opdracht";});["label1","label2","label3","label4"].forEach((id,i)=>{if($(id))$(id).textContent=l.labels[i]||"Puzzel";});
+function renderLevel(){const l=LEVELS[currentLevel];$("lab-art").src=l.art;$("lab-art").alt=l.name;document.querySelectorAll(".level-tab").forEach(b=>{b.classList.toggle("active",b.dataset.level===currentLevel);b.disabled=false;b.title=unlocked[b.dataset.level]?"Open dit tijdperk":"Voltooi eerst de puzzels van het vorige tijdperk en voer de code in";});["label1","label2","label3","label4"].forEach((id,i)=>{if($(id))$(id).textContent=l.labels[i]||"Puzzel";});
  // Toon het verdiende cijfer blijvend op de bijbehorende puzzelplek.
  document.querySelectorAll('.hotspot[data-object^="object"]').forEach(btn=>{const obj=btn.dataset.object;const idx=Number(obj.replace("object",""))-1;const digit=(codes[currentLevel]||[])[idx];const marker=btn.querySelector('span');if(marker){marker.textContent=digit!==undefined?String(digit):"✦";marker.setAttribute('aria-label',digit!==undefined?`Verdiend cijfer ${digit}`:"Puzzelplek nog niet voltooid");}btn.classList.toggle('puzzle-solved',(objectProgress[currentLevel]?.[obj]||0)>=3);});
  $("level-status").textContent=`${l.name}: ${Object.values(objectProgress[currentLevel]).filter(n=>n===3).length} van 4 puzzels voltooid · ${progress[currentLevel]} van 12 vragen`;
- const hiddenHotspot=document.querySelector(".hidden-hotspot");if(hiddenHotspot)hiddenHotspot.classList.toggle("solved",inventory.has(currentLevel));$("scene-caption").textContent=levelSolved[currentLevel]?"Thema voltooid! Zoek verborgen opdrachten of bezoek een ander tijdperk.":"Onderzoek de voorwerpen. Een verborgen opdracht wacht ergens in het labo.";renderEconomyPanel()}
+ $("scene-caption").textContent=levelSolved[currentLevel]?"Alle puzzels van dit labo zijn opgelost. Verzamel grondstoffen en open de kluis.":"Onderzoek de voorwerpen. Let op: de Schaduw kan elk moment verschijnen.";renderInventory();renderEconomyPanel()}
 function updateProgress(){const n=Object.values(levelSolved).filter(Boolean).length;$("progress-text").textContent=`${n} van ${LEVEL_TOTAL} levels voltooid`;$("progress-fill").style.width=`${n/LEVEL_TOTAL*100}%`}
-function renderInventory(){const items=LEVEL_ORDER.map(k=>[k,LEVELS[k].ingredientIcon,LEVELS[k].ingredient.replace('-symbool','')]);$("inventory-items").innerHTML=items.map(([k,icon,label])=>`<div class="inv-item ${inventory.has(k)?"collected":"empty"}">${icon}<small>${inventory.has(k)?label:"Nog zoeken"}</small></div>`).join("");$("inventory-note").textContent=`Verzameld: ${inventory.size} van ${LEVEL_TOTAL} symbolen`;const ready=inventory.size===LEVEL_TOTAL&&!shadowRepelled;$("ward-button").disabled=!ready||!shadowVisible;$("ward-button").textContent=shadowRepelled?"Schaduw verdreven":"Verdrijf de Schaduw"}
+function renderInventory(){
+ const items=[['kno3','Kaliumnitraat','KNO3'],['carbon','Koolstof','C'],['sulfur','Zwavel','S']];
+ const target=$("inventory-items");
+ if(target)target.innerHTML=items.map(([key,label,formula])=>`<div class="material-item ${inventory[key]>0?'has-stock':'empty'}"><span class="material-icon">${MATERIAL_INFO[key].emoji}</span><strong>${label}</strong><b>${inventory[key]} mol</b><small>${formula}</small></div>`).join('');
+ const note=$("inventory-note");if(note)note.textContent="Elke keer dat je de Schaduw op tijd aantikt, laat hij 1 mol van één grondstof vallen.";
+ const blow=$("blow-safe-button");if(blow)blow.disabled=false;
+}
 function showQuestion(q){activeQuestion=q;activeKind="question";$("modal-category").textContent=`${LEVELS[currentLevel].name.toUpperCase()} · VRAAG ${(objectProgress[currentLevel]?.[activeObject]||0)+1}/3`;$("modal-title").textContent=q.type==="numeric"?"Rekenvraag":"Meerkeuzevraag";$("question-text").textContent=q.question;const area=$("answer-area");area.innerHTML="";if(q.type==="numeric"){area.innerHTML='<input class="numeric-input" id="numeric-answer" type="number" min="0" step="1" placeholder="Vul een natuurlijk getal in" required>'}else q.options.forEach((op,i)=>{const label=document.createElement("label");label.className="option-label";label.innerHTML=`<input type="radio" name="choice" value="${i}"><span></span>`;label.querySelector("span").textContent=op;area.append(label)});$("check-button").classList.remove("hidden");$("check-button").textContent="Controleer antwoord";$("feedback").className="feedback hidden";$("modal-backdrop").classList.remove("hidden")}
-function openObject(obj){if(obj==="antagonist"){if(!shadowVisible)return;showShadowEncounter();return}if(obj==="hidden"){if(inventory.has(currentLevel)){setStatus("Deze verborgen opdracht is al voltooid.");return}if(progress[currentLevel]<12){setStatus("Los eerst alle vier puzzels (12 vragen) van dit labo op om de verborgen opdracht vrij te spelen.");return}activeKind="hidden";$("modal-category").textContent="VERBORGEN OPDRACHT";$("modal-title").textContent="Een geheim voorwerp gevonden";$("question-text").textContent=LEVELS[currentLevel].hiddenText;$("answer-area").innerHTML='<p>Neem dit symbool op in je inventaris.</p>';$("hint-button").classList.add("hidden");$("check-button").classList.remove("hidden");$("check-button").textContent="Verzamel voorwerp";$("feedback").className="feedback hidden";$("modal-backdrop").classList.remove("hidden");return}if(levelSolved[currentLevel]){setStatus("Dit level is al voltooid. Je kunt nog naar verborgen opdrachten zoeken.");return}if(Date.now()<(lockouts[currentLevel]?.[obj]||0)){setStatus(`Deze puzzel heeft nog ${Math.ceil((lockouts[currentLevel][obj]-Date.now())/1000)} seconden straftijd.`);showLockout(obj);return}const count=objectProgress[currentLevel]?.[obj]||0;
+function openObject(obj){if(obj==="antagonist"){if(!shadowVisible)return;collectShadowDrop();return}if(levelSolved[currentLevel]){setStatus("Dit level is al voltooid. Je kunt nog grondstoffen verzamelen en de kluis openen.");return}if(Date.now()<(lockouts[currentLevel]?.[obj]||0)){setStatus(`Deze puzzel heeft nog ${Math.ceil((lockouts[currentLevel][obj]-Date.now())/1000)} seconden straftijd.`);showLockout(obj);return}const count=objectProgress[currentLevel]?.[obj]||0;
 if(count>=3){setStatus("Deze puzzel is voltooid. Kies een andere plek in het labo.");return}
 const q=levelQuestions[currentLevel].filter(x=>x.object===obj)[count];
 if(!q){setStatus("Geen vraag gevonden voor deze plek. Controleer vragen.json.");return}
 activeObject=obj;showQuestion(q)}
 function showLockout(obj){activeKind="lockout";activeObject=obj;$("modal-category").textContent="STRAFTIJD";$("modal-title").textContent="Deze puzzel is geblokkeerd";$("question-text").textContent="Een fout antwoord geeft één minuut straftijd op deze specifieke puzzel. De andere drie plekken blijven beschikbaar."; $("answer-area").innerHTML='<div class="lockout-countdown" id="countdown"></div>';$("hint-button").classList.add("hidden");$("check-button").classList.add("hidden");$("modal-backdrop").classList.remove("hidden");const update=()=>{let left=Math.max(0,Math.ceil(((lockouts[currentLevel]||{})[obj]-Date.now())/1000));if($("countdown"))$("countdown").textContent=`Resterende tijd: ${String(Math.floor(left/60)).padStart(2,"0")}:${String(left%60).padStart(2,"0")}`;if(!left){clearInterval(window.lockInterval);if($("countdown"))$("countdown").textContent="Puzzel weer vrij";}};update();window.lockInterval=setInterval(update,250)}
-async function submitAnswer(e){e.preventDefault();if(activeKind==="code-entry"){const entered=$("code-answer")?.value.trim();if(!/^\d{4}$/.test(entered||"")){feedback("Voer precies vier cijfers in.","bad");return;}const target=activeCodeTarget;if(target==="exit"){if(entered===LEVELS.future.code.join("")){if(!shadowRepelled){feedback("De code klopt, maar verdrijf eerst de Schaduw met de vier symbolen.","bad");return;}finishGame();closeModal();log("De uitgangscode is correct. Het monster is verslagen en je bent ontsnapt!");}else feedback("Verkeerde code. Controleer de vier cijfers die je hebt verdiend.","bad");return;}const previous=LEVEL_ORDER[LEVEL_ORDER.indexOf(target)-1];if(entered===LEVELS[previous].code.join("")){unlocked[target]=true;currentLevel=target;closeModal();renderLevel();setStatus("Code correct! De tijdpoort is open.");log("Tijdpoort geopend: "+LEVELS[target].name);scheduleShadow();}else feedback("Verkeerde code. Controleer de vier verdiende cijfers.","bad");return;}if(activeKind==="hidden"){inventory.add(currentLevel);renderInventory();log("Verborgen ingrediënt gevonden in: "+LEVELS[currentLevel].name);setStatus("Verborgen symbool toegevoegd aan je inventaris.");unlockNextIfReady();closeModal();if(inventory.size===LEVEL_TOTAL)log("Alle vier symbolen gevonden. Je kunt de Schaduw verdrijven zodra hij verschijnt.");return}if(activeKind==="code"){const entered=$("numeric-answer")?.value.trim();const expected=LEVELS[currentLevel].code.join("");if(entered!==expected){feedback("Die code klopt niet. Controleer de drie cijfers en probeer opnieuw.","bad");return}codeEntered[currentLevel]=true;log("Tijdpoortcode correct ingevoerd voor: "+LEVELS[currentLevel].name);feedback("Code correct! De tijdpoort opent zodra ook de verborgen opdracht voltooid is.","good");unlockNextIfReady();renderLevel();setTimeout(()=>closeModal(),900);return}if(activeKind!=="question")return;const q=activeQuestion;let correct=false,submittedAnswer=null;if(q.type==="numeric"){const v=$("numeric-answer")?.value.trim();if(v===""){feedback("Vul eerst een antwoord in.","bad");return}submittedAnswer=Number(v);correct=submittedAnswer===Number(q.answer)}else{const s=document.querySelector('input[name="choice"]:checked');if(!s){feedback("Kies eerst een antwoord.","bad");return}submittedAnswer=Number(s.value);correct=submittedAnswer===Number(q.answer)}if(window.ChemieOnline&&window.ChemieOnline.isAuthenticated()){try{const verified=await window.ChemieOnline.recordQuizAnswer(q.id,submittedAnswer);if(!verified||!verified.ok){feedback("De online controle lukte niet. Controleer je verbinding en probeer opnieuw.","bad");return}correct=Boolean(verified.correct);window.ChemieOnline.refreshDashboardSoon();}catch(err){console.error(err);feedback("Geen verbinding met de XP-server. Probeer dit antwoord opnieuw.","bad");return}}if(!correct){lockouts[currentLevel]=lockouts[currentLevel]||{};lockouts[currentLevel][activeObject]=Date.now()+PENALTY*1000;feedback("Fout antwoord! Deze puzzelplek is één minuut geblokkeerd. De andere plekken blijven beschikbaar.","bad");setStatus("Straftijd actief op "+LEVELS[currentLevel].labels[Number(activeObject.replace("object",""))-1]);$("answer-area").querySelectorAll("input").forEach(i=>i.disabled=true);$("check-button").textContent="Verder";$("check-button").onclick=e=>{e.preventDefault();closeModal();$("check-button").onclick=null};return}objectProgress[currentLevel][activeObject]=(objectProgress[currentLevel][activeObject]||0)+1;progress[currentLevel]++;
+async function submitAnswer(e){e.preventDefault();if(activeKind==="code-entry"){const entered=$("code-answer")?.value.trim();if(!/^\d{4}$/.test(entered||"")){feedback("Voer precies vier cijfers in.","bad");return;}const target=activeCodeTarget;if(target==="exit"){if(entered===LEVELS.future.code.join("")){finishGame();closeModal();log("De uitgangscode is correct. De kluis is geopend en je bent ontsnapt!");}else feedback("Verkeerde code. Controleer de vier cijfers die je hebt verdiend.","bad");return;}const previous=LEVEL_ORDER[LEVEL_ORDER.indexOf(target)-1];if(entered===LEVELS[previous].code.join("")){unlocked[target]=true;currentLevel=target;closeModal();renderLevel();setStatus("Code correct! De tijdpoort is open.");log("Tijdpoort geopend: "+LEVELS[target].name);scheduleShadow();}else feedback("Verkeerde code. Controleer de vier verdiende cijfers.","bad");return;}if(activeKind==="code"){const entered=$("numeric-answer")?.value.trim();const expected=LEVELS[currentLevel].code.join("");if(entered!==expected){feedback("Die code klopt niet. Controleer de drie cijfers en probeer opnieuw.","bad");return}codeEntered[currentLevel]=true;log("Tijdpoortcode correct ingevoerd voor: "+LEVELS[currentLevel].name);feedback("Code correct! De tijdpoort opent.","good");unlockNextIfReady();renderLevel();setTimeout(()=>closeModal(),900);return}if(activeKind!=="question")return;const q=activeQuestion;let correct=false,submittedAnswer=null;if(q.type==="numeric"){const v=$("numeric-answer")?.value.trim();if(v===""){feedback("Vul eerst een antwoord in.","bad");return}submittedAnswer=Number(v);correct=submittedAnswer===Number(q.answer)}else{const s=document.querySelector('input[name="choice"]:checked');if(!s){feedback("Kies eerst een antwoord.","bad");return}submittedAnswer=Number(s.value);correct=submittedAnswer===Number(q.answer)}if(window.ChemieOnline&&window.ChemieOnline.isAuthenticated()){try{const verified=await window.ChemieOnline.recordQuizAnswer(q.id,submittedAnswer);if(!verified||!verified.ok){feedback("De online controle lukte niet. Controleer je verbinding en probeer opnieuw.","bad");return}correct=Boolean(verified.correct);window.ChemieOnline.refreshDashboardSoon();}catch(err){console.error(err);feedback("Geen verbinding met de XP-server. Probeer dit antwoord opnieuw.","bad");return}}if(!correct){lockouts[currentLevel]=lockouts[currentLevel]||{};lockouts[currentLevel][activeObject]=Date.now()+PENALTY*1000;feedback("Fout antwoord! Deze puzzelplek is één minuut geblokkeerd. De andere plekken blijven beschikbaar.","bad");setStatus("Straftijd actief op "+LEVELS[currentLevel].labels[Number(activeObject.replace("object",""))-1]);$("answer-area").querySelectorAll("input").forEach(i=>i.disabled=true);$("check-button").textContent="Verder";$("check-button").onclick=e=>{e.preventDefault();closeModal();$("check-button").onclick=null};return}objectProgress[currentLevel][activeObject]=(objectProgress[currentLevel][activeObject]||0)+1;progress[currentLevel]++;
 const localCount=objectProgress[currentLevel][activeObject], puzzleIndex=Number(activeObject.replace("object",""))-1;
 if(localCount===3){
  codes[currentLevel]=codes[currentLevel]||[];codes[currentLevel][puzzleIndex]=LEVELS[currentLevel].code[puzzleIndex];
@@ -85,34 +103,89 @@ if(localCount<QUESTIONS_PER_PUZZLE){
  $("check-button").classList.add("hidden");
  setTimeout(()=>{closeModal();},1400);
 } }
-function unlockNextIfReady(){if(!codeEntered[currentLevel]||!inventory.has(currentLevel))return;const i=LEVEL_ORDER.indexOf(currentLevel);if(i>=0&&i<LEVEL_ORDER.length-1){const next=LEVEL_ORDER[i+1];unlocked[next]=true;setStatus("Tijdpoort geopend! Het volgende labo is nu toegankelijk.");log("Tijdpoort ontgrendeld: "+LEVELS[next].name);renderLevel();}else if(currentLevel==="future"){setStatus("Laatste tijdpoort geopend.")}}
+function unlockNextIfReady(){if(!codeEntered[currentLevel])return;const i=LEVEL_ORDER.indexOf(currentLevel);if(i>=0&&i<LEVEL_ORDER.length-1){const next=LEVEL_ORDER[i+1];unlocked[next]=true;setStatus("Tijdpoort geopend! Het volgende labo is nu toegankelijk.");log("Tijdpoort ontgrendeld: "+LEVELS[next].name);renderLevel();}else if(currentLevel==="future"){setStatus("Laatste tijdpoort geopend.")}}
 function showCodeEntry(){activeKind="code";$("modal-category").textContent="TIJDPOORTCODE";$("modal-title").textContent="Open de tijdpoort";$("question-text").textContent="Voer de viercijferige code in die je met de vier puzzels hebt verdiend.";$("answer-area").innerHTML='<input class="numeric-input" id="numeric-answer" type="text" inputmode="numeric" maxlength="4" placeholder="Viercijferige code" required>';$("hint-button").classList.add("hidden");$("check-button").classList.remove("hidden");$("check-button").textContent="Ontgrendel tijdpoort";$("feedback").className="feedback hidden";$("modal-backdrop").classList.remove("hidden")}
 function feedback(t,k){$("feedback").textContent=t;$("feedback").className="feedback "+k}
 function closeModal(){$("modal-backdrop").classList.add("hidden");$("check-button").classList.remove("hidden");$("check-button").onclick=null}
-function showShadowEncounter(){activeKind="shadow";$("modal-category").textContent="DE SCHADUW";$("modal-title").textContent=inventory.size===LEVEL_TOTAL?"Je hebt alle vier symbolen verzameld!":"Een mysterieuze verschijning";$("question-text").textContent=inventory.size===LEVEL_TOTAL?"Je inventaris bevat alle vier symbolische ingrediënten. Gebruik het fictieve afweerteken om de Schaduw terug door de tijdpoort te sturen.":"De Schaduw grijnst en verdwijnt bijna meteen. Je hebt nog niet alle vier de symbolen gevonden. Onderzoek de verborgen opdrachten in elk tijdperk."; $("answer-area").innerHTML=inventory.size===LEVEL_TOTAL?'<p>De vier symbolen vormen samen een fictief afweerteken. Er zijn geen echte mengverhoudingen of bereidingsstappen nodig.</p>':'<p>Tip: voltooi elk level en zoek daarna de verborgen opdracht.</p>';$("hint-button").classList.add("hidden");$("check-button").classList.toggle("hidden",inventory.size!==LEVEL_TOTAL);$("check-button").textContent="Activeer afweerteken";$("feedback").className="feedback hidden";$("modal-backdrop").classList.remove("hidden")}
-function scheduleShadow(){
-  if(appearanceTimer) clearTimeout(appearanceTimer);
-  appearanceTimer=setTimeout(()=>{
-    if(shadowRepelled) return;
-    shadowVisible=true;
-    $("antagonist").classList.remove("hidden");
-    $("antagonist-status").textContent="Hij is verschenen in dit labo!";
-    $("shadow-meter-fill").style.width="100%";
-    setStatus("Pas op! De Schaduw is verschenen.");
-    log("De Schaduw werd gezien in "+LEVELS[currentLevel].name+".");
-    renderInventory();
-    shadowTimer=setTimeout(()=>{
-      shadowVisible=false;
-      $("antagonist").classList.add("hidden");
-      $("antagonist-status").textContent="De Schaduw is weer verdwenen…";
-      $("shadow-meter-fill").style.width="25%";
-      renderInventory();
-      scheduleShadow();
-    },12000+Math.random()*10000);
-  },8000+Math.random()*14000);
+function showSafeFeedback(html,kind='info'){
+ const box=$("safe-feedback");if(!box)return;box.innerHTML=html;box.className=`safe-feedback ${kind}`;
 }
-function repelShadow(){shadowRepelled=true;shadowVisible=false;$("antagonist").classList.add("hidden");$("antagonist-status").textContent="Verdreven! De tijdlijn is veilig."; $("shadow-meter-fill").style.width="0%";renderInventory();log("De Schaduw is verdreven met het symbolische afweerteken.");closeModal();checkWin();if(!Object.values(levelSolved).every(Boolean))setStatus("De Schaduw is verdreven. Voltooi de overige levels!")}
-function checkWin(){if(Object.values(levelSolved).every(Boolean)&&inventory.size===LEVEL_TOTAL&&shadowRepelled){finishGame()}}
+function hideSafeFeedback(){const box=$("safe-feedback");if(box){box.className="safe-feedback hidden";box.textContent="";}}
+function updateShadowStatus(text){const node=$("antagonist-status");if(node)node.textContent=text;}
+function moveShadowToRandomSpot(){const node=$("antagonist");if(!node)return;const left=12+Math.random()*72;const top=10+Math.random()*57;node.style.left=`${left}%`;node.style.top=`${top}%`;}
+function hideShadow(scheduleNext=true){if(shadowTimer){clearTimeout(shadowTimer);shadowTimer=null;}shadowVisible=false;shadowEncounterId=null;localShadowMaterial=null;const node=$("antagonist");if(node)node.classList.add("hidden");const fill=$("shadow-meter-fill");if(fill)fill.style.width="0%";updateShadowStatus("De Schaduw is weer verdwenen…");if(scheduleNext)scheduleShadow();}
+async function spawnShadow(){
+ let encounter=null, visibleMs=10000;
+ if(window.ChemieOnline&&window.ChemieOnline.isAuthenticated()){
+   encounter=await window.ChemieOnline.startShadowEncounter(currentLevel);
+   if(!encounter||!encounter.ok||!encounter.encounter_id){scheduleShadow(9000);return;}
+   shadowEncounterId=encounter.encounter_id;localShadowMaterial=null;
+   visibleMs=Math.min(10000,Math.max(1000,Number(encounter.visible_seconds||10)*1000));
+ }else{
+   shadowEncounterId=null;localShadowMaterial=shuffle(['kno3','carbon','sulfur'])[0];
+ }
+ shadowVisible=true;moveShadowToRandomSpot();const node=$("antagonist");if(node)node.classList.remove("hidden");
+ updateShadowStatus("Hij is verschenen! Klik snel op De Schaduw om 1 mol grondstof te verzamelen.");
+ const fill=$("shadow-meter-fill");if(fill){fill.style.transition='none';fill.style.width='100%';requestAnimationFrame(()=>{fill.style.transition=`width ${visibleMs}ms linear`;fill.style.width='0%';});}
+ setStatus("Pas op! De Schaduw is verschenen. Klik snel op hem!");log("De Schaduw verschijnt onverwacht in "+LEVELS[currentLevel].name+".");
+ shadowTimer=setTimeout(()=>{hideShadow(true);setStatus("De Schaduw is alweer verdwenen. Misschien verschijnt hij straks opnieuw.");},visibleMs);
+}
+function scheduleShadow(delay=null){
+ if(shadowVisible||appearanceTimer)return;
+ appearanceTimer=setTimeout(async()=>{
+   appearanceTimer=null;
+   try{await spawnShadow();}catch(error){console.warn('Schaduw-ontmoeting kon niet worden gestart:',error);updateShadowStatus('De Schaduw blijft voorlopig buiten beeld.');scheduleShadow(10000);}
+ },delay??(12000+Math.random()*16000));
+}
+async function collectShadowDrop(){
+ if(!shadowVisible)return;
+ const node=$("antagonist");if(node)node.disabled=true;
+ try{
+   let material=null;
+   if(shadowEncounterId&&window.ChemieOnline&&window.ChemieOnline.isAuthenticated()){
+     const result=await window.ChemieOnline.collectShadowDrop(shadowEncounterId);
+     if(!result||!result.ok)throw new Error(result?.error||'De Schaduw is net te laat verdwenen.');
+     material=result.material;applyMaterials(result.inventory||result.materials||{});
+   }else{
+     material=localShadowMaterial||shuffle(['kno3','carbon','sulfur'])[0];
+     inventory[material]=(inventory[material]||0)+1;saveLocalMaterials();renderInventory();
+   }
+   const label=MATERIAL_INFO[material]?.name||'grondstof';
+   hideShadow(false);updateShadowStatus(`Gevangen! De Schaduw liet 1 mol ${label} vallen.`);
+   setStatus(`Goed getimed! Je verzamelde 1 mol ${label}.`);log(`De Schaduw liet 1 mol ${label} vallen.`);scheduleShadow();
+ }catch(error){
+   hideShadow(false);updateShadowStatus('De Schaduw is ontsnapt. Probeer het bij zijn volgende verschijning.');
+   setStatus(error.message||'De grondstof kon niet worden verzameld.');scheduleShadow();
+ }finally{if(node)node.disabled=false;}
+}
+const REACTION_EQUATION='2 KNO3 + 3 C + S --> K2S + 3 CO2 + N2';
+function showInsufficientMaterials(){
+ showSafeFeedback(`<strong>Onvoldoende grondstoffen.</strong><div class="reaction-equation">${REACTION_EQUATION}</div><p>Weet je zeker dat je de juiste ingrediënten hebt?</p>`, 'needs-items');
+ setStatus('Je hebt nog niet voldoende grondstoffen om de virtuele reactie uit te voeren.');
+}
+async function blowSafe(){
+ const button=$("blow-safe-button");if(button)button.disabled=true;hideSafeFeedback();
+ try{
+   if(window.ChemieOnline&&window.ChemieOnline.isAuthenticated()){
+     const result=await window.ChemieOnline.blowSafe();
+     if(result?.insufficient){if(result.inventory)applyMaterials(result.inventory);showInsufficientMaterials();return;}
+     if(!result||!result.ok)throw new Error(result?.error||'De kluis kon niet worden geopend.');
+     if(result.inventory)applyMaterials(result.inventory);
+     if(result.economy&&window.ChemieGameBridge)window.ChemieGameBridge.applyOnlineEconomy(result.economy);
+     else if(Number.isFinite(Number(result.coins)))labCoins=Number(result.coins);
+     renderEconomyPanel();
+     showSafeFeedback(`<strong>De virtuele reactie is uitgevoerd!</strong><p>De kluis is open. Je ontvangt <b>30 LabCoins</b>.</p><small>De inventaris is bijgewerkt.</small>`,'success');
+     log('De kluis werd geopend met de virtuele reactie. +30 LabCoins.');setStatus('De kluis is open! Je hebt 30 LabCoins verdiend.');
+     window.ChemieOnline.refreshDashboardSoon();
+   }else{
+     if(inventory.kno3<2||inventory.carbon<3||inventory.sulfur<1){showInsufficientMaterials();return;}
+     inventory.kno3-=2;inventory.carbon-=3;inventory.sulfur-=1;saveLocalMaterials();renderInventory();labCoins+=30;renderEconomyPanel();
+     showSafeFeedback(`<strong>De virtuele reactie is uitgevoerd!</strong><p>De kluis is open. Je ontvangt <b>30 LabCoins</b>.</p><small>De inventaris is bijgewerkt.</small>`,'success');
+     log('De kluis werd geopend met de virtuele reactie. +30 LabCoins.');setStatus('De kluis is open! Je hebt 30 LabCoins verdiend.');
+   }
+ }catch(error){console.error(error);showSafeFeedback(`<strong>De reactie kon niet worden uitgevoerd.</strong><p>${String(error.message||'Controleer je verbinding en probeer opnieuw.').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]))}</p>`,'error');setStatus(error.message||'De kluis kon niet worden geopend.');}
+ finally{if(button)button.disabled=false;}
+}
 function finishGame(){
  if(appearanceTimer)clearTimeout(appearanceTimer);
  if(shadowTimer)clearTimeout(shadowTimer);
@@ -122,12 +195,12 @@ function finishGame(){
  screen.classList.add("game-finished");
  // Pas de automatische herstart: het eindscherm blijft staan tot de speler zelf de pagina verlaat.
  const heading=screen.querySelector("h1,h2,h3");
- if(heading)heading.textContent="Gewonnen! Het monster is verslagen!";
+ if(heading)heading.textContent="Gewonnen! De kluis is geopend!";
  const text=screen.querySelector("p");
- if(text)text.textContent="De Schaduw is verdreven, de tijdlijn is veilig en je bent ontsnapt. Het avontuur is afgelopen.";
+ if(text)text.textContent="Je hebt de vier laboratoria onderzocht, de codes verzameld en de kluis geopend. Het avontuur is afgelopen.";
  const replay=$("play-again");
  if(replay){replay.classList.add("hidden");replay.disabled=true;}
- setStatus("Escape room voltooid. Het monster is verslagen!");
+ setStatus("Escape room voltooid. De kluis is geopend!");
 }
 let activeCodeTarget=null;
 function askCode(target,isFinal=false){activeKind="code-entry";activeCodeTarget=target;$("modal-category").textContent="CODE-INVOER";$("modal-title").textContent=isFinal?"Laatste tijdslot":"Tijdpoort vergrendeld";$("question-text").textContent=isFinal?"Voer de vier cijfers in die je in het futuristische labo hebt verdiend om de uitgang te openen.":`Voer de vier cijfers in die je in het vorige labo hebt verdiend om ${LEVELS[target].name} te betreden.`;$("answer-area").innerHTML='<input class="numeric-input" id="code-answer" type="text" inputmode="numeric" maxlength="4" placeholder="Voer de 4-cijferige code in" autocomplete="off">';$("hint-button").classList.add("hidden");$("check-button").classList.remove("hidden");$("check-button").textContent="Code controleren";$("feedback").className="feedback hidden";$("modal-backdrop").classList.remove("hidden");}
@@ -137,24 +210,12 @@ document.querySelectorAll(".level-tab").forEach(b=>b.addEventListener("click",()
  if(target==="medieval") { currentLevel="medieval"; renderLevel(); setStatus("Je keert terug naar het middeleeuwse labo."); return; }
  const previous=LEVEL_ORDER[LEVEL_ORDER.indexOf(target)-1];
  if(progress[previous]!==12){setStatus("Deze tijdpoort blijft gesloten. Los eerst alle vier puzzels (12 vragen) in het vorige labo op.");return;}
- if(unlocked[target]) { currentLevel=target; renderLevel(); setStatus("Je betreedt: "+LEVELS[currentLevel].name+"."); log(LEVELS[currentLevel].intro); return; }
+ if(unlocked[target]) { currentLevel=target; renderLevel(); setStatus("Je betreedt: "+LEVELS[currentLevel].name+"."); log(LEVELS[currentLevel].intro); scheduleShadow(); return; }
  askCode(target);
 }));
 document.querySelectorAll(".hotspot").forEach(b=>b.addEventListener("click",()=>{if(b.dataset.object==="door"){if(progress.future===12)askCode("exit",true);else setStatus("De uitgang blijft gesloten. Los eerst alle vier puzzels in het futuristische labo op.");return;}openObject(b.dataset.object)}));
-// De verborgen opdracht is te vinden door op de onzichtbare hotspot in de scène te klikken.
-const ingredientHotspot=document.querySelector(".hidden-hotspot");
-if(ingredientHotspot){
- ingredientHotspot.style.opacity="0";
- ingredientHotspot.style.background="transparent";
- ingredientHotspot.style.borderColor="transparent";
- ingredientHotspot.style.color="transparent";
- ingredientHotspot.setAttribute("aria-label","Verborgen ingrediënt zoeken");
- ingredientHotspot.addEventListener("click",()=>openObject("hidden"));
-}
-
 $("answer-form").addEventListener("submit",submitAnswer);$("close-modal").addEventListener("click",closeModal);
-$("ward-button").addEventListener("click",()=>{if(inventory.size===LEVEL_TOTAL&&shadowVisible)showShadowEncounter()});
-$("check-button").addEventListener("click",e=>{if(activeKind==="shadow"&&inventory.size===LEVEL_TOTAL){e.preventDefault();repelShadow()}});
+$("blow-safe-button")?.addEventListener("click",blowSafe);
 $("reset-button").addEventListener("click",()=>{if(!$("win-screen").classList.contains("game-finished"))location.reload();});
 if($("play-again")){$("play-again").classList.add("hidden");$("play-again").disabled=true;}
 
@@ -317,6 +378,8 @@ async function handleEconomyClick(e){
 window.ChemieGameBridge={
  getEconomyState(){return {coins:labCoins,ownedSkins:[...ownedSkins],equippedSkin};},
  applyOnlineEconomy(state){if(!state)return;if(Number.isFinite(Number(state.coins)))labCoins=Number(state.coins);if(Array.isArray(state.ownedSkins))ownedSkins=new Set(state.ownedSkins);if(state.equippedSkin&&COSMETIC_SKINS.some(x=>x.id===state.equippedSkin))equippedSkin=state.equippedSkin;renderEconomyPanel();applyEquippedSkin();},
+ applyMaterials(state){applyMaterials(state);},
+ clearMaterials(){inventory=EMPTY_MATERIALS();saveLocalMaterials();renderInventory();if(shadowVisible)hideShadow(false);},
  refresh(){renderEconomyPanel();applyEquippedSkin();},
  setQuestionBank(rows){
    if(!Array.isArray(rows)||!rows.length)return false;
