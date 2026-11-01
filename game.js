@@ -23,6 +23,30 @@ function readLocalMaterials(){try{return normalizeMaterials(JSON.parse(localStor
 function saveLocalMaterials(){try{localStorage.setItem("chemie-escape-materials",JSON.stringify(inventory));}catch{}}
 function applyMaterials(value){inventory=normalizeMaterials(value);saveLocalMaterials();renderInventory();}
 
+// Houd de inventarisweergave synchroon met de grondstoffenvoorraad.
+// Deze functie wordt aangeroepen bij het laden, na een Schaduw-drop en na de kluisreactie.
+function renderInventory(){
+ const target=$("inventory-items");
+ if(!target)return;
+ const total=Object.values(inventory||{}).reduce((sum,value)=>sum+Math.max(0,Number(value)||0),0);
+ target.innerHTML=Object.entries(MATERIAL_INFO).map(([key,item])=>{
+  const amount=Math.max(0,Math.floor(Number(inventory?.[key])||0));
+  const stockClass=amount>0?"has-stock":"empty";
+  return `<div class="material-item ${stockClass}" aria-label="${item.name}: ${amount} mol">
+   <span class="material-icon">${item.emoji}</span>
+   <strong>${item.name}</strong>
+   <b>${amount} mol</b>
+   <small>${item.formula}</small>
+  </div>`;
+ }).join("");
+ const note=$("inventory-note");
+ if(note){
+  note.textContent=total>0
+   ? `Je hebt in totaal ${total} mol grondstoffen verzameld. Verzamel de juiste hoeveelheden om de kluisreactie uit te voeren.`
+   : "Elke keer dat je de Schaduw op tijd aantikt, laat hij 1 mol van één grondstof vallen.";
+ }
+}
+
 
 // Optionele sidequest: elementnamen omzetten naar exact gespelde elementsymbolen.
 // De vergelijking is hoofdlettergevoelig (bv. Pb is juist; PB en pb zijn fout).
@@ -255,18 +279,27 @@ async function submitAnswer(e){
   setTimeout(()=>closeModal(),1600);return;
  }
  const token=activeRunToken;
+ const answeredAttemptId=activeAttemptId;
+ const answeredObject=activeObject,answeredLevel=currentLevel;
+ const nextQ=nextUnansweredQuestion();
  saveLocalAttempt();
  feedback(`Juist! Vraag ${activeAttemptCorrectIds.length} van ${activeAttemptRequired} opgelost.`,"good");
  setStatus("Goed antwoord. De volgende vraag wordt automatisch geopend…");
  if(verified.economy&&window.ChemieGameBridge)window.ChemieGameBridge.applyOnlineEconomy(verified.economy);
- renderLevel();
- const nextQ=nextUnansweredQuestion();
+ // Een fout in een nevenweergave (zoals de inventaris) mag de vragenreeks
+ // nooit onderbreken. De volgende vraag wordt daarom onafhankelijk ingepland.
+ try{renderLevel();updateProgress();}catch(renderError){console.error("Weergave bijwerken is mislukt; de vragenreeks loopt door.",renderError);}
  $("check-button").classList.add("hidden");
- const answeredObject=activeObject,answeredLevel=currentLevel;
  if(nextQ)setTimeout(()=>{
-  if(token===activeRunToken&&currentLevel===answeredLevel&&activeObject===answeredObject&&currentRunMatches(answeredLevel,answeredObject))showQuestion(nextQ);
- },650);
- else setTimeout(()=>{if(token===activeRunToken)setStatus("Je reeks is opgeslagen. Open dezelfde puzzel om verder te gaan.");},650);
+  const sameRun=token===activeRunToken&&currentLevel===answeredLevel&&activeRunLevel===answeredLevel&&activeObject===answeredObject&&activeRunObject===answeredObject&&String(activeAttemptId||"")===String(answeredAttemptId||"");
+  if(sameRun){
+   showQuestion(nextQ);
+   setStatus(`Goed! Vraag ${activeAttemptCorrectIds.length+1} van ${activeAttemptRequired} wordt geopend.`);
+   const input=$("numeric-answer")||document.querySelector('input[name="choice"]');
+   input?.focus?.();
+  }
+ },550);
+ else setTimeout(()=>{if(token===activeRunToken)setStatus("Je reeks is opgeslagen. Open dezelfde puzzel om verder te gaan.");},550);
 }
 function unlockNextIfReady(){if(!codeEntered[currentLevel])return;const i=LEVEL_ORDER.indexOf(currentLevel);if(i>=0&&i<LEVEL_ORDER.length-1){const next=LEVEL_ORDER[i+1];unlocked[next]=true;setStatus("Tijdpoort geopend! Het volgende labo is nu toegankelijk.");log("Tijdpoort ontgrendeld: "+LEVELS[next].name);renderLevel();}else if(currentLevel==="future"){setStatus("Laatste tijdpoort geopend.")}}
 function showCodeEntry(){activeKind="code";$("modal-category").textContent="TIJDPOORTCODE";$("modal-title").textContent="Open de tijdpoort";$("question-text").textContent="Voer de viercijferige code in die je met de vier puzzels hebt verdiend.";$("answer-area").innerHTML='<input class="numeric-input" id="numeric-answer" type="text" inputmode="numeric" maxlength="4" placeholder="Viercijferige code" required>';$("hint-button").classList.add("hidden");$("check-button").classList.remove("hidden");$("check-button").textContent="Ontgrendel tijdpoort";$("feedback").className="feedback hidden";$("modal-backdrop").classList.remove("hidden")}
