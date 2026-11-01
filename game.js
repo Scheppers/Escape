@@ -1,6 +1,6 @@
 const LEVELS={
- medieval:{name:"Middeleeuws alchemistenlabo",art:"assets/medieval_lab.svg",labels:["Kookpot","Oud boek","Glazen potten","Werktafel"],code:[3,7,2,4],intro:"Je bent aangekomen in een middeleeuws alchemistenlabo."},
- lavoisier:{name:"Labo tijdens de Franse Revolutie",art:"assets/french_lab.svg",labels:["Balans","Notities van Lavoisier","Glaswerk","Proefopstelling"],code:[8,1,5,6],intro:"De tijdreis brengt je naar het labo van Lavoisier."},
+ medieval:{name:"Middeleeuws alchemistenlabo",art:"assets/medieval_lab.svg",labels:["Scheidingstechnieken","Wetten en aspecten","Atoommodellen","Bindingstypes"],code:[3,7,2,4],intro:"Je bent aangekomen in een middeleeuws alchemistenlabo."},
+ lavoisier:{name:"Labo tijdens de Franse Revolutie",art:"assets/french_lab.svg",labels:["Reacties in waterig midden","Kwantitatieve aspecten","Koolstofchemie","Redoxreacties"],code:[8,1,5,6],intro:"De tijdreis brengt je naar het labo van Lavoisier."},
  modern:{name:"Modern chemielabo",art:"assets/modern_lab.svg",labels:["Reageerbuizen","Weegschaal","Maatkolf","Periodiek systeem"],code:[6,4,9,2],intro:"Je bereikt het moderne chemielabo."},
  future:{name:"Futuristisch chemielabo",art:"assets/futuristic_lab.svg",labels:["Robotarm","Hologram","Reactor","Tijdpoort"],code:[5,2,8,1],intro:"Je stapt de toekomst binnen. Het futuristische labo bewaakt de laatste tijdcode."}
 };
