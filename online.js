@@ -132,6 +132,10 @@
     const ownedCards = cardCatalogCache.filter(c => (ownedMap.get(c.id) || 0) > 0);
     const tabs = `<div class="card-system-tabs"><button type="button" data-card-tab="shop" class="${cardShopTab==='shop'?'active':''}">🛍️ Winkel</button><button type="button" data-card-tab="collection" class="${cardShopTab==='collection'?'active':''}">📚 Mijn collectie</button><button type="button" data-card-tab="reactor" class="${cardShopTab==='reactor'?'active':''}">⚗️ Reactiekamer</button></div>`;
     let body = '';
+    // Card IDs moeten ook beschikbaar zijn nadat de reactiekamer-HTML is opgebouwd.
+    // Ze stonden eerder binnen de else-scope en waren daardoor hieronder niet bereikbaar.
+    let firstCardId = '';
+    let secondCardId = '';
     if (cardShopTab === 'shop') {
       const shop = cardCatalogCache.filter(c => c.is_shop_item && !c.is_reward_only);
       body = `<p class="online-help">Koop kaarten van enkelvoudige stoffen. Je mag meerdere exemplaren van dezelfde kaart bezitten. Samengestelde stoffen maak je in de reactiekamer.</p><div class="online-store-grid online-card-grid">${shop.map(c => {
@@ -142,8 +146,8 @@
       body = `<p class="online-help">Je verzameling bevat ${ownedCards.reduce((sum,c)=>sum+(ownedMap.get(c.id)||0),0)} kaart(en). Dubbele kaarten tellen als aparte exemplaren en mogen allemaal in je battledeck.</p><div class="online-store-grid online-card-grid">${ownedCards.map(c => `<article class="online-card owned"><div class="online-card-top"><span>${esc(c.card_type || c.category)}</span><span>${esc(c.rarity)}</span></div><div class="online-formula">${esc(c.formula)}</div><h4>${esc(c.name)}</h4><p>${esc(c.description)}</p><div class="online-stats"><span>💪 Kracht ${Number(c.power ?? c.attack)}</span><span>📦 ×${ownedMap.get(c.id)}</span></div>${c.support_effect && c.support_effect !== 'none' ? `<small class="card-support">✨ ${esc(c.support_description || 'Speciale ondersteuning')}</small>` : ''}${c.is_reward_only ? '<span class="card-reward-tag">🏆 Exclusieve battlekaart</span>' : ''}</article>`).join('') || '<p class="online-help">Je collectie is nog leeg. Koop eerst enkele enkelvoudige stoffen in de winkel.</p>'}</div>`;
     } else {
       const ownedOptions = ownedCards.map(c => `<option value="${esc(c.id)}">${esc(c.formula)} · ${esc(c.name)} (bezit: ${ownedMap.get(c.id)})</option>`).join('');
-      const first = ownedCards[0]?.id || '';
-      const second = ownedCards.find(c => c.id !== first)?.id || '';
+      firstCardId = ownedCards[0]?.id || '';
+      secondCardId = ownedCards.find(c => c.id !== firstCardId)?.id || '';
       body = `<p class="online-help">Kies twee verschillende beginstoffen. De reactiekamer zoekt de bijbehorende reactie en gebruikt precies de coëfficiënten uit de reactievergelijking. Het reactieproduct of de reactieproducten komen daarna in je collectie.</p>
         <div class="reaction-builder"><label>Beginstof 1<select id="reaction-card-a" data-reaction-selector>${ownedOptions}</select></label><label>Beginstof 2<select id="reaction-card-b" data-reaction-selector>${ownedOptions}</select></label><div id="reaction-preview" class="reaction-preview"></div><button type="button" class="online-primary" id="reaction-run" disabled>Voer reactie uit</button></div>`;
       if (!ownedCards.length) body = `<p class="online-help">Je hebt nog geen kaarten om te laten reageren. Koop eerst twee soorten enkelvoudige stoffen in de winkel.</p>`;
@@ -153,7 +157,7 @@
     view.innerHTML = `<div class="online-view-heading"><div><h3>🃏 Stoffenwinkel & kaartencollectie</h3><p>Je saldo: ${Number(balance)} LabCoins.</p></div><button class="online-small-btn" data-online-refresh>Vernieuwen</button></div>${tabs}<div class="card-system-body">${body}</div>`;
     if (cardShopTab === 'reactor' && ownedCards.length >= 2) {
       const a = document.getElementById('reaction-card-a'), b = document.getElementById('reaction-card-b');
-      if (a) a.value = first; if (b) b.value = second;
+      if (a) a.value = firstCardId; if (b) b.value = secondCardId;
       renderReactionPreview();
     }
   }
