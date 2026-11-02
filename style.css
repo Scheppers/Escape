@@ -107,3 +107,56 @@
 .difficulty-tag-gemiddeld{background:#5b461d;color:#f5d58e}
 .difficulty-tag-moeilijk{background:#5a2c36;color:#ffc1cb}
 @media(max-width:700px){.teacher-puzzle-settings-grid{grid-template-columns:1fr}.teacher-puzzle-setting{align-items:flex-start;flex-direction:column}.teacher-puzzle-setting label{max-width:none;width:100%}}
+
+/* Kaartensysteem: stoffenwinkel, collectie, reactiekamer en vereenvoudigde battles */
+.card-system-tabs{display:flex;gap:8px;flex-wrap:wrap;margin:12px 0 16px;padding:7px;background:#0b1b28;border:1px solid #294b60;border-radius:12px}
+.card-system-tabs button{background:transparent;border:1px solid transparent;color:#b9ced8;padding:10px 14px}
+.card-system-tabs button.active{background:#1b6679;border-color:#4ca8b5;color:#fff}
+.card-system-body{min-height:160px}
+.online-card .online-stats{justify-content:space-between;gap:7px;flex-wrap:wrap;font-size:.82rem}
+.online-card.owned{border-color:#3d806e;background:linear-gradient(145deg,#153a3b,#122839)}
+.card-support{display:block;padding:8px 9px;border-radius:8px;background:#273d54;color:#c8e7f4;line-height:1.4}
+.card-reward-tag{display:inline-block;padding:5px 8px;border-radius:7px;background:#604b22;color:#ffe6a4;font-size:.72rem;font-weight:900}
+.reaction-builder{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:12px;padding:18px;background:#102536;border:1px solid #34566b;border-radius:14px}
+.reaction-builder label,.deck-slot-label{display:grid;gap:7px;color:#c8dce5;font-weight:700;font-size:.85rem}
+.reaction-builder select,.deck-slot-select{width:100%;min-width:0;border:1px solid #45677a;border-radius:9px;background:#091724;color:#f4fbff;padding:11px;font:inherit}
+.reaction-preview{grid-column:1/-1;padding:14px;border:1px solid #3c6577;background:#0a1a27;border-radius:11px;color:#d8e8ef;line-height:1.55}
+.reaction-preview h4{margin:0 0 8px;color:#f0d18b}
+.reaction-preview p{margin:6px 0}
+.reaction-preview .good{color:#7ee0bd}
+.reaction-equation-card{padding:12px;border-radius:9px;background:#1c3c51;color:#ffe2a0;text-align:center;font-size:clamp(1rem,2.8vw,1.45rem);font-weight:900;overflow-wrap:anywhere}
+#reaction-run{grid-column:1/-1;margin:0}
+.battle-deck-builder{display:grid;grid-template-columns:repeat(5,minmax(0,1fr));gap:8px;width:100%;margin:8px 0}
+.battle-deck-builder .deck-slot-label{min-width:0;font-size:.75rem}
+.deck-slot-select{font-size:.78rem;padding:9px 7px}
+.battle-turn-banner{display:flex;align-items:center;justify-content:space-between;gap:10px;flex-wrap:wrap;padding:12px 14px;border:1px solid #508ba1;border-radius:11px;margin:12px 0;font-weight:800}
+.battle-turn-banner.your-turn{background:linear-gradient(100deg,#164d55,#173c50);border-color:#43a995;color:#c9fff0}
+.battle-turn-banner.waiting-turn{background:#2b3048;border-color:#6b709c;color:#e1e3ff}
+.battle-turn-banner strong{letter-spacing:.09em;font-size:.72rem}
+.battle-round-indicator{color:#f0d18b;font-weight:800;font-size:.85rem}
+.battle-waiting{padding:12px;border-radius:9px;background:#182b3d;color:#c9dce5}
+.online-moves li{margin:7px 0;padding:7px 9px;border-radius:8px;background:#0d1f2e}
+.battle-support-note{display:block;margin-top:5px;color:#aee5dc}
+.online-play-card em{font-size:.7rem;color:#9dd8ca;font-style:normal;line-height:1.35}
+.teacher-card-manager{margin-top:20px}
+.teacher-card-layout{display:grid;grid-template-columns:minmax(0,.9fr) minmax(0,1.1fr);gap:14px;margin:14px 0}
+.teacher-card-list{display:grid;gap:8px;max-height:520px;overflow:auto}
+.teacher-card-row{display:flex;align-items:center;justify-content:space-between;gap:10px;padding:10px;border:1px solid #35566a;border-radius:9px;background:#102537}
+.teacher-card-row>div:first-child{display:grid;gap:4px;min-width:0}
+.teacher-card-row strong{color:#f1d69a}
+.teacher-card-row small{color:#b9cfda;font-size:.74rem;overflow-wrap:anywhere}
+.teacher-card-row button{flex-shrink:0;border:1px solid #4d91a3;border-radius:8px;padding:7px 9px;background:#146b7b;color:#fff;font-size:.75rem}
+.teacher-card-row button.danger{background:#552c39;border-color:#965467}
+.teacher-card-manager .teacher-question-form h4{grid-column:1/-1;margin:0 0 4px;color:#f0d18b}
+.teacher-card-manager .teacher-question-form label span{display:flex;align-items:center;gap:8px}
+.teacher-card-manager .teacher-question-form input[type=checkbox]{width:auto;min-width:0}
+.teacher-reaction-layout{margin-top:18px}
+.teacher-card-manager .teacher-question-form .span-all{grid-column:1/-1}
+@media(max-width:850px){.teacher-card-layout{grid-template-columns:1fr}.battle-deck-builder{grid-template-columns:repeat(2,minmax(0,1fr))}}
+@media(max-width:560px){.reaction-builder{grid-template-columns:1fr}.reaction-preview,#reaction-run{grid-column:auto}.battle-deck-builder{grid-template-columns:1fr 1fr}.battle-turn-banner{align-items:flex-start;flex-direction:column}.teacher-card-row{align-items:flex-start;flex-direction:column}.teacher-card-row button{width:100%}}
+
+#battle-invite-form{display:grid;grid-template-columns:minmax(0,1fr);align-items:stretch}
+#battle-invite-form>label{display:grid;gap:7px}
+#battle-invite-form>strong{color:#f0d18b;margin-top:4px}
+.battle-accept-form{padding:12px;border:1px solid #36586c;border-radius:10px;background:#0c1e2c}
+.battle-reward{padding:10px 12px;border-radius:9px;background:#51401d;color:#ffe6a4;font-weight:800}

@@ -1,0 +1,82 @@
+CHEMIE ESCAPE ROOM – KAARTENWINKEL, REACTIEKAMER EN BATTLES
+============================================================
+
+INHOUD VAN DE UPDATE
+--------------------
+- index.html: laadt de nieuwe online.js- en style.css-versies zonder oude browsercache.
+- online.js: stoffenwinkel, kaartencollectie, reactiekamer, deckkeuze, beurtgebaseerde battles en leerkrachtbeheer.
+- style.css: vormgeving voor kaarten, reactiekamer, decks en battlebeurten.
+- supabase/migrations/2026_11_chemiekaarten_reacties_battles.sql: database-uitbreiding en beveiligde spelregels.
+
+INSTALLATIE
+-----------
+1. Maak eerst een back-up van je GitHub-project.
+2. Pak deze ZIP uit.
+3. Kopieer index.html, online.js en style.css naar de hoofdmap van je GitHub-repository en vervang de bestaande bestanden.
+4. Kopieer de map/bestandsstructuur onder supabase/migrations/ naar dezelfde map in je GitHub-project.
+5. Open Supabase Dashboard > SQL Editor.
+6. Open het nieuwe SQL-bestand 2026_11_chemiekaarten_reacties_battles.sql, kopieer de volledige inhoud naar de SQL Editor en voer die één keer uit.
+7. Commit de bestanden in GitHub. Netlify zal daarna automatisch opnieuw deployen.
+
+BELANGRIJK
+----------
+- Voer deze nieuwe SQL-migratie één keer uit, nadat het bestaande schema en de eerdere uitbreidingen al zijn uitgevoerd.
+- Voer schema.sql NIET opnieuw uit op je bestaande database.
+- Vervang game.js niet: die is voor deze kaartuitbreiding niet aangepast.
+- Laat config.js, netlify.toml, Netlify Functions en alle omgevingsvariabelen ongemoeid.
+- Er zijn geen nieuwe Netlify-omgevingsvariabelen of geheime sleutels nodig.
+- De migratie behoudt bestaande accounts, LabCoins, skins, inventarissen en puzzelvoortgang.
+- Eventuele nog openstaande battles uit het oudere battleprototype worden op 'declined' gezet, omdat die een ander kaart- en beurtmodel gebruikten. Afgeronde historiek blijft bestaan.
+
+HOE HET KAARTENSYSTEEM WERKT
+----------------------------
+WINKEL EN COLLECTIE
+- De winkel toont alleen kaarten die als winkelkaart zijn gemarkeerd. De standaardcatalogus bevat enkelvoudige stoffen zoals H2, He, C, O2, Fe, Na, Cl2, S, Ag, Au, Cu, N2, Mg en Br2.
+- Spelers kunnen meerdere exemplaren van dezelfde kaart kopen. De collectie toont het aantal per kaart.
+- Bestaande startkaarten blijven behouden.
+
+REACTIEKAMER
+- Een leerling kiest twee verschillende beginstoffen.
+- De ingestelde reactie bepaalt de vereiste hoeveelheden en de één of twee productsoorten.
+- De reactanten worden verbruikt; de productkaarten worden toegevoegd.
+- De voorbeeldreactie is 2 H2 + O2 -> 2 H2O. Een leerling die één startkaart H2 heeft, koopt dus nog één H2-kaart om deze reactie uit te voeren.
+- De leerkracht beheert reacties in Klasbeheer > Kaarten en reacties beheren.
+
+BATTLES
+- Beide spelers kiezen precies vijf kaartslots. Dezelfde kaart mag meerdere keren gekozen worden als de speler voldoende exemplaren bezit.
+- Kaarten hebben één krachtwaarde; er is geen aparte aanvalskracht of verdedigingskracht.
+- De uitdager start als aanvaller. De andere speler kiest een verdedigingskaart. Daarna wordt de verdediger de volgende aanvaller.
+- Het verschil in effectieve kracht is de schade voor de verliezer. Bij gelijke kracht loopt niemand schade op.
+- Speciale ondersteuning wordt toegepast op basis van kaarttype en werkt onafhankelijk van de rol. Voorbeelden in de standaardcatalogus: H2O halveert de kracht van een kaart van type 'vuur'; He voorkomt alle HP-schade wanneer de andere kaart type 'gas' heeft.
+- Halvering wordt naar beneden afgerond op een geheel getal.
+- Een battle eindigt zodra iemand 0 HP bereikt of na vijf duels. De speler met de meeste resterende HP wint; bij gelijke HP is het gelijkspel.
+- De standaard startlevenskracht is 20 HP. De leerkracht kan die aanpassen in Klasbeheer. De instelling geldt voor nieuwe battles.
+- De winnaar ontvangt een speciale kaart die niet in de winkel te koop is. De standaard beloningskaart is Ozonmeester. De leerkracht kan extra kaarten als exclusieve battlebeloning markeren.
+- Kaarten blijven in de collectie nadat ze in een battle zijn gespeeld; de vijf slots zijn alleen voor die ene battle.
+
+LEERKRACHTBEHEER
+----------------
+In Klasbeheer > Kaarten en reacties beheren kan de leerkracht:
+- kaarten toevoegen of aanpassen;
+- per kaart de naam, formule, type, winkelprijs en kracht (1–20) instellen;
+- een speciaal ondersteuningstype en effect instellen (geen, halve kracht of alle schade annuleren);
+- bepalen of een kaart in de winkel te koop is of uitsluitend als battlebeloning kan worden verkregen;
+- reacties met twee beginstoffen en één of twee productsoorten aanmaken, aanpassen of archiveren;
+- de startlevenskracht per nieuwe battle instellen (1–200 HP).
+
+Een kaart die in een open battledeck zit, kan tijdens die battle niet door de leerkracht worden aangepast. Dit voorkomt dat kaartwaarden midden in een duel veranderen.
+
+SCOPE VAN DE INSTELLINGEN
+-------------------------
+De kaartcatalogus, reacties en startlevenskracht zijn in deze versie gedeeld binnen één Supabase-project. Als er meerdere klassen in hetzelfde project zitten, gebruiken die dus dezelfde kaartinstellingen. Kaartbezit en battles zelf blijven per leerling opgeslagen; battles zijn alleen mogelijk tussen leerlingen uit dezelfde klas.
+
+CONTROLE NA INSTALLATIE
+-----------------------
+1. Log in als leerkracht en open Klasbeheer > Kaarten en reacties beheren.
+2. Controleer de kaartcatalogus en de voorbeeldreactie 'Vorming van water'.
+3. Log in met twee leerlingaccounts uit dezelfde klas.
+4. Koop eventueel een extra H2-kaart, voer 2 H2 + O2 -> 2 H2O uit en controleer de collectie.
+5. Stel bij beide accounts een battledeck van vijf kaarten samen en start/aanvaard een uitdaging.
+6. Controleer dat de aanvaller/verdediger duidelijk wisselt, dat gelijke kracht geen schade geeft en dat HP en de beloningskaart na afloop kloppen.
+
+De bronbestanden en Netlify-build zijn lokaal gecontroleerd. De SQL-migratie en online transacties zijn niet op jouw live Supabase-project uitgevoerd; test dit daarom eerst met twee testleerlingen.

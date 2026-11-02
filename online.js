@@ -14,6 +14,8 @@
   const authEmail = (username) => `${String(username || '').trim().toLowerCase()}@${AUTH_DOMAIN}`;
   let refreshTimer = null, lastBattleIds = '';
   let teacherQuestionCache = [], teacherQuestionLevel = 'medieval';
+  let cardCatalogCache = [], ownedCardCache = [], reactionCache = [], cardShopTab = 'shop';
+  let teacherCardCache = [], teacherReactionCache = [];
   const esc = (s) => String(s ?? '').replace(/[&<>"']/g, ch => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[ch]));
   const msg = (text, kind = '') => { if (authStatus) { authStatus.textContent = text; authStatus.className = `online-status ${kind}`; } };
   const configured = Boolean(config.url && config.anonKey && !/VUL|YOUR_|PASTE/i.test(config.url + config.anonKey));
@@ -115,14 +117,61 @@
     view.innerHTML = `<div class="online-view-heading"><div><h3>🎭 Skinwinkel</h3><p>Je saldo: ${econ.coins} LabCoins. Alleen uiterlijke aanpassingen.</p></div><button class="online-small-btn" data-online-refresh>Vernieuwen</button></div><div class="online-store-grid">${cards}</div>`;
   }
   async function renderCards() {
-    const [{ data: catalog, error: cErr }, { data: owned, error: oErr }, econ] = await Promise.all([
-      supabase.from('card_catalog').select('id,name,formula,category,rarity,price,attack,shield,description').order('price'),
-      supabase.from('user_cards').select('card_id').eq('user_id', currentUser.id), getEconomy()
+    const [{ data: catalog, error: cErr }, { data: owned, error: oErr }, { data: reactions, error: rErr }, econ] = await Promise.all([
+      supabase.from('card_catalog').select('id,name,formula,category,rarity,price,attack,shield,description,card_type,power,support_target_type,support_effect,support_description,is_shop_item,is_reward_only').order('price'),
+      supabase.from('user_cards').select('card_id,quantity').eq('user_id', currentUser.id),
+      supabase.from('card_reactions').select('id,name,reactant_a_id,reactant_a_qty,reactant_b_id,reactant_b_qty,product_a_id,product_a_qty,product_b_id,product_b_qty,equation_text,active').eq('active', true).order('name'),
+      getEconomy()
     ]);
-    if (cErr) throw cErr; if (oErr) throw oErr;
-    const ownedIds = new Set((owned || []).map(x => x.card_id));
-    const cards = (catalog || []).map(c => `<article class="online-card ${ownedIds.has(c.id) ? 'owned' : ''}"><div class="online-card-top"><span>${esc(c.category)}</span><span>${esc(c.rarity)}</span></div><div class="online-formula">${esc(c.formula)}</div><h4>${esc(c.name)}</h4><p>${esc(c.description)}</p><div class="online-stats"><span>⚔ ${Number(c.attack)}</span><span>🛡 ${Number(c.shield)}</span></div><button data-card-buy="${esc(c.id)}" ${ownedIds.has(c.id) ? 'disabled' : ''}>${ownedIds.has(c.id) ? '✓ In collectie' : `Koop · ${Number(c.price)} coins`}</button></article>`).join('');
-    view.innerHTML = `<div class="online-view-heading"><div><h3>🃏 Kaartenwinkel</h3><p>Saldo: ${econ.coins} LabCoins. Kaarten gebruik je in battles.</p></div><button class="online-small-btn" data-online-refresh>Vernieuwen</button></div><div class="online-store-grid online-card-grid">${cards}</div>`;
+    if (cErr) throw cErr; if (oErr) throw oErr; if (rErr) throw rErr;
+    cardCatalogCache = catalog || []; ownedCardCache = owned || []; reactionCache = reactions || [];
+    renderCardsPanel(econ);
+  }
+  function renderCardsPanel(econ = null) {
+    const ownedMap = new Map(ownedCardCache.map(row => [row.card_id, Number(row.quantity) || 0]));
+    const ownedCards = cardCatalogCache.filter(c => (ownedMap.get(c.id) || 0) > 0);
+    const tabs = `<div class="card-system-tabs"><button type="button" data-card-tab="shop" class="${cardShopTab==='shop'?'active':''}">🛍️ Winkel</button><button type="button" data-card-tab="collection" class="${cardShopTab==='collection'?'active':''}">📚 Mijn collectie</button><button type="button" data-card-tab="reactor" class="${cardShopTab==='reactor'?'active':''}">⚗️ Reactiekamer</button></div>`;
+    let body = '';
+    if (cardShopTab === 'shop') {
+      const shop = cardCatalogCache.filter(c => c.is_shop_item && !c.is_reward_only);
+      body = `<p class="online-help">Koop kaarten van enkelvoudige stoffen. Je mag meerdere exemplaren van dezelfde kaart bezitten. Samengestelde stoffen maak je in de reactiekamer.</p><div class="online-store-grid online-card-grid">${shop.map(c => {
+        const quantity = ownedMap.get(c.id) || 0;
+        return `<article class="online-card"><div class="online-card-top"><span>${esc(c.card_type || c.category)}</span><span>${esc(c.rarity)}</span></div><div class="online-formula">${esc(c.formula)}</div><h4>${esc(c.name)}</h4><p>${esc(c.description)}</p><div class="online-stats"><span>💪 Kracht ${Number(c.power ?? c.attack)}</span><span>📦 ${quantity} in bezit</span></div><button data-card-buy="${esc(c.id)}">Koop exemplaar · ${Number(c.price)} 🪙</button></article>`;
+      }).join('') || '<p class="online-help">De leerkracht heeft nog geen winkelkaarten geactiveerd.</p>'}</div>`;
+    } else if (cardShopTab === 'collection') {
+      body = `<p class="online-help">Je verzameling bevat ${ownedCards.reduce((sum,c)=>sum+(ownedMap.get(c.id)||0),0)} kaart(en). Dubbele kaarten tellen als aparte exemplaren en mogen allemaal in je battledeck.</p><div class="online-store-grid online-card-grid">${ownedCards.map(c => `<article class="online-card owned"><div class="online-card-top"><span>${esc(c.card_type || c.category)}</span><span>${esc(c.rarity)}</span></div><div class="online-formula">${esc(c.formula)}</div><h4>${esc(c.name)}</h4><p>${esc(c.description)}</p><div class="online-stats"><span>💪 Kracht ${Number(c.power ?? c.attack)}</span><span>📦 ×${ownedMap.get(c.id)}</span></div>${c.support_effect && c.support_effect !== 'none' ? `<small class="card-support">✨ ${esc(c.support_description || 'Speciale ondersteuning')}</small>` : ''}${c.is_reward_only ? '<span class="card-reward-tag">🏆 Exclusieve battlekaart</span>' : ''}</article>`).join('') || '<p class="online-help">Je collectie is nog leeg. Koop eerst enkele enkelvoudige stoffen in de winkel.</p>'}</div>`;
+    } else {
+      const ownedOptions = ownedCards.map(c => `<option value="${esc(c.id)}">${esc(c.formula)} · ${esc(c.name)} (bezit: ${ownedMap.get(c.id)})</option>`).join('');
+      const first = ownedCards[0]?.id || '';
+      const second = ownedCards.find(c => c.id !== first)?.id || '';
+      body = `<p class="online-help">Kies twee verschillende beginstoffen. De reactiekamer zoekt de bijbehorende reactie en gebruikt precies de coëfficiënten uit de reactievergelijking. Het reactieproduct of de reactieproducten komen daarna in je collectie.</p>
+        <div class="reaction-builder"><label>Beginstof 1<select id="reaction-card-a" data-reaction-selector>${ownedOptions}</select></label><label>Beginstof 2<select id="reaction-card-b" data-reaction-selector>${ownedOptions}</select></label><div id="reaction-preview" class="reaction-preview"></div><button type="button" class="online-primary" id="reaction-run" disabled>Voer reactie uit</button></div>`;
+      if (!ownedCards.length) body = `<p class="online-help">Je hebt nog geen kaarten om te laten reageren. Koop eerst twee soorten enkelvoudige stoffen in de winkel.</p>`;
+      else if (ownedCards.length < 2) body = `<p class="online-help">Je hebt minstens twee verschillende soorten kaarten nodig om een reactie te starten.</p>`;
+    }
+    const balance = econ?.coins ?? currentProfile?.coins ?? 0;
+    view.innerHTML = `<div class="online-view-heading"><div><h3>🃏 Stoffenwinkel & kaartencollectie</h3><p>Je saldo: ${Number(balance)} LabCoins.</p></div><button class="online-small-btn" data-online-refresh>Vernieuwen</button></div>${tabs}<div class="card-system-body">${body}</div>`;
+    if (cardShopTab === 'reactor' && ownedCards.length >= 2) {
+      const a = document.getElementById('reaction-card-a'), b = document.getElementById('reaction-card-b');
+      if (a) a.value = first; if (b) b.value = second;
+      renderReactionPreview();
+    }
+  }
+  function renderReactionPreview() {
+    const a = document.getElementById('reaction-card-a')?.value;
+    const b = document.getElementById('reaction-card-b')?.value;
+    const preview = document.getElementById('reaction-preview');
+    const run = document.getElementById('reaction-run');
+    if (!preview || !run) return;
+    const reaction = reactionCache.find(r => (r.reactant_a_id === a && r.reactant_b_id === b) || (r.reactant_a_id === b && r.reactant_b_id === a));
+    if (!reaction) { preview.innerHTML = '<p>Er is nog geen reactie ingesteld voor deze combinatie. Vraag de leerkracht om deze reactie toe te voegen.</p>'; run.disabled = true; run.dataset.reactionId = ''; return; }
+    const byId = new Map(cardCatalogCache.map(c => [c.id,c]));
+    const amountA = ownedCardCache.find(x=>x.card_id===reaction.reactant_a_id)?.quantity || 0;
+    const amountB = ownedCardCache.find(x=>x.card_id===reaction.reactant_b_id)?.quantity || 0;
+    const productA = byId.get(reaction.product_a_id), productB = reaction.product_b_id ? byId.get(reaction.product_b_id) : null;
+    const enough = amountA >= reaction.reactant_a_qty && amountB >= reaction.reactant_b_qty;
+    preview.innerHTML = `<h4>${esc(reaction.name)}</h4><div class="reaction-equation-card">${esc(reaction.equation_text || `${reaction.reactant_a_qty} ${byId.get(reaction.reactant_a_id)?.formula || ''} + ${reaction.reactant_b_qty} ${byId.get(reaction.reactant_b_id)?.formula || ''}`)}</div><p>Je verbruikt ${reaction.reactant_a_qty} × ${esc(byId.get(reaction.reactant_a_id)?.formula || '')} en ${reaction.reactant_b_qty} × ${esc(byId.get(reaction.reactant_b_id)?.formula || '')}.</p><p>Je ontvangt ${reaction.product_a_qty} × ${esc(productA?.formula || '')}${productB ? ` en ${reaction.product_b_qty} × ${esc(productB.formula)}` : ''}.</p><small class="${enough?'good':'teacher-warn'}">${enough ? 'Je hebt voldoende kaarten.' : `Onvoldoende voorraad. Je bezit ${amountA} en ${amountB} van de benodigde beginstoffen.`}</small>`;
+    run.disabled = !enough; run.dataset.reactionId = reaction.id;
   }
   async function renderTeacher() {
     if (currentProfile?.role !== 'teacher') throw new Error('Alleen de leerkracht heeft toegang tot klasbeheer.');
@@ -151,8 +200,19 @@ Optie D"></textarea></label>
         <label for="teacher-question-answer" id="teacher-question-answer-label">Correct antwoord<select id="teacher-question-answer"><option value="1">Optie 1</option><option value="2">Optie 2</option><option value="3">Optie 3</option><option value="4">Optie 4</option></select></label>
         <div class="span-all" style="display:flex;gap:9px;flex-wrap:wrap"><button type="submit" class="online-primary" id="teacher-question-save">Vraag opslaan</button><button type="button" class="online-secondary" id="teacher-question-new">Nieuwe vraag / formulier leegmaken</button></div>
         <p class="teacher-question-status span-all">Label elke vraag als Basis, Gemiddeld of Moeilijk. Het aantal vragen (3, 5 of 10) stel je bovenaan per puzzelplek in. Zorg dat de gekozen moeilijkheid voldoende actieve vragen bevat.</p>
-        </form></section>`;
+        </form></section>
+      <section class="teacher-question-manager teacher-card-manager"><div class="online-view-heading"><div><h3>🃏 Kaarten en reacties beheren</h3><p>Beheer de winkelkaarten, kracht, type, speciale ondersteuning en chemische reacties. De kaartcatalogus en reacties worden gedeeld binnen dit Supabase-project.</p></div></div>
+        <div class="teacher-card-layout">
+          <article class="online-auth-card"><h4>Kaartcatalogus</h4><div id="teacher-card-list" class="teacher-card-list">Kaarten worden geladen…</div></article>
+          <form id="teacher-card-form" class="teacher-question-form"><h4 class="span-all">Kaart toevoegen / aanpassen</h4><label>Kaart-ID<input id="teacher-card-id" pattern="[a-z0-9][a-z0-9-]{1,49}" placeholder="bv. water" required></label><label>Naam<input id="teacher-card-name" required></label><label>Formule<input id="teacher-card-formula" placeholder="H₂O" required></label><label>Kaarttype<input id="teacher-card-type" list="teacher-card-types" value="gas" required><datalist id="teacher-card-types"><option value="water"><option value="vuur"><option value="steen"><option value="metaal"><option value="gas"><option value="vloeistof"><option value="zout"><option value="edelgas"><option value="vaste stof"></datalist></label><label>Winkelprijs (LabCoins)<input id="teacher-card-price" type="number" min="0" max="10000" value="5" required></label><label>Kracht (1–20)<input id="teacher-card-power" type="number" min="1" max="20" value="1" required></label><label class="span-all">Beschrijving<textarea id="teacher-card-description" rows="2"></textarea></label><label>Ondersteuning tegen type<input id="teacher-card-target" list="teacher-card-types" placeholder="leeg = geen ondersteuning"></label><label>Ondersteuningseffect<select id="teacher-card-effect"><option value="none">Geen</option><option value="halve">Halveert kracht van doeltype</option><option value="cancel_damage">Voorkomt alle schade in dit duel</option></select></label><label class="span-all">Tekst ondersteuning<textarea id="teacher-card-support-description" rows="2" placeholder="bv. Halveert de kracht van een vuurkaart."></textarea></label><label><span><input id="teacher-card-shop" type="checkbox"> Te koop in de winkel</span></label><label><span><input id="teacher-card-reward" type="checkbox"> Exclusieve battlebeloning</span></label><div class="span-all" style="display:flex;gap:8px;flex-wrap:wrap"><button type="submit" class="online-primary">Kaart opslaan</button><button type="button" class="online-secondary" id="teacher-card-new">Nieuw formulier</button></div></form>
+        </div>
+        <div class="teacher-card-layout teacher-reaction-layout"><article class="online-auth-card"><h4>Reacties</h4><div id="teacher-reaction-list" class="teacher-card-list">Reacties worden geladen…</div></article>
+          <form id="teacher-reaction-form" class="teacher-question-form"><h4 class="span-all">Reactie toevoegen / aanpassen</h4><input type="hidden" id="teacher-reaction-id"><label class="span-all">Naam van de reactie<input id="teacher-reaction-name" required placeholder="Vorming van water"></label><label>Beginstof 1<select id="teacher-reaction-a"></select></label><label>Aantal beginstof 1<input id="teacher-reaction-a-qty" type="number" min="1" max="99" value="2" required></label><label>Beginstof 2<select id="teacher-reaction-b"></select></label><label>Aantal beginstof 2<input id="teacher-reaction-b-qty" type="number" min="1" max="99" value="1" required></label><label>Product 1<select id="teacher-reaction-pa"></select></label><label>Aantal product 1<input id="teacher-reaction-pa-qty" type="number" min="1" max="99" value="2" required></label><label>Product 2 (optioneel)<select id="teacher-reaction-pb"></select></label><label>Aantal product 2<input id="teacher-reaction-pb-qty" type="number" min="0" max="99" value="0"></label><label class="span-all">Weergave reactievergelijking<input id="teacher-reaction-equation" placeholder="2 H₂ + O₂ → 2 H₂O"></label><label><span><input id="teacher-reaction-active" type="checkbox" checked> Actief voor leerlingen</span></label><div class="span-all" style="display:flex;gap:8px;flex-wrap:wrap"><button type="submit" class="online-primary">Reactie opslaan</button><button type="button" class="online-secondary" id="teacher-reaction-new">Nieuwe reactie</button></div></form>
+        </div>
+        <form id="teacher-battle-settings-form" class="teacher-question-form"><h4 class="span-all">⚔️ Battle-instellingen</h4><label>Startlevenskracht per speler<input id="teacher-battle-hp" type="number" min="1" max="200" value="20" required></label><div><button type="submit" class="online-primary">Battle-instelling opslaan</button></div><p class="teacher-question-status span-all">Elke speler kiest vijf kaarten. Hogere kracht veroorzaakt schade gelijk aan het verschil; gelijke kracht veroorzaakt geen schade. Een halvering wordt naar beneden afgerond op een geheel getal. Speciale ondersteuning werkt onafhankelijk van de aanvals- of verdedigingsrol. Na elk duel wisselen de rollen. De ingestelde startlevenskracht geldt voor nieuwe battles binnen dit project.</p></form>
+      </section>`;
     try { await renderTeacherQuestions('medieval'); } catch (questionError) { console.error(questionError); const status=document.getElementById('teacher-question-status'); if(status) status.textContent='Vragenbeheer is nog niet geactiveerd. Voer de SQL-migratie uit die in het updatepakket staat.'; const list=document.getElementById('teacher-question-list'); if(list) list.innerHTML='<p class="online-help">Voer eerst de meegeleverde Supabase-migratie uit om vragensets online te beheren.</p>'; }
+    try { await renderTeacherCardManager(); } catch (cardError) { console.error(cardError); const list=document.getElementById('teacher-card-list'); if(list) list.textContent='Kaartbeheer kon niet laden. Controleer of de kaartenmigratie in Supabase is uitgevoerd.'; }
   }
 
   function resetTeacherQuestionForm() {
@@ -263,31 +323,132 @@ Optie D"></textarea></label>
 
 
   async function getMyBattles() { const data = await rpc('get_my_battles'); return Array.isArray(data) ? data : []; }
+  function deckSelectMarkup(cards, ownedRows, prefix, selectedValues = []) {
+    const quantity = new Map(ownedRows.map(row => [row.card_id, Number(row.quantity) || 0]));
+    const options = cards.filter(c => (quantity.get(c.id) || 0) > 0).map(c => `<option value="${esc(c.id)}">${esc(c.formula)} · ${esc(c.name)} (bezit: ${quantity.get(c.id)})</option>`).join('');
+    return Array.from({length:5}, (_,i) => `<label class="deck-slot-label">Kaart ${i+1}<select name="deck_card_ids" class="deck-slot-select" data-deck-prefix="${esc(prefix)}">${options || '<option value="">Geen kaarten in collectie</option>'}</select></label>`).join('');
+  }
+  function suggestDeck(cards, ownedRows) {
+    const remaining = new Map(ownedRows.map(row => [row.card_id, Number(row.quantity) || 0]));
+    const result = [];
+    for (let i=0;i<5;i++) {
+      const card = cards.find(c => (remaining.get(c.id) || 0) > 0);
+      if (!card) break;
+      result.push(card.id); remaining.set(card.id, remaining.get(card.id)-1);
+    }
+    return result;
+  }
+  function selectedDeck(form) {
+    const values = [...(form?.querySelectorAll('[name="deck_card_ids"]') || [])].map(el=>el.value).filter(Boolean);
+    if (values.length !== 5) throw new Error('Selecteer precies vijf kaarten.');
+    const available = new Map(ownedCardCache.map(row=>[row.card_id,Number(row.quantity)||0]));
+    const selected = new Map(); values.forEach(id=>selected.set(id,(selected.get(id)||0)+1));
+    for (const [id,count] of selected) if (count>(available.get(id)||0)) throw new Error('Je hebt niet voldoende exemplaren van één van de geselecteerde kaarten.');
+    return values;
+  }
   async function renderBattles() {
     const [battles, { data: owned, error: oErr }, { data: catalog, error: cErr }] = await Promise.all([
-      getMyBattles(), supabase.from('user_cards').select('card_id').eq('user_id', currentUser.id), supabase.from('card_catalog').select('id,name,formula,attack,shield,price,rarity,description')
+      getMyBattles(), supabase.from('user_cards').select('card_id,quantity').eq('user_id', currentUser.id), supabase.from('card_catalog').select('id,name,formula,card_type,power,support_description,support_effect,is_reward_only')
     ]);
     if (oErr) throw oErr; if (cErr) throw cErr;
-    const cards = catalog || [], ownedIds = new Set((owned || []).map(x => x.card_id));
+    const cards = catalog || []; ownedCardCache = owned || [];
     const battleMarkup = await Promise.all(battles.map(async b => {
       const isChallenger = b.challenger_id === currentUser.id;
       const opponentName = isChallenger ? b.opponent_username : b.challenger_username;
       const isMyTurn = b.current_turn === currentUser.id;
       let sub = '';
-      if (b.status === 'pending' && b.opponent_id === currentUser.id) sub = `<div class="online-actions"><button data-battle-response="accept" data-id="${b.battle_id}">Uitdaging aanvaarden</button><button class="danger" data-battle-response="decline" data-id="${b.battle_id}">Weigeren</button></div>`;
-      else if (b.status === 'pending') sub = '<p>Uitdaging verstuurd; wachten op antwoord.</p>';
+      if (b.status === 'pending' && b.opponent_id === currentUser.id) {
+        sub = `<p>${esc(b.challenger_username)} daagt je uit. Kies vijf kaarten voor jouw deck voordat je aanvaardt.</p><form class="battle-accept-form" data-battle-accept-form="${b.battle_id}"><div class="battle-deck-builder">${deckSelectMarkup(cards,ownedCardCache,`accept-${b.battle_id}`)}</div><div class="online-actions"><button type="button" data-battle-response="accept" data-id="${b.battle_id}">Aanvaarden met dit deck</button><button type="button" class="danger" data-battle-response="decline" data-id="${b.battle_id}">Weigeren</button></div></form>`;
+      } else if (b.status === 'pending') sub = '<p>Uitdaging verstuurd. Je deck is vastgelegd; wachten op de keuze van je tegenstander.</p>';
       else if (b.status === 'declined') sub = '<p>Uitdaging geweigerd.</p>';
-      else if (b.status === 'completed') sub = `<p>${b.winner_id ? (b.winner_id === currentUser.id ? '🏆 Jij hebt gewonnen!' : 'De tegenstander heeft gewonnen.') : '🤝 Gelijkspel'} </p>`;
+      else if (b.status === 'completed') { const rewardCard=cards.find(c=>c.id===b.reward_card_id); sub = `<p>${b.winner_id ? (b.winner_id === currentUser.id ? '🏆 Jij hebt gewonnen!' : 'De tegenstander heeft gewonnen.') : '🤝 Gelijkspel'}</p>${rewardCard && b.winner_id===currentUser.id ? `<p class="battle-reward">🎁 Je ontvangt ${esc(rewardCard.formula)} · ${esc(rewardCard.name)} — een exclusieve kaart die niet in de winkel te koop is.</p>` : ''}<div class="online-hp"><span>Jij: ${isChallenger ? b.challenger_hp : b.opponent_hp}/${b.starting_hp} HP</span><span>${esc(opponentName)}: ${isChallenger ? b.opponent_hp : b.challenger_hp}/${b.starting_hp} HP</span></div>`; }
       else if (b.status === 'active') {
-        const { data: moves, error: mErr } = await supabase.from('battle_moves').select('move_number,user_id,card_id,damage,hp_after,created_at').eq('battle_id', b.battle_id).order('move_number');
-        if (mErr) throw mErr;
-        const used = new Set((moves || []).filter(m => m.user_id === currentUser.id).map(m => m.card_id));
-        const moveList = (moves || []).map(m => {const c=cards.find(x=>x.id===m.card_id);return `<li><b>${m.move_number}.</b> ${esc(c?.name||m.card_id)} (${esc(c?.formula||'')}) · ${Number(m.damage)} schade</li>`}).join('');
-        sub = `<p>${isMyTurn ? '<strong class="good">Jij bent aan zet.</strong>' : 'Tegenstander is aan zet.'} Ronde ${Number(b.turn_count)+1}/10.</p><div class="online-hp"><span>🧪 Jij: ${isChallenger ? b.challenger_hp : b.opponent_hp}/30 HP</span><span>⚗ ${esc(opponentName)}: ${isChallenger ? b.opponent_hp : b.challenger_hp}/30 HP</span></div><ol class="online-moves">${moveList || '<li>De battle is gestart.</li>'}</ol>${isMyTurn ? `<div class="online-hand"><strong>Kies een kaart:</strong><div class="online-hand-grid">${cards.filter(c=>ownedIds.has(c.id)&&!used.has(c.id)).map(c=>`<button class="online-play-card" data-play-card="${esc(c.id)}" data-battle-id="${b.battle_id}"><b>${esc(c.formula)}</b><span>${esc(c.name)}</span><small>⚔ ${c.attack} · 🛡 ${c.shield}</small></button>`).join('')}</div></div>` : ''}`;
+        const [{ data: moves, error: mErr }, { data: ownDeck, error: dErr }] = await Promise.all([
+          supabase.from('battle_moves').select('move_number,user_id,card_id,deck_slot,round_number,role,effective_power,damage,hp_after,support_note,damage_to_user_id,created_at').eq('battle_id', b.battle_id).order('move_number'),
+          supabase.from('battle_decks').select('slot_number,card_id').eq('battle_id', b.battle_id).eq('user_id', currentUser.id).order('slot_number')
+        ]);
+        if (mErr) throw mErr; if (dErr) throw dErr;
+        const usedSlots = new Set((moves || []).filter(m=>m.user_id===currentUser.id).map(m=>Number(m.deck_slot)));
+        const rounds = new Map(); (moves || []).forEach(m=>{const arr=rounds.get(Number(m.round_number))||[];arr.push(m);rounds.set(Number(m.round_number),arr);});
+        const moveList = [...rounds.entries()].sort((a,b)=>a[0]-b[0]).map(([round,arr])=>{
+          const atk=arr.find(m=>m.role==='attacker'),def=arr.find(m=>m.role==='defender');
+          const atkCard=cards.find(c=>c.id===atk?.card_id),defCard=cards.find(c=>c.id===def?.card_id);
+          if (!def) return `<li><strong>Ronde ${round}</strong> · Aanval ingezet: ${esc(atkCard?.formula||'kaart')} — wachten op verdediging.</li>`;
+          const damage=Number(def.damage)||0; const recipient=def.damage_to_user_id===currentUser.id?'jij':def.damage_to_user_id?'tegenstander':'niemand';
+          const notes=def.support_note ? `<small class="battle-support-note">✨ ${esc(def.support_note)}</small>` : '';
+          const outcome=damage===0?'Geen levenspunten verloren.':`${damage} HP schade aan ${recipient}.`;
+          return `<li><strong>Ronde ${round}</strong> · Aanval: ${esc(atkCard?.formula||'')} (${Number(atk.effective_power)} kracht) · Verdediging: ${esc(defCard?.formula||'')} (${Number(def.effective_power)} kracht). <b>${esc(outcome)}</b>${notes}</li>`;
+        }).join('');
+        const hand = isMyTurn ? `<div class="online-hand"><strong>${b.current_role==='attacker'?'🗡️ Jij valt aan':'🛡️ Jij verdedigt'} — kies één kaart:</strong><div class="online-hand-grid">${(ownDeck||[]).filter(d=>!usedSlots.has(Number(d.slot_number))).map(d=>{const c=cards.find(x=>x.id===d.card_id);return `<button class="online-play-card" data-play-slot="${Number(d.slot_number)}" data-battle-id="${b.battle_id}"><b>${esc(c?.formula||d.card_id)}</b><span>${esc(c?.name||'Kaart')}</span><small>💪 Kracht ${Number(c?.power)||1} · ${esc(c?.card_type||'')}</small>${c?.support_description?`<em>${esc(c.support_description)}</em>`:''}<small>Deckslot ${Number(d.slot_number)}</small></button>`;}).join('') || '<p>Je hebt alle vijf kaarten al gespeeld.</p>'}</div></div>` : `<p class="battle-waiting">${b.current_role==='attacker'?'Tegenstander kiest een aanvalskaart.':'Tegenstander kiest een verdedigingskaart.'}</p>`;
+        const role = isMyTurn ? (b.current_role==='attacker'?'Jij bent de aanvaller':'Jij bent de verdediger') : (b.current_role==='attacker'?'Tegenstander is de aanvaller':'Tegenstander is de verdediger');
+        sub = `<div class="battle-turn-banner ${isMyTurn?'your-turn':'waiting-turn'}"><strong>${isMyTurn?'JOUW BEURT':'BEURT TEGENSTANDER'}</strong><span>${role}</span></div><div class="online-hp"><span>🧪 Jij: ${isChallenger ? b.challenger_hp : b.opponent_hp}/${b.starting_hp} HP</span><span>⚗ ${esc(opponentName)}: ${isChallenger ? b.opponent_hp : b.challenger_hp}/${b.starting_hp} HP</span></div><p class="battle-round-indicator">Duel ${Number(b.round_count)+1}/5 · ${b.current_role==='attacker'?'aanval':'verdediging'}</p><ol class="online-moves">${moveList || '<li>De battle is gestart. De uitdager valt aan.</li>'}</ol>${hand}`;
       }
       return `<article class="online-battle-card"><div class="online-view-heading"><div><h4>⚔️ Jij vs. ${esc(opponentName)}</h4><small>${esc(b.status)} · ${new Date(b.updated_at).toLocaleString('nl-BE')}</small></div><span class="online-pill">${b.status === 'active' ? `${isChallenger ? b.challenger_hp : b.opponent_hp} HP` : esc(b.status)}</span></div>${sub}</article>`;
     }));
-    view.innerHTML = `<div class="online-view-heading"><div><h3>⚔️ Chemiebattles</h3><p>Daag een klasgenoot uit met diens gebruikersnaam. Andere klassen zijn afgeschermd.</p></div><button class="online-small-btn" data-online-refresh>Vernieuwen</button></div><form id="battle-invite-form" class="online-invite-form"><label for="battle-opponent">Gebruikersnaam tegenstander</label><input id="battle-opponent" name="username" minlength="3" maxlength="20" pattern="[a-z0-9_-]{3,20}" placeholder="bv. chemicus_123" required><button>Daag uit</button></form><div class="online-battles-list">${battleMarkup.join('') || '<p class="online-help">Nog geen uitdagingen of battles. Daag een klasgenoot uit!</p>'}</div>`;
+    const deckOptions = deckSelectMarkup(cards,ownedCardCache,'challenge');
+    view.innerHTML = `<div class="online-view-heading"><div><h3>⚔️ Chemiebattles</h3><p>Stel een battledeck van vijf kaarten samen en daag een klasgenoot uit. De verdediger kiest na de aanval zijn kaart; daarna wisselen de rollen.</p></div><button class="online-small-btn" data-online-refresh>Vernieuwen</button></div><form id="battle-invite-form" class="online-invite-form"><label for="battle-opponent">Gebruikersnaam tegenstander</label><input id="battle-opponent" name="username" minlength="3" maxlength="20" pattern="[a-z0-9_-]{3,20}" placeholder="bv. chemicus_123" required><strong>Kies jouw vijf kaarten</strong><div class="battle-deck-builder">${deckOptions}</div><button>Verstuur uitdaging</button></form><div class="online-battles-list">${battleMarkup.join('') || '<p class="online-help">Nog geen uitdagingen of battles. Daag een klasgenoot uit!</p>'}</div>`;
+    const suggestions = suggestDeck(cards,ownedCardCache);
+    document.querySelectorAll('#battle-invite-form .deck-slot-select').forEach((select,i)=>{if(suggestions[i])select.value=suggestions[i];});
+    document.querySelectorAll('.battle-accept-form').forEach(form=>{
+      const picks=suggestDeck(cards,ownedCardCache);
+      form.querySelectorAll('.deck-slot-select').forEach((select,i)=>{if(picks[i])select.value=picks[i];});
+    });
+  }
+
+  async function renderTeacherCardManager() {
+    if (currentProfile?.role !== 'teacher') return;
+    const [{ data: cards, error: cErr }, { data: reactions, error: rErr }, { data: settings, error: sErr }] = await Promise.all([
+      supabase.from('card_catalog').select('id,name,formula,card_type,price,power,description,support_target_type,support_effect,support_description,is_shop_item,is_reward_only,rarity').order('name'),
+      supabase.from('card_reactions').select('*').order('name'),
+      supabase.from('battle_settings').select('starting_hp').eq('singleton',true).single()
+    ]);
+    if (cErr) throw cErr; if (rErr) throw rErr; if (sErr) throw sErr;
+    teacherCardCache=cards||[]; teacherReactionCache=reactions||[];
+    const options = teacherCardCache.map(c=>`<option value="${esc(c.id)}">${esc(c.formula)} · ${esc(c.name)}</option>`).join('');
+    ['teacher-reaction-a','teacher-reaction-b','teacher-reaction-pa','teacher-reaction-pb'].forEach(id=>{const el=document.getElementById(id);if(el)el.innerHTML=(id==='teacher-reaction-pb'?'<option value="">Geen tweede product</option>':'')+options;});
+    const list=document.getElementById('teacher-card-list');
+    if(list)list.innerHTML=teacherCardCache.map(c=>`<article class="teacher-card-row"><div><strong>${esc(c.formula)} · ${esc(c.name)}</strong><small>${esc(c.card_type)} · kracht ${Number(c.power)} · ${Number(c.price)} coins · ${c.is_shop_item?'winkel':c.is_reward_only?'beloning':'alleen reactieproduct'}</small>${c.support_description?`<small>✨ ${esc(c.support_description)}</small>`:''}</div><button type="button" data-teacher-card-edit="${esc(c.id)}">Bewerken</button></article>`).join('');
+    const rlist=document.getElementById('teacher-reaction-list');
+    if(rlist)rlist.innerHTML=teacherReactionCache.map(r=>{const byId=new Map(teacherCardCache.map(c=>[c.id,c]));const text= r.equation_text || `${r.reactant_a_qty} ${byId.get(r.reactant_a_id)?.formula||r.reactant_a_id} + ${r.reactant_b_qty} ${byId.get(r.reactant_b_id)?.formula||r.reactant_b_id}`;return `<article class="teacher-card-row"><div><strong>${esc(r.name)}</strong><small>${esc(text)}</small><small>${r.active?'Actief':'Gearchiveerd'}</small></div><div><button type="button" data-teacher-reaction-edit="${r.id}">Bewerken</button>${r.active?`<button type="button" class="danger" data-teacher-reaction-archive="${r.id}">Archiveren</button>`:''}</div></article>`;}).join('')||'<p>Er zijn nog geen reacties.</p>';
+    const hp=document.getElementById('teacher-battle-hp');if(hp)hp.value=Number(settings.starting_hp)||20;
+    resetTeacherCardForm();resetTeacherReactionForm();
+  }
+  function resetTeacherCardForm(){
+    const form=document.getElementById('teacher-card-form');if(!form)return;form.reset();
+    const id=document.getElementById('teacher-card-id');if(id)id.readOnly=false;
+    const price=document.getElementById('teacher-card-price');if(price)price.value='5';
+    const power=document.getElementById('teacher-card-power');if(power)power.value='1';
+  }
+  function editTeacherCard(id){
+    const c=teacherCardCache.find(x=>x.id===id);if(!c)return;
+    const values={id:c.id,name:c.name,formula:c.formula,card_type:c.card_type,price:c.price,power:c.power,description:c.description,support_target_type:c.support_target_type||'',support_effect:c.support_effect||'none',support_description:c.support_description||''};
+    Object.entries(values).forEach(([key,value])=>{const el=document.getElementById('teacher-card-'+(key==='card_type'?'type':key==='support_target_type'?'target':key==='support_effect'?'effect':key==='support_description'?'support-description':key));if(el)el.value=value??'';});
+    document.getElementById('teacher-card-shop').checked=Boolean(c.is_shop_item);document.getElementById('teacher-card-reward').checked=Boolean(c.is_reward_only);
+    const idEl=document.getElementById('teacher-card-id');if(idEl)idEl.readOnly=true;
+    document.getElementById('teacher-card-form').scrollIntoView({behavior:'smooth',block:'center'});
+  }
+  function resetTeacherReactionForm(){
+    const form=document.getElementById('teacher-reaction-form');if(!form)return;form.reset();
+    const id=document.getElementById('teacher-reaction-id');if(id)id.value='';
+    const ids=['teacher-reaction-a','teacher-reaction-b','teacher-reaction-pa','teacher-reaction-pb'];ids.forEach(elid=>{const el=document.getElementById(elid);if(el&&el.options.length)el.selectedIndex=elid==='teacher-reaction-pb'?0:0;});
+    const active=document.getElementById('teacher-reaction-active');if(active)active.checked=true;
+  }
+  function editTeacherReaction(id){
+    const r=teacherReactionCache.find(x=>x.id===id);if(!r)return;
+    const values={id:r.id,name:r.name,a:r.reactant_a_id,b:r.reactant_b_id,'a-qty':r.reactant_a_qty,'b-qty':r.reactant_b_qty,pa:r.product_a_id,'pa-qty':r.product_a_qty,pb:r.product_b_id||'','pb-qty':r.product_b_qty,equation:r.equation_text||''};
+    Object.entries(values).forEach(([key,value])=>{const el=document.getElementById('teacher-reaction-'+key);if(el)el.value=value??'';});
+    document.getElementById('teacher-reaction-active').checked=Boolean(r.active);
+    document.getElementById('teacher-reaction-form').scrollIntoView({behavior:'smooth',block:'center'});
+  }
+  async function saveTeacherCard(e){
+    e.preventDefault();requireLogin();if(currentProfile?.role!=='teacher')throw new Error('Alleen de leerkracht kan kaarten beheren.');
+    const card={id:document.getElementById('teacher-card-id').value.trim(),name:document.getElementById('teacher-card-name').value.trim(),formula:document.getElementById('teacher-card-formula').value.trim(),card_type:document.getElementById('teacher-card-type').value,price:Number(document.getElementById('teacher-card-price').value),power:Number(document.getElementById('teacher-card-power').value),description:document.getElementById('teacher-card-description').value.trim(),support_target_type:document.getElementById('teacher-card-target').value,support_effect:document.getElementById('teacher-card-effect').value,support_description:document.getElementById('teacher-card-support-description').value.trim(),is_shop_item:document.getElementById('teacher-card-shop').checked,is_reward_only:document.getElementById('teacher-card-reward').checked};
+    await rpc('teacher_save_card',{p_card:card});await renderTeacherCardManager();msg('Kaartinstellingen opgeslagen.','good');
+  }
+  async function saveTeacherReaction(e){
+    e.preventDefault();requireLogin();if(currentProfile?.role!=='teacher')throw new Error('Alleen de leerkracht kan reacties beheren.');
+    const reaction={id:document.getElementById('teacher-reaction-id').value.trim(),name:document.getElementById('teacher-reaction-name').value.trim(),reactant_a_id:document.getElementById('teacher-reaction-a').value,reactant_a_qty:Number(document.getElementById('teacher-reaction-a-qty').value),reactant_b_id:document.getElementById('teacher-reaction-b').value,reactant_b_qty:Number(document.getElementById('teacher-reaction-b-qty').value),product_a_id:document.getElementById('teacher-reaction-pa').value,product_a_qty:Number(document.getElementById('teacher-reaction-pa-qty').value),product_b_id:document.getElementById('teacher-reaction-pb').value||null,product_b_qty:Number(document.getElementById('teacher-reaction-pb-qty').value)||0,equation_text:document.getElementById('teacher-reaction-equation').value.trim(),active:document.getElementById('teacher-reaction-active').checked};
+    await rpc('teacher_save_reaction',{p_reaction:reaction});await renderTeacherCardManager();msg('Chemische reactie opgeslagen.','good');
   }
   async function action(task) {
     try { msg('Bezig…'); await task(); if (currentUser) { msg('Klaar.', 'good'); await loadProfile(); setView(currentView); } else { msg('Je bent afgemeld.', 'good'); } }
@@ -389,6 +550,11 @@ Optie D"></textarea></label>
   async function handleClick(e) {
     const viewButton = e.target.closest('[data-online-view]'); if (viewButton) { setView(viewButton.dataset.onlineView); return; }
     const qEdit = e.target.closest('[data-q-edit]'); if (qEdit) { editTeacherQuestion(qEdit.dataset.qEdit); return; }
+    const cardEdit = e.target.closest('[data-teacher-card-edit]'); if (cardEdit) { editTeacherCard(cardEdit.dataset.teacherCardEdit); return; }
+    const reactionEdit = e.target.closest('[data-teacher-reaction-edit]'); if (reactionEdit) { editTeacherReaction(reactionEdit.dataset.teacherReactionEdit); return; }
+    const reactionArchive = e.target.closest('[data-teacher-reaction-archive]'); if (reactionArchive) { await action(async()=>{ await rpc('teacher_archive_reaction',{p_reaction_id:reactionArchive.dataset.teacherReactionArchive}); await renderTeacherCardManager(); }); return; }
+    const cardTab = e.target.closest('[data-card-tab]'); if (cardTab) { cardShopTab=cardTab.dataset.cardTab; await renderCardsPanel(await getEconomy()); return; }
+    const reactionRun = e.target.closest('#reaction-run'); if (reactionRun && reactionRun.dataset.reactionId) { await action(async()=>{ await rpc('perform_card_reaction',{p_reaction_id:reactionRun.dataset.reactionId}); cardShopTab='collection'; }); return; }
     const deleteStudent = e.target.closest('[data-teacher-delete-student]');
     if (deleteStudent) {
       const username = deleteStudent.dataset.teacherDeleteStudent;
@@ -403,8 +569,8 @@ Optie D"></textarea></label>
     if (e.target.closest('[data-online-logout]')) { await action(signOut); return; }
     const skin = e.target.closest('[data-skin-action]'); if (skin) { await action(async () => { if (skin.dataset.skinAction === 'buy') await rpc('buy_skin', { p_skin_id: skin.dataset.id }); else await rpc('equip_skin', { p_skin_id: skin.dataset.id }); }); return; }
     const card = e.target.closest('[data-card-buy]'); if (card) { await action(async () => { await rpc('buy_card', { p_card_id: card.dataset.cardBuy }); }); return; }
-    const response = e.target.closest('[data-battle-response]'); if (response) { await action(async () => { await rpc('respond_to_battle', { p_battle_id: response.dataset.id, p_accept: response.dataset.battleResponse === 'accept' }); }); return; }
-    const play = e.target.closest('[data-play-card]'); if (play) { await action(async () => { await rpc('play_battle_card', { p_battle_id: play.dataset.battleId, p_card_id: play.dataset.playCard }); }); return; }
+    const response = e.target.closest('[data-battle-response]'); if (response) { await action(async () => { const accept=response.dataset.battleResponse==='accept'; const form=response.closest('.battle-accept-form'); const deck=accept?selectedDeck(form):null; await rpc('respond_to_battle', { p_battle_id: response.dataset.id, p_accept: accept, p_deck_card_ids: deck }); }); return; }
+    const play = e.target.closest('[data-play-slot]'); if (play) { await action(async () => { await rpc('play_battle_card', { p_battle_id: play.dataset.battleId, p_deck_slot: Number(play.dataset.playSlot) }); }); return; }
   }
   function bindEvents() {
     root?.addEventListener('click', e => { handleClick(e).catch(err => { console.error(err); msg(err.message || 'Er ging iets mis.', 'bad'); }); });
@@ -415,10 +581,14 @@ Optie D"></textarea></label>
       if (e.target.id === 'teacher-create-accounts-form') { action(() => handleCreateStudentAccounts(e)); return; }
       if (e.target.id === 'teacher-reset-form') { action(() => handleTeacherPasswordReset(e)); return; }
       if (e.target.id === 'teacher-question-form') { e.preventDefault(); handleTeacherQuestionSave(e).catch(err => { console.error(err); msg(err.message || 'Vraag opslaan is mislukt.', 'bad'); }); return; }
+      if (e.target.id === 'teacher-card-form') { action(()=>saveTeacherCard(e)); return; }
+      if (e.target.id === 'teacher-reaction-form') { action(()=>saveTeacherReaction(e)); return; }
+      if (e.target.id === 'teacher-battle-settings-form') { e.preventDefault(); action(async()=>{const hp=Number(document.getElementById('teacher-battle-hp').value); await rpc('teacher_set_battle_settings',{p_starting_hp:hp}); msg('Startlevenskracht bijgewerkt.','good');}); return; }
     });
     view?.addEventListener('change', e => {
       if (e.target.id === 'teacher-question-level') renderTeacherQuestions(e.target.value).catch(err => { console.error(err); msg(err.message || 'Vragenset laden is mislukt.', 'bad'); });
       if (e.target.id === 'teacher-question-type') toggleQuestionEditorType();
+      if (e.target.matches('[data-reaction-selector]')) renderReactionPreview();
       if (e.target.matches('[data-puzzle-count]')) action(async () => {
         const objectId = e.target.dataset.puzzleCount, required = Number(e.target.value);
         await rpc('teacher_set_puzzle_questions', { p_level_id: teacherQuestionLevel, p_object_id: objectId, p_questions_required: required });
@@ -427,10 +597,11 @@ Optie D"></textarea></label>
       });
     });
     document.getElementById('online-logout')?.addEventListener('click', () => action(signOut));
+    view?.addEventListener('click', e=>{ if(e.target.closest('#teacher-card-new'))resetTeacherCardForm(); if(e.target.closest('#teacher-reaction-new'))resetTeacherReactionForm(); });
     view?.addEventListener('submit', e => {
       if (e.target.id !== 'battle-invite-form') return;
       e.preventDefault(); const username = (document.getElementById('battle-opponent')?.value || '').trim().toLowerCase();
-      action(async () => { await rpc('create_battle', { p_opponent_username: username }); });
+      action(async () => { const deck=selectedDeck(e.target); await rpc('create_battle', { p_opponent_username: username, p_deck_card_ids: deck }); });
     });
   }
 
