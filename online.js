@@ -42,7 +42,7 @@
     return result;
   }
   const LEVELS_FOR_QUESTIONS = [
-    { id: 'medieval', name: 'Leerjaar 1 · Middeleeuws labo', objects: { object1:'Scheidingstechnieken', object2:'Aspecten en wetten', object3:'Atoommodellen', object4:'De chemische binding' } },
+    { id: 'medieval', name: 'Leerjaar 1 · Middeleeuws labo', objects: { object1:'Kookpot', object2:'Oud boek', object3:'Glazen potten', object4:'Werktafel' } },
     { id: 'lavoisier', name: 'Leerjaar 2 · Lavoisierlabo', objects: { object1:'Balans', object2:'Notities van Lavoisier', object3:'Glaswerk', object4:'Proefopstelling' } },
     { id: 'modern', name: 'Leerjaar 3 · Modern labo', objects: { object1:'Reageerbuizen', object2:'Weegschaal', object3:'Maatkolf', object4:'Periodiek systeem' } },
     { id: 'future', name: 'Leerjaar 4 · Futuristisch labo', objects: { object1:'Robotarm', object2:'Hologram', object3:'Reactor', object4:'Tijdpoort' } }
@@ -101,7 +101,7 @@
       view.innerHTML = `<div class="online-home-grid"><article class="online-mini-card"><span>🏫</span><strong>Klasbeheer</strong><small>Beheer meerdere klassen, verdeel leerlingen en reset wachtwoorden.</small></article><article class="online-mini-card"><span>🏆</span><strong>XP-ranking per klas</strong><small>Kies zelf welke klasrangschikking je wilt bekijken.</small></article><article class="online-mini-card"><span>🔐</span><strong>Geen zelfregistratie</strong><small>Leerlingen kunnen alleen inloggen met een account dat jij aanmaakt.</small></article></div><p class="online-help">De leerkracht beheert meerdere klassen. Leerlingen zien alleen de gebruikersnamen en XP van hun eigen klas; battles zijn uitsluitend mogelijk met klasgenoten.</p>`;
       return;
     }
-    view.innerHTML = `<div class="online-home-grid"><article class="online-mini-card"><span>⭐</span><strong>${xp} XP</strong><small>${rem}/100 XP tot level ${level + 1}</small><div class="online-xp-bar"><i style="width:${rem}%"></i></div></article><article class="online-mini-card"><span class="labcoin-mini-icon">${LABCOIN_ICON}</span><strong>${Number(currentProfile.coins)} LabCoins</strong><small>Verdien coins met de Elementensprint, de Zurenkennis-sprint en de virtuele kluisreactie.</small></article><article class="online-mini-card"><span>🧬</span><strong>Kaartenbataljon</strong><small>Koop stofkaarten en daag een klasgenoot uit.</small></article></div><p class="online-help">De gewone puzzels geven XP. LabCoins verdien je via de optionele Elementensprint, de Zurenkennis-sprint en de virtuele kluisreactie. Met coins koop je kaarten en skins. De ranking en battles zijn beperkt tot jouw klas.</p>`;
+    view.innerHTML = `<div class="online-home-grid"><article class="online-mini-card"><span>⭐</span><strong>${xp} XP</strong><small>${rem}/100 XP tot level ${level + 1}</small><div class="online-xp-bar"><i style="width:${rem}%"></i></div></article><article class="online-mini-card"><span class="labcoin-mini-icon">${LABCOIN_ICON}</span><strong>${Number(currentProfile.coins)} LabCoins</strong><small>Verdien coins met de Elementensprint, de Zurenkennis-sprint, The OG of chemistry en de virtuele kluisreactie.</small></article><article class="online-mini-card"><span>🧬</span><strong>Kaartenbataljon</strong><small>Koop stofkaarten en daag een klasgenoot uit.</small></article></div><p class="online-help">De gewone puzzels geven XP. LabCoins verdien je via de optionele Elementensprint, de Zurenkennis-sprint, The OG of chemistry en de virtuele kluisreactie. Met coins koop je kaarten en skins. De ranking en battles zijn beperkt tot jouw klas.</p>`;
   }
   async function renderLeaderboard() {
     let rows = [], classFilter = '';
@@ -691,6 +691,9 @@ Optie D"></textarea></label>
     async startAcidSprint() { requireLogin(); return rpc('start_acid_sprint'); },
     async submitAcidSprintAnswer(sessionId, sequenceNumber, answer) { requireLogin(); return rpc('submit_acid_sprint_answer', { p_session_id: sessionId, p_sequence_number: sequenceNumber, p_answer: answer }); },
     async finishAcidSprint(sessionId) { requireLogin(); return rpc('finish_acid_sprint', { p_session_id: sessionId }); },
+    async startOgSprint() { requireLogin(); return rpc('start_oxidation_sprint'); },
+    async submitOgSprintAnswer(sessionId, sequenceNumber, answer) { requireLogin(); return rpc('submit_oxidation_sprint_answer', { p_session_id: sessionId, p_sequence_number: sequenceNumber, p_answer: answer }); },
+    async finishOgSprint(sessionId) { requireLogin(); return rpc('finish_oxidation_sprint', { p_session_id: sessionId }); },
     async buySkin(id) { await rpc('buy_skin', { p_skin_id: id }); const economy = await getEconomy(); return { ok: true, action: 'buy', economy }; },
     async equipSkin(id) { await rpc('equip_skin', { p_skin_id: id }); const economy = await getEconomy(); return { ok: true, action: 'equip', economy }; },
     refreshDashboardSoon() { setTimeout(() => { if (currentUser) refreshDashboard().catch(console.error); }, 350); },

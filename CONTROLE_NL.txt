@@ -1,13 +1,15 @@
-Uitgevoerde lokale controles:
+UITGEVOERDE CONTROLES
+
 - node --check game.js: geslaagd
 - node --check online.js: geslaagd
-- node --check op alle netlify/functions/*.mjs: geslaagd
-- HTML parser op index.html: geslaagd
-- scripts/build.mjs: geslaagd (dist aangemaakt)
+- node --check van bestaande Netlify Functions: geslaagd
+- Alle 50 oxidatievragen aanwezig in game.js: geslaagd
+- Alle 50 formules gebruiken subscriptcijfers: geslaagd
+- De 50 records in SQL komen overeen met de 50 clientvragen: geslaagd
+- Alle oxidatiegetallen hebben een toegelaten Romeinse antwoordnotatie: geslaagd
+- Netlify build via scripts/build.mjs: geslaagd
+- HTML-parse van index.html en dist/index.html: geslaagd
 
-Niet live getest:
-- SQL-migratie in het Supabase-project
-- Functions tegen de echte Supabase REST/Auth API
-- rol- en klasisolatie met echte leerlingaccounts
-
-Voer daarom de installatiehandleiding uit en test eerst met twee klassen en testaccounts.
+Niet live uitgevoerd:
+- SQL-migratie op het Supabase-project van de gebruiker
+- Online authenticatie, server-side answer checking en LabCoin-uitbetaling in productie

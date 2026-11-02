@@ -1,26 +1,52 @@
-CHEMIE ESCAPE ROOM – VISUELE OPSCHONING
+CHEMIE ESCAPE ROOM – BONUS LEVEL 3: THE OG OF CHEMISTRY
+======================================================
 
-Deze update past uitsluitend teksten en zichtbare onderdelen aan. De bestaande escape-roomlogica, kaartwinkel, reactiekamer, battles, Schaduw, inventarisopslag, accounts, LabCoins en Supabase-koppeling blijven behouden.
+INHOUD
+------
+- game.js: voegt de derde bonusronde toe en wijzigt de kop/tekst van het Bonus-paneel.
+- online.js: koppelt de bonusronde aan de beveiligde Supabase-functies.
+- supabase/migrations/2026_11_level3_og_oxidation_sprint.sql: vragenbank met 50 oxidatiegetalvragen en servercontrole/beloningen.
 
-AANGEPAST
-1. De introductiebalk 'De Schaduw van de Tijd' is verwijderd; het Missieoverzicht blijft staan.
-2. De uitlegregel onder Grondstoffeninventaris is verwijderd.
-3. De tekst bij De kluis luidt nu: 'Verdien 30 LabCoins door de kluis op te blazen met buskruit.'
-4. De reactievergelijking toont nette chemische notatie: 2 KNO₃ + 3 C + S → K₂S + 3 CO₂ + N₂.
-5. De knop 'Spel opnieuw starten' is verwijderd. De bijbehorende event-handler is ook verwijderd zodat er geen fout ontstaat.
-6. Het LabCoin-symbool is vervangen door een ingebouwd SVG-munticoon. Zo is het niet langer afhankelijk van emoji-ondersteuning op het toestel.
+WAT IS TOEGEVOEGD?
+------------------
+- De sectiekop wordt 'BONUS'.
+- De korte tekst eronder luidt exact: 'Ben jij snel genoeg om LabCoins te scoren in één van de extra levels?'
+- In level 3 (het moderne labo) wordt de knop 'The OG of chemistry · 60 sec' actief.
+- De sprint toont willekeurig open vragen over oxidatiegetallen.
+- Formules zijn met subscripttekens in de vragenbank opgeslagen en worden ook zo getoond, bijvoorbeeld MgSO₄, Fe₂O₃ en Ca₃(PO₄)₂.
+- Antwoorden worden als Romeinse cijfers ingevoerd, met '+' of '-' voor positieve en negatieve oxidatiegetallen; '0' blijft gewoon 0.
+- Beloning volgt de bestaande bonusspeltrap: juiste antwoorden 1–5 geven elk 1 LabCoin, 6–10 elk 2, 11–15 elk 3, enzovoort. Elk juist antwoord geeft ook 2 XP.
+- De 50 vragen worden in willekeurige volgorde aangeboden. Pas na alle 50 vragen wordt een volgende willekeurige ronde gestart.
+- Bij online accounts controleert Supabase de antwoorden en kent Supabase LabCoins/XP toe. De verwachte antwoorden worden niet naar de browser gestuurd.
 
 INSTALLATIE
-1. Maak eventueel een back-up van de vier huidige bestanden.
-2. Vervang in de hoofdmap van je GitHub-project deze vier bestanden:
-   - index.html
+-----------
+1. Maak een back-up van je huidige GitHub-project.
+2. Pak deze ZIP uit.
+3. Vervang in de hoofdmap van je GitHub-project uitsluitend:
    - game.js
    - online.js
-   - style.css
-3. Commit de wijzigingen in GitHub. Netlify bouwt en publiceert de website opnieuw.
+4. Kopieer het SQL-bestand uit deze ZIP naar de map:
+   supabase/migrations/
+5. Open Supabase -> SQL Editor.
+6. Open 2026_11_level3_og_oxidation_sprint.sql, kopieer de volledige inhoud
+   en voer die één keer uit met Run.
+7. Commit game.js en online.js in GitHub. Netlify zal daarna opnieuw deployen.
 
 BELANGRIJK
-- Voer geen SQL uit; deze update bevat geen databasewijzigingen.
-- Vervang config.js, netlify.toml en de map netlify/functions NIET.
-- online.js bevat ook de eerdere correctie waardoor de reactiekamer niet langer 'first is not defined' geeft. Behoud daarom deze online.js-versie.
-- De buildmap dist wordt automatisch opnieuw aangemaakt door het bestaande buildscript.
+----------
+- Voer alleen deze nieuwe migratie uit. Voer schema.sql of eerdere migraties niet opnieuw uit.
+- Laat config.js, netlify.toml, Netlify Functions en bestaande omgevingsvariabelen ongemoeid.
+- Er zijn geen nieuwe geheime sleutels of Netlify-variabelen nodig.
+- De vragenbank wordt gedeeld door alle klassen binnen hetzelfde Supabase-project. Scores, XP en LabCoins blijven gekoppeld aan het individuele account.
+- Test eerst met één leerlingaccount in level 3: start de sprint, antwoord bijvoorbeeld +II op Mg in MgSO₄, en controleer daarna de score en het LabCoin-saldo.
+
+CONTROLE
+--------
+JavaScript-syntaxiscontrole voor game.js en online.js: geslaagd.
+Controle van alle 50 vraag/antwoordcombinaties tussen game.js en SQL: geslaagd.
+Controle dat alle getoonde formules subscriptnotatie gebruiken: geslaagd.
+Netlify static build: geslaagd.
+HTML-validatie van de bestaande pagina: geslaagd.
+
+De SQL-migratie is nog niet uitgevoerd in jouw live Supabase-project. Test de online beloningen daarom na installatie met een testaccount.

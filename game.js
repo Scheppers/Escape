@@ -124,6 +124,62 @@ function normaliseAcidAnswer(value,type){
  return [...answer].map(ch=>sub[ch]??ch).join("");
 }
 
+// Bonusspel level 3: oxidatiegetallen. Formules zijn bewust met Unicode-subscripts opgeslagen.
+const OXIDATION_ITEMS=[
+ {formula:"MgSO₄",element:"Mg",answer:"+II"},
+ {formula:"H₂SO₄",element:"S",answer:"+VI"},
+ {formula:"O₂",element:"O",answer:"0"},
+ {formula:"NaCl",element:"Cl",answer:"-I"},
+ {formula:"H₂O",element:"O",answer:"-II"},
+ {formula:"CO₂",element:"C",answer:"+IV"},
+ {formula:"NH₃",element:"N",answer:"-III"},
+ {formula:"CaO",element:"Ca",answer:"+II"},
+ {formula:"KBr",element:"Br",answer:"-I"},
+ {formula:"HCl",element:"Cl",answer:"-I"},
+ {formula:"Fe₂O₃",element:"Fe",answer:"+III"},
+ {formula:"CuO",element:"Cu",answer:"+II"},
+ {formula:"SO₂",element:"S",answer:"+IV"},
+ {formula:"SO₃",element:"S",answer:"+VI"},
+ {formula:"HNO₃",element:"N",answer:"+V"},
+ {formula:"HNO₂",element:"N",answer:"+III"},
+ {formula:"Na₂CO₃",element:"C",answer:"+IV"},
+ {formula:"CaCO₃",element:"C",answer:"+IV"},
+ {formula:"KMnO₄",element:"Mn",answer:"+VII"},
+ {formula:"K₂Cr₂O₇",element:"Cr",answer:"+VI"},
+ {formula:"H₃PO₄",element:"P",answer:"+V"},
+ {formula:"H₃PO₃",element:"P",answer:"+III"},
+ {formula:"Na₂SO₃",element:"S",answer:"+IV"},
+ {formula:"LiF",element:"Li",answer:"+I"},
+ {formula:"H₂O₂",element:"O",answer:"-I"},
+ {formula:"Na₂O₂",element:"O",answer:"-I"},
+ {formula:"Cl₂",element:"Cl",answer:"0"},
+ {formula:"FeCl₂",element:"Fe",answer:"+II"},
+ {formula:"FeCl₃",element:"Fe",answer:"+III"},
+ {formula:"Cu₂O",element:"Cu",answer:"+I"},
+ {formula:"CuSO₄",element:"Cu",answer:"+II"},
+ {formula:"Al₂O₃",element:"Al",answer:"+III"},
+ {formula:"NaOH",element:"O",answer:"-II"},
+ {formula:"Ca(OH)₂",element:"Ca",answer:"+II"},
+ {formula:"NH₄Cl",element:"N",answer:"-III"},
+ {formula:"NaNO₃",element:"N",answer:"+V"},
+ {formula:"NaNO₂",element:"N",answer:"+III"},
+ {formula:"KClO₃",element:"Cl",answer:"+V"},
+ {formula:"KClO₄",element:"Cl",answer:"+VII"},
+ {formula:"HClO",element:"Cl",answer:"+I"},
+ {formula:"HClO₃",element:"Cl",answer:"+V"},
+ {formula:"HClO₄",element:"Cl",answer:"+VII"},
+ {formula:"MnO₂",element:"Mn",answer:"+IV"},
+ {formula:"KMnO₄",element:"O",answer:"-II"},
+ {formula:"CrO₃",element:"Cr",answer:"+VI"},
+ {formula:"Na₂CrO₄",element:"Cr",answer:"+VI"},
+ {formula:"K₃PO₄",element:"P",answer:"+V"},
+ {formula:"Ca₃(PO₄)₂",element:"P",answer:"+V"},
+ {formula:"H₂S",element:"S",answer:"-II"},
+ {formula:"OF₂",element:"O",answer:"+II"}
+];
+function normaliseOxidationAnswer(value){return String(value??"").trim().replace(/\s+/g,"").replace(/−/g,"-").toUpperCase();}
+function formatOxidationFormula(value){const subs={"0":"₀","1":"₁","2":"₂","3":"₃","4":"₄","5":"₅","6":"₆","7":"₇","8":"₈","9":"₉"};return [...String(value??"")].map(ch=>subs[ch]??ch).join("");}
+
 const COSMETIC_SKINS=[
  {id:"starter",name:"Beginnende alchemist",emoji:"🧪",price:0,detail:"Je vertrouwde startuitrusting."},
  {id:"brass",name:"Messing Meester",emoji:"🥽",price:8,detail:"Een veiligheidsbril voor de echte laboprofessional."},
@@ -136,6 +192,8 @@ let labCoins=0, ownedSkins=new Set(["starter"]), equippedSkin="starter", sprintT
 let sprintState={running:false,startingCoins:0,correct:0,answered:0,startedAt:0,queue:[],index:0,current:null,best:0,onlineSessionId:null};
 let acidSprintTimer=null, acidSprintTransitionTimer=null;
 let acidSprintState={running:false,startingCoins:0,correct:0,answered:0,startedAt:0,queue:[],index:0,current:null,best:0,onlineSessionId:null};
+let ogSprintTimer=null, ogSprintTransitionTimer=null;
+let ogSprintState={running:false,startingCoins:0,correct:0,answered:0,startedAt:0,expiresAt:0,queue:[],index:0,current:null,best:0,onlineSessionId:null};
 // Leerlingen krijgen geen hints: verberg de knop in alle soorten vensters.
 const hintButton=$("hint-button");
 if(hintButton){hintButton.style.setProperty("display","none","important");hintButton.setAttribute("aria-hidden","true");hintButton.disabled=true;}
@@ -509,11 +567,12 @@ function initEconomyUI(){
  const panel=document.createElement("section");
  panel.id="labcoins-panel";panel.className="labcoins-panel";
  panel.innerHTML=`
-  <div class="labcoins-heading"><div><p class="economy-eyebrow">BONUSSPEL</p><h3>${LABCOIN_ICON} LabCoins</h3></div><div class="coin-count"><span id="labcoin-balance">0</span><small>coins</small></div></div>
-  <p class="labcoins-copy">Verdien munten met de Elementensprint in level 1 en de Zurenkennis-sprint in level 2. Gewone puzzels geven alleen hun deurcijfer.</p>
+  <div class="labcoins-heading"><div><p class="economy-eyebrow">BONUS</p><h3>${LABCOIN_ICON} LabCoins</h3></div><div class="coin-count"><span id="labcoin-balance">0</span><small>coins</small></div></div>
+  <p class="labcoins-copy">Ben jij snel genoeg om LabCoins te scoren in één van de extra levels?</p>
   <div class="skin-preview"><span class="skin-preview-icon" id="equipped-skin-icon">🧪</span><span><small>Huidige skin</small><strong id="equipped-skin-name">Beginnende alchemist</strong></span></div>
   <button type="button" class="primary full economy-action" id="element-sprint-open">⚡ Elementensprint · 60 sec</button>
   <button type="button" class="primary full economy-action" id="acid-sprint-open">🧪 Zurenkennis · 60 sec</button>
+  <button type="button" class="primary full economy-action" id="og-sprint-open">⚗️ The OG of chemistry · 60 sec</button>
   <button type="button" class="secondary full economy-action" id="skin-shop-open">🛍️ Open de skinwinkel</button>`;
  const inventory=side.querySelector(".inventory");
  const safeBox=side.querySelector(".safe-box");
@@ -536,19 +595,21 @@ function initEconomyUI(){
  overlay.addEventListener("click",e=>{if(e.target===overlay)closeEconomyOverlay()});
  $("element-sprint-open").addEventListener("click",openElementSprint);
  $("acid-sprint-open").addEventListener("click",openAcidSprint);
+ $("og-sprint-open").addEventListener("click",openOgSprint);
  $("skin-shop-open").addEventListener("click",openSkinShop);
  $("economy-content").addEventListener("click",handleEconomyClick);
- $("economy-content").addEventListener("submit",e=>{if(e.target&&e.target.id==="sprint-answer-form")submitSprintAnswer(e);else if(e.target&&e.target.id==="acid-sprint-answer-form")submitAcidSprintAnswer(e)});
- document.addEventListener("keydown",e=>{if(e.key==="Escape"&&!$("economy-overlay").classList.contains("hidden")){if(sprintState.running||acidSprintState.running){setStatus("De bonusronde loopt nog; sluit de opdracht pas na afloop.");return;}closeEconomyOverlay();}});
+ $("economy-content").addEventListener("submit",e=>{if(e.target&&e.target.id==="sprint-answer-form")submitSprintAnswer(e);else if(e.target&&e.target.id==="acid-sprint-answer-form")submitAcidSprintAnswer(e);else if(e.target&&e.target.id==="og-sprint-answer-form")submitOgSprintAnswer(e)});
+ document.addEventListener("keydown",e=>{if(e.key==="Escape"&&!$("economy-overlay").classList.contains("hidden")){if(sprintState.running||acidSprintState.running||ogSprintState.running){setStatus("De bonusronde loopt nog; sluit de opdracht pas na afloop.");return;}closeEconomyOverlay();}});
  renderEconomyPanel();applyEquippedSkin();
 }
 function renderEconomyPanel(){
  const balance=$("labcoin-balance");if(balance)balance.textContent=String(labCoins);
  const icon=$("equipped-skin-icon"),name=$("equipped-skin-name"),skin=COSMETIC_SKINS.find(x=>x.id===equippedSkin)||COSMETIC_SKINS[0];
  if(icon)icon.textContent=skin.emoji;if(name)name.textContent=skin.name;
- const anySprintRunning=sprintState.running||acidSprintState.running;
+ const anySprintRunning=sprintState.running||acidSprintState.running||ogSprintState.running;
  const quest=$("element-sprint-open");if(quest){quest.disabled=currentLevel!=="medieval"||anySprintRunning;quest.textContent=currentLevel==="medieval"?"⚡ Elementensprint · 60 sec":"⚡ Beschikbaar in level 1";quest.title=currentLevel==="medieval"?"Start de optionele quiz over elementsymbolen":"Keer terug naar het middeleeuwse labo voor de sidequest";}
  const acidQuest=$("acid-sprint-open");if(acidQuest){acidQuest.disabled=currentLevel!=="lavoisier"||anySprintRunning;acidQuest.textContent=currentLevel==="lavoisier"?"🧪 Zurenkennis · 60 sec":"🧪 Beschikbaar in level 2";acidQuest.title=currentLevel==="lavoisier"?"Start de open vragenronde over zuren en zuurrestnamen":"Keer terug naar het labo van Lavoisier voor deze sidequest";}
+ const ogQuest=$("og-sprint-open");if(ogQuest){ogQuest.disabled=currentLevel!=="modern"||anySprintRunning;ogQuest.textContent=currentLevel==="modern"?"⚗️ The OG of chemistry · 60 sec":"⚗️ Beschikbaar in level 3";ogQuest.title=currentLevel==="modern"?"Oefen oxidatiegetallen in één minuut":"Keer terug naar het moderne chemielabo voor deze sidequest";}
  applyEquippedSkin();
 }
 function applyEquippedSkin(){
@@ -557,9 +618,9 @@ function applyEquippedSkin(){
  const panelIcon=$("equipped-skin-icon"),panelName=$("equipped-skin-name");if(panelIcon)panelIcon.textContent=skin.emoji;if(panelName)panelName.textContent=skin.name;
 }
 function showEconomyOverlay(content){$("economy-content").innerHTML=content;$("economy-overlay").classList.remove("hidden");}
-function closeEconomyOverlay(){if(sprintState.running||acidSprintState.running){setStatus("De bonusronde loopt nog. De timer blijft lopen tot de minuut voorbij is.");return;}$("economy-overlay").classList.add("hidden");}
+function closeEconomyOverlay(){if(sprintState.running||acidSprintState.running||ogSprintState.running){setStatus("De bonusronde loopt nog. De timer blijft lopen tot de minuut voorbij is.");return;}$("economy-overlay").classList.add("hidden");}
 function openSkinShop(){
- if(sprintState.running||acidSprintState.running){setStatus("Maak eerst de bonusronde af voor je naar de winkel gaat.");return;}
+ if(sprintState.running||acidSprintState.running||ogSprintState.running){setStatus("Maak eerst de bonusronde af voor je naar de winkel gaat.");return;}
  renderShop();
 }
 function renderShop(){
@@ -577,12 +638,12 @@ function renderShop(){
 }
 function openElementSprint(){
  if(currentLevel!=="medieval"){setStatus("De Elementensprint is beschikbaar in het eerste, middeleeuwse labo.");return;}
- if(sprintState.running||acidSprintState.running){setStatus("Er loopt al een bonusronde.");return;}
+ if(sprintState.running||acidSprintState.running||ogSprintState.running){setStatus("Er loopt al een bonusronde.");return;}
  showEconomyOverlay(`<p class="economy-eyebrow">OPTIONELE SIDEQUEST · LEVEL 1</p><h2 class="economy-title" id="economy-title">⚡ De Elementensprint</h2><p class="economy-lead">Je krijgt <strong>60 seconden</strong>. De naam van een element verschijnt; typ het juiste elementsymbool en let goed op hoofdletters. Bijvoorbeeld: lood → <strong>Pb</strong>, niet PB of pb.</p><div class="sprint-rules"><strong>Beloningen:</strong> juiste antwoorden 1–5 leveren elk 1 coin op; antwoorden 6–10 elk 2 coins; antwoorden 11–15 elk 3 coins, enzovoort. Een gewoon antwoord in de escape-roomquiz levert geen coins op.</div><button type="button" class="primary full" id="element-sprint-start">Start de 60 seconden</button><p class="muted">De sidequest is vrijwillig en verandert niets aan je deurcodes.</p>`);
 }
 async function startElementSprint(){
  if(currentLevel!=="medieval"){closeEconomyOverlay();setStatus("De Elementensprint is beschikbaar in het eerste labo.");return;}
- if(sprintState.running||acidSprintState.running){setStatus("Er loopt al een bonusronde.");return;}
+ if(sprintState.running||acidSprintState.running||ogSprintState.running){setStatus("Er loopt al een bonusronde.");return;}
  if(sprintTimer)clearInterval(sprintTimer);if(sprintTransitionTimer)clearTimeout(sprintTransitionTimer);
  let onlineSessionId=null,questionQueue=null;
  if(window.ChemieOnline&&window.ChemieOnline.isAuthenticated()){
@@ -648,13 +709,13 @@ async function finishElementSprint(){
 
 function openAcidSprint(){
  if(currentLevel!=="lavoisier"){setStatus("De Zurenkennis-sprint is beschikbaar in level 2, het labo van Lavoisier.");return;}
- if(acidSprintState.running||sprintState.running){setStatus("Er loopt al een bonusronde.");return;}
+ if(acidSprintState.running||sprintState.running||ogSprintState.running){setStatus("Er loopt al een bonusronde.");return;}
  showEconomyOverlay(`<p class="economy-eyebrow">OPTIONELE SIDEQUEST · LEVEL 2</p><h2 class="economy-title" id="economy-title">🧪 Zurenkennis-sprint</h2><p class="economy-lead">Je krijgt <strong>60 seconden</strong>. Beantwoord open vragen over de brutoformule, systematische naam, gebruiksnaam en zuurrest. De vragen kunnen in alle richtingen voorkomen.</p><div class="sprint-rules"><strong>Formules invoeren:</strong> je mag gewone cijfers gebruiken, zoals <strong>H2SO4</strong> en <strong>SO42-</strong>, of de knoppen gebruiken om indices en ladingen in te voegen. Beide schrijfwijzen worden als hetzelfde antwoord herkend.<br><strong>Beloningen:</strong> juiste antwoorden 1–5 leveren elk 1 coin op; antwoorden 6–10 elk 2 coins; antwoorden 11–15 elk 3 coins, enzovoort.</div><button type="button" class="primary full" id="acid-sprint-start">Start de 60 seconden</button><p class="muted">De vragen zijn open invulvragen. De gewone puzzelcodes veranderen niet.</p>`);
 }
 function createLocalAcidSprintQueue(){return createAcidSprintQueue();}
 async function startAcidSprint(){
  if(currentLevel!=="lavoisier"){closeEconomyOverlay();setStatus("De Zurenkennis-sprint is beschikbaar in level 2.");return;}
- if(acidSprintState.running||sprintState.running){setStatus("Er loopt al een bonusronde.");return;}
+ if(acidSprintState.running||sprintState.running||ogSprintState.running){setStatus("Er loopt al een bonusronde.");return;}
  if(acidSprintTimer)clearInterval(acidSprintTimer);if(acidSprintTransitionTimer)clearTimeout(acidSprintTransitionTimer);
  let onlineSessionId=null,questionQueue=null;
  if(window.ChemieOnline&&window.ChemieOnline.isAuthenticated()){
@@ -733,10 +794,91 @@ async function finishAcidSprint(){
  setStatus(`Zurenkennis-sprint klaar: ${acidSprintState.correct} juist, ${earned} coins verdiend.`);if(window.ChemieOnline)window.ChemieOnline.refreshDashboardSoon();
 }
 
+function openOgSprint(){
+ if(currentLevel!=="modern"){setStatus("The OG of chemistry is beschikbaar in level 3, het moderne chemielabo.");return;}
+ if(sprintState.running||acidSprintState.running||ogSprintState.running){setStatus("Er loopt al een bonusronde.");return;}
+ showEconomyOverlay(`<p class="economy-eyebrow">OPTIONELE BONUS · LEVEL 3</p><h2 class="economy-title" id="economy-title">⚗️ The OG of chemistry</h2><p class="economy-lead">Je krijgt <strong>60 seconden</strong>. Bepaal zo snel mogelijk het oxidatiegetal van het aangeduide element. Antwoord met Romeinse cijfers, bijvoorbeeld <strong>+II</strong>, <strong>-I</strong> of <strong>0</strong>.</p><div class="sprint-rules"><strong>Beloningen:</strong> juiste antwoorden 1–5 leveren elk 1 LabCoin op; antwoorden 6–10 elk 2 LabCoins; antwoorden 11–15 elk 3 LabCoins, enzovoort. Elk juist antwoord levert daarnaast 2 XP op.</div><button type="button" class="primary full" id="og-sprint-start">Start de 60 seconden</button><p class="muted">De vragen zijn open invulvragen. De gewone puzzelcodes veranderen niet.</p>`);
+}
+async function startOgSprint(){
+ if(currentLevel!=="modern"){closeEconomyOverlay();setStatus("The OG of chemistry is beschikbaar in level 3.");return;}
+ if(ogSprintState.running||acidSprintState.running||sprintState.running){setStatus("Er loopt al een bonusronde.");return;}
+ if(ogSprintTimer)clearInterval(ogSprintTimer);if(ogSprintTransitionTimer)clearTimeout(ogSprintTransitionTimer);
+ let onlineSessionId=null,questionQueue=null,serverExpiresAt=null;
+ if(window.ChemieOnline&&window.ChemieOnline.isAuthenticated()){
+  try{
+   const remote=await window.ChemieOnline.startOgSprint();
+   if(!remote||!remote.ok)throw new Error(remote?.error||"The OG of chemistry kon niet starten.");
+   onlineSessionId=remote.session_id||null;
+   if(Array.isArray(remote.items))questionQueue=remote.items.map(item=>({...item,sequence_number:Number(item.sequence_number)}));
+   if(remote.expires_at)serverExpiresAt=Date.parse(remote.expires_at);
+   if(remote.coins!==undefined)labCoins=Number(remote.coins)||0;
+  }catch(error){setStatus(error.message||"De online sprint kon niet starten. Controleer de Supabase-migratie.");return;}
+ }
+ const startedAt=Date.now();
+ ogSprintState={running:true,startingCoins:labCoins,correct:0,answered:0,startedAt,expiresAt:Number.isFinite(serverExpiresAt)?serverExpiresAt:startedAt+60000,queue:questionQueue?.length?questionQueue:Array.from({length:3},()=>shuffle(OXIDATION_ITEMS)).flat(),index:0,current:null,best:ogSprintState.best||0,onlineSessionId};
+ renderEconomyPanel();renderOgSprintQuestion();tickOgSprintTimer();ogSprintTimer=setInterval(tickOgSprintTimer,100);
+}
+function tickOgSprintTimer(){
+ if(!ogSprintState.running)return;
+ const deadline=Number(ogSprintState.expiresAt)||ogSprintState.startedAt+60000;
+ const remaining=Math.max(0,deadline-Date.now());
+ const timer=$("og-sprint-time-left");if(timer){timer.textContent=`0:${String(Math.ceil(remaining/1000)).padStart(2,"0")}`;timer.classList.toggle("urgent",remaining<=10000);}
+ if(remaining<=0)finishOgSprint();
+}
+function renderOgSprintQuestion(){
+ if(!ogSprintState.running)return;
+ const item=ogSprintState.queue[ogSprintState.index];if(!item){return;}ogSprintState.current=item;ogSprintState.index++;
+ const formula=formatOxidationFormula(item.formula);
+ showEconomyOverlay(`<p class="economy-eyebrow">THE OG OF CHEMISTRY · LEVEL 3</p><h2 class="economy-title" id="economy-title">Welk oxidatiegetal?</h2><div class="sprint-hud"><div class="sprint-timer" id="og-sprint-time-left">1:00</div><div class="sprint-score"><span id="og-sprint-correct-count">${ogSprintState.correct}</span> juist · <span id="og-sprint-answered-count">${ogSprintState.answered}</span> beantwoord</div></div><div class="sprint-question"><small>Welk oxidatiegetal heeft ${escapeHtml(item.element)} in deze stof?</small><div class="acid-prompt">${escapeHtml(item.element)} in ${escapeHtml(formula)}</div></div><form class="sprint-form" id="og-sprint-answer-form"><input class="sprint-input" id="og-sprint-answer" name="answer" type="text" maxlength="5" placeholder="Bijv. +II, -I of 0" autocomplete="off" autocapitalize="characters" spellcheck="false" aria-label="Oxidatiegetal in Romeinse cijfers" required><button type="submit" class="primary">Antwoord</button></form><p class="sprint-feedback" id="og-sprint-feedback" aria-live="polite">Gebruik Romeinse cijfers en vermeld het teken bij positieve of negatieve waarden.</p>`);
+ tickOgSprintTimer();const input=$("og-sprint-answer");if(input)input.focus({preventScroll:true});
+}
+async function submitOgSprintAnswer(e){
+ e.preventDefault();if(!ogSprintState.running||!ogSprintState.current)return;
+ const input=$("og-sprint-answer"),submit=$("og-sprint-answer-form")?.querySelector('button[type="submit"]');
+ const typed=(input?.value||"").trim();if(!typed){input?.focus();return;}
+ if(submit)submit.disabled=true;if(input)input.disabled=true;
+ const item=ogSprintState.current;let message="",kind="bad",verified=null;
+ if(ogSprintState.onlineSessionId&&window.ChemieOnline&&window.ChemieOnline.isAuthenticated()){
+  try{
+   verified=await window.ChemieOnline.submitOgSprintAnswer(ogSprintState.onlineSessionId,Number(item.sequence_number),typed);
+   if(!verified||!verified.ok)throw new Error(verified?.error||"De online antwoordcontrole is mislukt.");
+   ogSprintState.correct=Number(verified.correct_count)||0;
+   ogSprintState.answered=Number(verified.answered_count)||ogSprintState.answered+1;
+   labCoins=Number(verified.coins)||0;
+   if(verified.correct){message=`Juist! ${verified.expected_answer}. +${verified.reward} ${Number(verified.reward)===1?"LabCoin":"LabCoins"}.`;kind="good";}
+   else{message=`Niet helemaal. Het juiste oxidatiegetal is ${verified.expected_answer}. Geen LabCoins deze keer.`;}
+   window.ChemieOnline.refreshDashboardSoon();
+  }catch(error){
+   if(submit)submit.disabled=false;if(input){input.disabled=false;input.focus();}
+   const note=$("og-sprint-feedback");if(note){note.textContent=error.message||"De controle is mislukt. Probeer opnieuw.";note.className="sprint-feedback bad";}return;
+  }
+ }else{
+  ogSprintState.answered++;
+  const correct=normaliseOxidationAnswer(typed)===normaliseOxidationAnswer(item.answer);
+  if(correct){const reward=Math.floor(ogSprintState.correct/5)+1;ogSprintState.correct++;labCoins+=reward;message=`Juist! ${item.answer}. +${reward} ${reward===1?"LabCoin":"LabCoins"}.`;kind="good";}
+  else{message=`Niet helemaal. Het juiste oxidatiegetal is ${item.answer}. Geen LabCoins deze keer.`;}
+ }
+ const note=$("og-sprint-feedback");if(note){note.textContent=message;note.className=`sprint-feedback ${kind}`;}
+ const correctEl=$("og-sprint-correct-count"),answeredEl=$("og-sprint-answered-count");if(correctEl)correctEl.textContent=String(ogSprintState.correct);if(answeredEl)answeredEl.textContent=String(ogSprintState.answered);
+ renderEconomyPanel();ogSprintTransitionTimer=setTimeout(()=>{if(ogSprintState.running)renderOgSprintQuestion();},650);
+}
+async function finishOgSprint(){
+ if(!ogSprintState.running)return;
+ ogSprintState.running=false;if(ogSprintTimer){clearInterval(ogSprintTimer);ogSprintTimer=null;}if(ogSprintTransitionTimer){clearTimeout(ogSprintTransitionTimer);ogSprintTransitionTimer=null;}
+ if(ogSprintState.onlineSessionId&&window.ChemieOnline&&window.ChemieOnline.isAuthenticated()){
+  try{const settled=await window.ChemieOnline.finishOgSprint(ogSprintState.onlineSessionId);if(settled&&settled.ok){labCoins=Number(settled.coins)||0;ogSprintState.correct=Number(settled.correct_count)||ogSprintState.correct;ogSprintState.answered=Number(settled.answered_count)||ogSprintState.answered;}else if(settled?.error){setStatus(settled.error);}}catch(error){console.error("The OG of chemistry afronden mislukt:",error);}
+ }
+ const earned=labCoins-ogSprintState.startingCoins;ogSprintState.best=Math.max(ogSprintState.best,ogSprintState.correct);renderEconomyPanel();
+ showEconomyOverlay(`<p class="economy-eyebrow">BONUS VOLTOOID · LEVEL 3</p><h2 class="economy-title" id="economy-title">⏱️ Tijd is om!</h2><p class="economy-lead">Goed gewerkt aan je oxidatiegetallen. Je LabCoins zijn bijgewerkt.</p><div class="sprint-results"><div class="sprint-result"><strong>${ogSprintState.correct}</strong><small>Juiste antwoorden</small></div><div class="sprint-result"><strong>${ogSprintState.answered}</strong><small>Beantwoord</small></div><div class="sprint-result"><strong>+${earned}</strong><small>Verdiende LabCoins</small></div></div><div class="sprint-rules">Je beste score in deze speelsessie: <strong>${ogSprintState.best}</strong> juiste antwoorden. Je kunt The OG of chemistry opnieuw spelen.</div><button type="button" class="primary full" id="og-sprint-retry">Nog een ronde</button><button type="button" class="secondary full" id="economy-done">Terug naar het labo</button>`);
+ setStatus(`The OG of chemistry klaar: ${ogSprintState.correct} juist, ${earned} LabCoins verdiend.`);if(window.ChemieOnline)window.ChemieOnline.refreshDashboardSoon();
+}
+
 async function handleEconomyClick(e){
  const formulaChar=e.target.closest("[data-acid-char]");if(formulaChar){e.preventDefault();insertAcidCharacter(formulaChar.dataset.acidChar);return;}
  const acidStart=e.target.closest("#acid-sprint-start");if(acidStart){startAcidSprint();return;}
  const acidRetry=e.target.closest("#acid-sprint-retry");if(acidRetry){startAcidSprint();return;}
+ const ogStart=e.target.closest("#og-sprint-start");if(ogStart){startOgSprint();return;}
+ const ogRetry=e.target.closest("#og-sprint-retry");if(ogRetry){startOgSprint();return;}
  const start=e.target.closest("#element-sprint-start");if(start){startElementSprint();return;}
  const retry=e.target.closest("#element-sprint-retry");if(retry){startElementSprint();return;}
  const done=e.target.closest("#economy-done");if(done){closeEconomyOverlay();return;}
