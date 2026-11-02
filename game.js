@@ -450,9 +450,17 @@ async function submitAnswer(e){
  else setTimeout(()=>{if(token===activeRunToken)setStatus("Je reeks is opgeslagen. Open dezelfde puzzel om verder te gaan.");},550);
 }
 function unlockNextIfReady(){if(!codeEntered[currentLevel])return;const i=LEVEL_ORDER.indexOf(currentLevel);if(i>=0&&i<LEVEL_ORDER.length-1){const next=LEVEL_ORDER[i+1];unlocked[next]=true;setStatus("Tijdpoort geopend! Het volgende labo is nu toegankelijk.");log("Tijdpoort ontgrendeld: "+LEVELS[next].name);renderLevel();}else if(currentLevel==="future"){setStatus("Laatste tijdpoort geopend.")}}
-function showCodeEntry(){activeKind="code";$("modal-category").textContent="TIJDPOORTCODE";$("modal-title").textContent="Open de tijdpoort";$("question-text").textContent="Voer de viercijferige code in die je met de vier puzzels hebt verdiend.";$("answer-area").innerHTML='<input class="numeric-input" id="numeric-answer" type="text" inputmode="numeric" maxlength="4" placeholder="Viercijferige code" required>';$("hint-button").classList.add("hidden");$("check-button").classList.remove("hidden");$("check-button").textContent="Ontgrendel tijdpoort";$("feedback").className="feedback hidden";$("modal-backdrop").classList.remove("hidden")}
+function showCodeEntry(){activeKind="code";$("modal-category").textContent="TIJDPOORTCODE";$("modal-title").textContent="Open de tijdpoort";$("question-text").textContent="Voer de viercijferige code in die je met de vier puzzels hebt verdiend.";$("answer-area").innerHTML='<input class="numeric-input" id="numeric-answer" type="text" inputmode="numeric" maxlength="4" placeholder="Viercijferige code" required>';$("hint-button").classList.add("hidden");$("check-button").classList.remove("hidden");$("check-button").disabled=false;$("check-button").textContent="Ontgrendel tijdpoort";$("feedback").className="feedback hidden";$("modal-backdrop").classList.remove("hidden")}
 function feedback(t,k){$("feedback").textContent=t;$("feedback").className="feedback "+k}
-function closeModal(){$("modal-backdrop").classList.add("hidden");$("check-button").classList.remove("hidden");$("check-button").onclick=null}
+function closeModal(){
+ $("modal-backdrop").classList.add("hidden");
+ const checkButton=$("check-button");
+ checkButton.classList.remove("hidden");
+ // Een eerdere juiste puzzelcontrole kan de knop uitgeschakeld hebben.
+ // Herstel de knop bij het sluiten van elke modal, zodat code-invoer altijd werkt.
+ checkButton.disabled=false;
+ checkButton.onclick=null;
+}
 function showSafeFeedback(html,kind='info'){
  const box=$("safe-feedback");if(!box)return;box.innerHTML=html;box.className=`safe-feedback ${kind}`;
 }
@@ -570,8 +578,8 @@ function finishGame(rewardCard={id:"au-final-timeline",name:"Goud",formula:"Au"}
    <span class="final-gold-ribbon">EXCLUSIEVE TIJDREISBELONING</span>
    <div class="final-gold-formula">${cardFormula}</div>
    <h3>${cardName}</h3>
-   <p>Deze kaart is uniek: niet verkrijgbaar in de winkel en niet inzetbaar in battles of reacties.</p>
-   <div class="final-gold-locks"><span>🔒 Niet te koop</span><span>⚗️ Niet inzetbaar in battles</span></div>
+   <p>Deze kaart is uniek: niet verkrijgbaar in de winkel of als battlebeloning. Je kunt ze wel in je battledeck gebruiken, maar niet in chemische reacties.</p>
+   <div class="final-gold-locks"><span>🔒 Niet te koop</span><span>⚔️ Wel inzetbaar in battledecks</span><span>⚗️ Niet inzetbaar in reacties</span></div>
   </article>
   <p>Je kunt nu vrij door alle vier labo’s reizen, extra puzzels oplossen en bonusspellen spelen. Je eindbeloning blijft aan je account gekoppeld.</p>
   <button class="primary" type="button" id="final-continue">Verder spelen</button>`;
@@ -582,7 +590,20 @@ function finishGame(rewardCard={id:"au-final-timeline",name:"Goud",formula:"Au"}
 }
 
 let activeCodeTarget=null;
-function askCode(target,isFinal=false){activeKind="code-entry";activeCodeTarget=target;$("modal-category").textContent="CODE-INVOER";$("modal-title").textContent=isFinal?"Laatste tijdslot":"Tijdpoort vergrendeld";$("question-text").textContent=isFinal?"Voer de vier cijfers in die je in het futuristische labo hebt verdiend. Rangschik ze steeds van klein naar groot.":`Voer de vier cijfers in die je in het vorige labo hebt verdiend om ${LEVELS[target].name} te betreden. Rangschik ze steeds van klein naar groot.`;$("answer-area").innerHTML='<input class="numeric-input" id="code-answer" type="text" inputmode="numeric" maxlength="4" placeholder="4 cijfers · klein naar groot" autocomplete="off">';$("hint-button").classList.add("hidden");$("check-button").classList.remove("hidden");$("check-button").textContent="Code controleren";$("feedback").className="feedback hidden";$("modal-backdrop").classList.remove("hidden");}
+function askCode(target,isFinal=false){
+ activeKind="code-entry";activeCodeTarget=target;
+ $("modal-category").textContent="CODE-INVOER";
+ $("modal-title").textContent=isFinal?"Laatste tijdslot":"Tijdpoort vergrendeld";
+ $("question-text").textContent=isFinal?"Voer de vier cijfers in die je in het futuristische labo hebt verdiend. Rangschik ze steeds van klein naar groot.":`Voer de vier cijfers in die je in het vorige labo hebt verdiend om ${LEVELS[target].name} te betreden. Rangschik ze steeds van klein naar groot.`;
+ $("answer-area").innerHTML='<input class="numeric-input" id="code-answer" type="text" inputmode="numeric" maxlength="4" placeholder="4 cijfers · klein naar groot" autocomplete="off">';
+ $("hint-button").classList.add("hidden");
+ const checkButton=$("check-button");
+ checkButton.classList.remove("hidden");
+ checkButton.disabled=false;
+ checkButton.textContent="Code controleren";
+ $("feedback").className="feedback hidden";
+ $("modal-backdrop").classList.remove("hidden");
+}
 document.querySelectorAll(".level-tab").forEach(b=>b.addEventListener("click",()=>{
  const target=b.dataset.level;
  if(target===currentLevel){setStatus("Je bevindt je al in dit labo.");return;}
