@@ -8,6 +8,7 @@ const LEVEL_ORDER=Object.keys(LEVELS);
 const LEVEL_TOTAL=LEVEL_ORDER.length;
 const QUESTIONS_PER_LEVEL=12, QUESTIONS_PER_PUZZLE=3, PENALTY=60;
 const DIFFICULTIES={basis:"Basis",gemiddeld:"Gemiddeld",moeilijk:"Moeilijk"};
+let teacherMode=false;
 let codeEntered=Object.fromEntries(Object.keys(LEVELS).map(k=>[k,false]));
 let questions=[], pendingOnlineQuestionBank=null, objectProgress={}, puzzleSolved={}, puzzleCompletions={}, currentLevel="medieval", progress={}, levelSolved={}, levelQuestions={}, lockouts={}, inventory={kno3:0,carbon:0,sulfur:0}, activeQuestion=null, activeObject=null, activeKind="question", activeAttemptId=null, activeAttemptQuestions=[], activeAttemptCorrectIds=[], activeAttemptIndex=0, activeAttemptRequired=QUESTIONS_PER_PUZZLE, activeDifficulty="basis", activeRunLevel=null, activeRunObject=null, activeRunToken=0, shadowVisible=false, shadowTimer=null, appearanceTimer=null, shadowEncounterId=null, localShadowMaterial=null, codes={}, unlocked=Object.fromEntries(Object.keys(LEVELS).map((k,i)=>[k,i===0]));
 const $=id=>document.getElementById(id);
@@ -254,6 +255,7 @@ async function resumePuzzleRun(level,obj){
 }
 async function openObject(obj){
  if(obj==="antagonist"){if(!shadowVisible)return;collectShadowDrop();return;}
+ if(teacherMode){setStatus("Leerkrachtweergave: je kunt de vier labo’s vrij bekijken. Puzzels hoef je met dit account niet op te lossen.");return;}
  if(!/^object[1-4]$/.test(obj))return;
  if(Date.now()<(lockouts[currentLevel]?.[obj]||0)){setStatus(`Deze puzzel heeft nog ${Math.ceil((lockouts[currentLevel][obj]-Date.now())/1000)} seconden straftijd.`);showLockout(obj);return;}
  activeObject=obj;
@@ -486,13 +488,14 @@ function askCode(target,isFinal=false){activeKind="code-entry";activeCodeTarget=
 document.querySelectorAll(".level-tab").forEach(b=>b.addEventListener("click",()=>{
  const target=b.dataset.level;
  if(target===currentLevel){setStatus("Je bevindt je al in dit labo.");return;}
+ if(teacherMode){unlocked=Object.fromEntries(LEVEL_ORDER.map(level=>[level,true]));currentLevel=target;renderLevel();setStatus(`Leerkrachtweergave: ${LEVELS[target].name} is geopend.`);log(`Leerkracht opent ${LEVELS[target].name}.`);scheduleShadow();return;}
  if(target==="medieval") { currentLevel="medieval"; renderLevel(); setStatus("Je keert terug naar het middeleeuwse labo."); return; }
  const previous=LEVEL_ORDER[LEVEL_ORDER.indexOf(target)-1];
  if(!levelSolved[previous]){setStatus("Deze tijdpoort blijft gesloten. Los eerst alle vier puzzels in het vorige labo minstens één keer op.");return;}
  if(unlocked[target]) { currentLevel=target; renderLevel(); setStatus("Je betreedt: "+LEVELS[currentLevel].name+"."); log(LEVELS[currentLevel].intro); scheduleShadow(); return; }
  askCode(target);
 }));
-document.querySelectorAll(".hotspot").forEach(b=>b.addEventListener("click",()=>{if(b.dataset.object==="door"){if(levelSolved.future)askCode("exit",true);else setStatus("De uitgang blijft gesloten. Los eerst alle vier puzzels in het futuristische labo minstens één keer op.");return;}openObject(b.dataset.object)}));
+document.querySelectorAll(".hotspot").forEach(b=>b.addEventListener("click",()=>{if(b.dataset.object==="door"){if(teacherMode){setStatus("Leerkrachtweergave: gebruik de levelknoppen bovenaan om tussen de labo’s te wisselen.");return;}if(levelSolved.future)askCode("exit",true);else setStatus("De uitgang blijft gesloten. Los eerst alle vier puzzels in het futuristische labo minstens één keer op.");return;}openObject(b.dataset.object)}));
 $("answer-form").addEventListener("submit",submitAnswer);$("close-modal").addEventListener("click",closeModal);$("answer-area").addEventListener("click",e=>{const choice=e.target.closest("[data-puzzle-difficulty]");if(choice){e.preventDefault();startPuzzleRun(choice.dataset.puzzleDifficulty);}});
 $("blow-safe-button")?.addEventListener("click",blowSafe);
 if($("play-again")){$("play-again").classList.add("hidden");$("play-again").disabled=true;}
@@ -753,6 +756,8 @@ async function handleEconomyClick(e){
 
 // Public bridge used by the optional online layer; the server remains the authority for rewards and purchases.
 window.ChemieGameBridge={
+ setTeacherMode(value){teacherMode=Boolean(value);if(teacherMode){unlocked=Object.fromEntries(LEVEL_ORDER.map(level=>[level,true]));renderLevel();setStatus("Leerkrachtmodus actief: alle vier labo’s zijn vrij toegankelijk.");}else{unlocked=Object.fromEntries(LEVEL_ORDER.map((level,index)=>[level,index===0]));renderLevel();}},
+ isTeacher(){return teacherMode;},
  onOnlineLogin(){onOnlineLogin();},
  onOnlineLogout(){onOnlineLogout();},
  getEconomyState(){return {coins:labCoins,ownedSkins:[...ownedSkins],equippedSkin};},
@@ -772,18 +777,19 @@ window.ChemieGameBridge={
      progress[level]+=Number(row.questions_required)||QUESTIONS_PER_PUZZLE;
    });
    levelSolved=Object.fromEntries(LEVEL_ORDER.map(l=>[l,Object.values(puzzleSolved[l]).every(Boolean)]));
-   unlocked=Object.fromEntries(LEVEL_ORDER.map((l,i)=>[l,i===0]));
+   unlocked=teacherMode?Object.fromEntries(LEVEL_ORDER.map(l=>[l,true])):Object.fromEntries(LEVEL_ORDER.map((l,i)=>[l,i===0]));
    currentLevel="medieval";
    renderLevel();updateProgress();
  },
  applyOnlineLevelUnlocks(rows){
-   unlocked=Object.fromEntries(LEVEL_ORDER.map(l=>[l,false]));
-   (Array.isArray(rows)?rows:[]).forEach(row=>{if(Object.hasOwn(unlocked,row.level_id))unlocked[row.level_id]=true;});
+   unlocked=teacherMode?Object.fromEntries(LEVEL_ORDER.map(l=>[l,true])):Object.fromEntries(LEVEL_ORDER.map(l=>[l,false]));
+   if(!teacherMode)(Array.isArray(rows)?rows:[]).forEach(row=>{if(Object.hasOwn(unlocked,row.level_id))unlocked[row.level_id]=true;});
    unlocked.medieval=true;
-   currentLevel=LEVEL_ORDER.filter(l=>unlocked[l]).slice(-1)[0]||"medieval";
+   currentLevel=teacherMode?"medieval":(LEVEL_ORDER.filter(l=>unlocked[l]).slice(-1)[0]||"medieval");
    renderLevel();
  },
  clearOnlinePuzzleProgress(){
+   teacherMode=false;
    puzzleSolved=Object.fromEntries(LEVEL_ORDER.map(l=>[l,{object1:false,object2:false,object3:false,object4:false}]));
    puzzleCompletions=Object.fromEntries(LEVEL_ORDER.map(l=>[l,{object1:0,object2:0,object3:0,object4:0}]));
    progress=Object.fromEntries(LEVEL_ORDER.map(l=>[l,0]));objectProgress=Object.fromEntries(LEVEL_ORDER.map(l=>[l,{object1:0,object2:0,object3:0,object4:0}]));levelSolved=Object.fromEntries(LEVEL_ORDER.map(l=>[l,false]));codes={};unlocked=Object.fromEntries(LEVEL_ORDER.map((l,i)=>[l,i===0]));currentLevel="medieval";renderLevel();updateProgress();

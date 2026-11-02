@@ -1,0 +1,13 @@
+Uitgevoerde lokale controles:
+- node --check game.js: geslaagd
+- node --check online.js: geslaagd
+- node --check op alle netlify/functions/*.mjs: geslaagd
+- HTML parser op index.html: geslaagd
+- scripts/build.mjs: geslaagd (dist aangemaakt)
+
+Niet live getest:
+- SQL-migratie in het Supabase-project
+- Functions tegen de echte Supabase REST/Auth API
+- rol- en klasisolatie met echte leerlingaccounts
+
+Voer daarom de installatiehandleiding uit en test eerst met twee klassen en testaccounts.

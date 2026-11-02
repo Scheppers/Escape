@@ -167,3 +167,18 @@
 .online-currency-amount{display:inline-flex;align-items:center;justify-content:flex-end;gap:5px}
 .online-mini-card>.labcoin-mini-icon{display:flex;align-items:center;font-size:1rem}
 .online-mini-card>.labcoin-mini-icon .labcoin-coin-icon{width:1.8rem;height:1.8rem}
+
+
+/* Leerkrachtbeheer: meerdere klassen en leerlingtoewijzing */
+.teacher-classes-overview{display:grid;grid-template-columns:minmax(0,1.4fr) minmax(240px,.8fr);gap:14px;margin:14px 0 18px;align-items:start}
+.teacher-class-cards{display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:9px}
+.teacher-class-card{display:flex;flex-direction:column;gap:5px;padding:13px;border:1px solid #d9e4e9;border-radius:12px;background:#f4f8f8;color:#17394b}
+.teacher-class-card strong{font-size:.9rem}.teacher-class-card span{font-size:.78rem;color:#55707c}
+.teacher-create-class-form{padding:13px;border:1px solid #d9e4e9;border-radius:12px;background:#f8faf9}
+.teacher-create-class-form label,.teacher-ranking-filter{display:grid;gap:6px;font-size:.82rem;font-weight:800;color:#29495a}
+.teacher-student-class-action{display:flex;gap:6px;align-items:center;min-width:210px}
+.teacher-student-class-action select{min-width:0;flex:1;padding:7px;border:1px solid #c7d7dd;border-radius:7px;background:white;color:#203b4c;font:inherit;font-size:.75rem}
+.teacher-student-class-action button{white-space:nowrap}
+.teacher-ranking-filter{max-width:340px;margin:0 0 13px}
+.teacher-ranking-filter select{padding:9px 11px;border:1px solid #c7d7dd;border-radius:8px;background:white;color:#203b4c;font:inherit}
+@media(max-width:700px){.teacher-classes-overview{grid-template-columns:1fr}.teacher-student-class-action{min-width:170px}}

@@ -1,4 +1,4 @@
-import { json, readBody, env, validUsername, authEmail, rest, adminAuth, verifyTeacher } from './_shared.mjs';
+import { json, readBody, env, validUsername, authEmail, rest, adminAuth, verifyTeacher, getTeacherClasses } from './_shared.mjs';
 
 export default async (request) => {
   if (request.method === 'OPTIONS') return new Response(null, { status: 204 });
@@ -7,7 +7,10 @@ export default async (request) => {
   try {
     const { url, service, anon } = env();
     const { profile: teacher } = await verifyTeacher(url, service, anon, request);
-    const { students = [] } = await readBody(request);
+    const { students = [], classId: requestedClassId } = await readBody(request);
+    const classes = await getTeacherClasses(url, service, teacher);
+    const selectedClass = requestedClassId ? classes.find(item => item.id === requestedClassId) : classes.find(item => item.id === teacher.class_id);
+    if (!selectedClass) return json(403, { error: 'Kies een klas die door jou beheerd wordt.' });
     if (!Array.isArray(students) || students.length < 1 || students.length > 30) {
       return json(400, { error: 'Maak tussen 1 en 30 accounts per keer aan.' });
     }
@@ -35,7 +38,7 @@ export default async (request) => {
             email: authEmail(username),
             password: String(student.password),
             email_confirm: true,
-            user_metadata: { username, class_id: teacher.class_id, role: 'student' },
+            user_metadata: { username, class_id: selectedClass.id, role: 'student' },
           }),
         });
         created.push({ username });
@@ -50,7 +53,7 @@ export default async (request) => {
       }
     }
 
-    return json(created.length ? 201 : 400, { ok: errors.length === 0, created, errors });
+    return json(created.length ? 201 : 400, { ok: errors.length === 0, classId: selectedClass.id, className: selectedClass.name, created, errors });
   } catch (error) {
     return json(403, { error: String(error?.message || 'Niet toegestaan.') });
   }

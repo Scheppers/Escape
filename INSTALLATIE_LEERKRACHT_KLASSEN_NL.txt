@@ -1,0 +1,75 @@
+CHEMIE ESCAPE ROOM — LEERKRACHTMODUS EN MEERDERE KLASSEN
+========================================================
+
+Deze update voegt twee functies toe:
+1. Het leerkrachtenaccount kan vrij schakelen tussen alle vier labo's. De leerkracht hoeft geen puzzelvragen te beantwoorden. Als het leerkrachtenaccount op een puzzelvoorwerp klikt, toont de website alleen een korte melding; er wordt geen poging gestart en er wordt geen spelvoortgang aangepast.
+2. De leerkracht kan meerdere klassen aanmaken, leerlingen bij het aanmaken aan een klas koppelen en bestaande leerlingen naar een andere eigen klas verplaatsen. De XP-ranking kan per klas worden bekeken. Leerlingen zien enkel hun eigen klas. Battles blijven uitsluitend mogelijk tussen leerlingen met hetzelfde klas-ID.
+
+WAT ZIT IN DIT PAKKET?
+----------------------
+- index.html, game.js, online.js, style.css
+- aangepaste Netlify Functions voor klasbeheer en leerlingaccounts
+- nieuwe function: netlify/functions/teacher-manage-classes.mjs
+- Supabase-migratie: supabase/migrations/2026_11_teacher_multiple_classes.sql
+
+INSTALLATIE
+-----------
+1. Maak eerst een back-up van je huidige GitHub-project.
+
+2. Vervang in de hoofdmap van je GitHub-project deze bestanden:
+   - index.html
+   - game.js
+   - online.js
+   - style.css
+
+3. Vervang in netlify/functions deze bestaande bestanden:
+   - _shared.mjs
+   - bootstrap-teacher.mjs
+   - teacher-create-students.mjs
+   - teacher-delete-student.mjs
+   - teacher-list-students.mjs
+   - teacher-reset-password.mjs
+
+4. Voeg het nieuwe bestand toe:
+   - netlify/functions/teacher-manage-classes.mjs
+
+5. Voeg de SQL-migratie toe aan je project:
+   - supabase/migrations/2026_11_teacher_multiple_classes.sql
+   Open daarna Supabase → SQL Editor, plak de volledige inhoud van dat SQL-bestand en klik één keer op Run.
+
+   Deze migratie voegt een eigenaar toe aan de bestaande klassen, koppelt de bestaande klas automatisch aan het huidige leerkrachtenaccount en past de rankingfunctie aan. Ze verwijdert geen leerlingen, XP, LabCoins, kaarten of spelvoortgang.
+
+6. Commit de wijzigingen in GitHub. Netlify publiceert de nieuwe bestanden en Functions automatisch opnieuw.
+
+BELANGRIJK
+----------
+- Voer alleen de nieuwe migratie uit. Voer schema.sql of oudere migraties niet opnieuw uit.
+- Laat config.js, netlify.toml, je Netlify-omgevingsvariabelen en de bestaande kaart-/battle-SQL ongemoeid.
+- Er zijn geen nieuwe Netlify-omgevingsvariabelen of geheime sleutels nodig.
+- De bestaande klas wordt na de migratie aan het huidige leerkrachtenaccount gekoppeld. Nieuwe klassen die je daarna aanmaakt, worden automatisch aan diezelfde leerkracht gekoppeld.
+- De klasnamen moeten uniek zijn binnen het Supabase-project.
+- Als je een leerling naar een andere klas verplaatst, worden eventuele openstaande of actieve battles van die leerling beëindigd. Dit voorkomt dat een battle tussen twee verschillende klassen blijft bestaan.
+
+GEBRUIK NA DE UPDATE
+--------------------
+- Leerkrachtmodus: log in als leerkracht. Alle vier de levelknoppen bovenaan zijn vrij toegankelijk.
+- Klas aanmaken: open Online arena → Klasbeheer → Nieuwe klas aanmaken.
+- Leerlingaccounts maken: kies eerst een klas in het formulier en voeg daarna de leerlingen toe als gebruikersnaam;wachtwoord, één per regel.
+- Leerling verplaatsen: kies in de leerlingentabel de nieuwe klas en klik op Verplaats.
+- Ranking bekijken: open XP-ranking en kies als leerkracht de gewenste klas.
+
+VEILIGHEID EN SCHEIDING
+-----------------------
+De klaskeuze in de interface is niet de beveiligingsgrens. Netlify controleert server-side of de leerkracht eigenaar is van de gekozen klas. De database laat een leerling uitsluitend de ranking van zijn/haar eigen class_id opvragen. De bestaande battlefuncties controleren eveneens dat uitdager en tegenstander bij dezelfde klas horen.
+
+TEST AANBEVOLEN
+---------------
+1. Log in als leerkracht en klik achtereenvolgens op de vier levelknoppen. Alle labo's moeten openen zonder codecijfers of opgeloste puzzels.
+2. Maak een tweede klas aan.
+3. Maak twee testleerlingen aan in klas A en twee in klas B.
+4. Controleer als leerkracht de ranking van beide klassen.
+5. Log in als leerling uit klas A: de ranking en battle-uitnodigingen mogen alleen klasgenoten uit klas A tonen.
+6. Probeer met een leerling uit klas A een leerling uit klas B uit te dagen: de server moet dit weigeren.
+7. Verplaats een leerling naar de andere klas en controleer dat hij/zij daarna in de nieuwe klasranking verschijnt.
+
+De code en Netlify-build zijn lokaal gecontroleerd. De migratie, serverfuncties en echte klasafscherming moeten na installatie nog in jouw eigen Supabase-/Netlify-omgeving getest worden.

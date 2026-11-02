@@ -41,7 +41,7 @@ export default async (request) => {
     const classId = classes[0]?.id;
     if (!classId) throw new Error('De klas kon niet worden aangemaakt.');
 
-    await adminAuth(url, service, 'users', {
+    const createdUser = await adminAuth(url, service, 'users', {
       method: 'POST',
       body: JSON.stringify({
         email: authEmail(username),
@@ -49,6 +49,13 @@ export default async (request) => {
         email_confirm: true,
         user_metadata: { username, class_id: classId, role: 'teacher' },
       }),
+    });
+    const teacherId = createdUser?.id || createdUser?.user?.id;
+    if (!teacherId) throw new Error('Het leerkrachtaccount is aangemaakt, maar de klas kon niet aan de leerkracht worden gekoppeld. Controleer het accountprofiel.');
+    await rest(url, service, `classes?id=eq.${encodeURIComponent(classId)}`, {
+      method: 'PATCH',
+      headers: { Prefer: 'return=minimal' },
+      body: JSON.stringify({ owner_teacher_id: teacherId }),
     });
 
     return json(201, { ok: true, username, className, message: 'Leerkrachtaccount aangemaakt. Je kunt nu inloggen.' });

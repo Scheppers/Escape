@@ -1,4 +1,4 @@
-import { json, readBody, env, validUsername, rest, adminAuth, verifyTeacher } from './_shared.mjs';
+import { json, readBody, env, validUsername, rest, adminAuth, verifyTeacher, getTeacherClasses } from './_shared.mjs';
 
 export default async (request) => {
   if (request.method === 'OPTIONS') return new Response(null, { status: 204 });
@@ -14,10 +14,12 @@ export default async (request) => {
       return json(400, { error: 'Controleer de gebruikersnaam en gebruik een wachtwoord van 8–128 tekens.' });
     }
 
-    const rows = await rest(url, service, `profiles?select=id,role&class_id=eq.${encodeURIComponent(teacher.class_id)}&username=eq.${encodeURIComponent(username)}&limit=1`);
+    const classes = await getTeacherClasses(url, service, teacher);
+    const classIds = classes.map(item => item.id);
+    const rows = classIds.length ? await rest(url, service, `profiles?select=id,role&class_id=${encodeURIComponent(`in.(${classIds.join(',')})`)}&username=eq.${encodeURIComponent(username)}&limit=1`) : [];
     const student = rows[0];
     if (!student || student.role !== 'student') {
-      return json(404, { error: 'Geen leerling met die gebruikersnaam gevonden in jouw klas.' });
+      return json(404, { error: 'Geen leerling met die gebruikersnaam gevonden in jouw klassen.' });
     }
 
     await adminAuth(url, service, `users/${encodeURIComponent(student.id)}`, {

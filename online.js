@@ -15,6 +15,7 @@
   const authEmail = (username) => `${String(username || '').trim().toLowerCase()}@${AUTH_DOMAIN}`;
   let refreshTimer = null, lastBattleIds = '';
   let teacherQuestionCache = [], teacherQuestionLevel = 'medieval';
+  let teacherClassCache = [], teacherLeaderboardClassId = null, teacherCreateClassId = null;
   let cardCatalogCache = [], ownedCardCache = [], reactionCache = [], cardShopTab = 'shop';
   let teacherCardCache = [], teacherReactionCache = [];
   const esc = (s) => String(s ?? '').replace(/[&<>"']/g, ch => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[ch]));
@@ -41,7 +42,7 @@
     return result;
   }
   const LEVELS_FOR_QUESTIONS = [
-    { id: 'medieval', name: 'Leerjaar 1 · Middeleeuws labo', objects: { object1:'Kookpot', object2:'Oud boek', object3:'Glazen potten', object4:'Werktafel' } },
+    { id: 'medieval', name: 'Leerjaar 1 · Middeleeuws labo', objects: { object1:'Scheidingstechnieken', object2:'Oud boek', object3:'Glazen potten', object4:'Werktafel' } },
     { id: 'lavoisier', name: 'Leerjaar 2 · Lavoisierlabo', objects: { object1:'Balans', object2:'Notities van Lavoisier', object3:'Glaswerk', object4:'Proefopstelling' } },
     { id: 'modern', name: 'Leerjaar 3 · Modern labo', objects: { object1:'Reageerbuizen', object2:'Weegschaal', object3:'Maatkolf', object4:'Periodiek systeem' } },
     { id: 'future', name: 'Leerjaar 4 · Futuristisch labo', objects: { object1:'Robotarm', object2:'Hologram', object3:'Reactor', object4:'Tijdpoort' } }
@@ -60,6 +61,7 @@
     if (!data) throw new Error('Je accountprofiel wordt nog aangemaakt. Ververs over enkele seconden.');
     if (!data.class_id) throw new Error('Dit account is nog niet aan een klas gekoppeld. Vraag de leerkracht om het account opnieuw aan te maken of laat de beheerder de oude accounts aan een klas koppelen.');
     currentProfile = data;
+    window.ChemieGameBridge?.setTeacherMode?.(data.role === 'teacher');
     const teacherNav = document.getElementById('online-teacher-nav');
     teacherNav?.classList.toggle('hidden', data.role !== 'teacher');
     nav?.querySelectorAll('[data-online-view="cards"],[data-online-view="skins"],[data-online-view="battles"]').forEach(b => b.classList.toggle('hidden', data.role === 'teacher'));
@@ -82,7 +84,7 @@
   }
   async function refreshDashboard() {
     if (!currentUser) return;
-    try { await loadProfile(); if (currentView === 'leaderboard') await renderLeaderboard(); else if (currentView === 'cards') await renderCards(); else if (currentView === 'skins') await renderSkins(); else if (currentView === 'battles') await renderBattles(); }
+    try { await loadProfile(); if (currentView === 'leaderboard') await renderLeaderboard(); else if (currentView === 'cards') await renderCards(); else if (currentView === 'skins') await renderSkins(); else if (currentView === 'battles') await renderBattles(); else if (currentView === 'teacher') await renderTeacher(); }
     catch (e) { console.error(e); msg(e.message || 'Vernieuwen is mislukt.', 'bad'); }
   }
   function setView(name) {
@@ -96,14 +98,29 @@
     if (!view || !currentProfile) return;
     const xp = Number(currentProfile.xp), level = Math.floor(xp / 100) + 1, rem = xp % 100;
     if (currentProfile.role === 'teacher') {
-      view.innerHTML = `<div class="online-home-grid"><article class="online-mini-card"><span>🏫</span><strong>Klasbeheer</strong><small>Maak leerlingaccounts aan en reset wachtwoorden via het tabblad Klasbeheer.</small></article><article class="online-mini-card"><span>🏆</span><strong>XP-ranking van je klas</strong><small>Je ziet de voortgang van de leerlingen uit jouw klas.</small></article><article class="online-mini-card"><span>🔐</span><strong>Geen zelfregistratie</strong><small>Leerlingen kunnen alleen inloggen met een account dat jij aanmaakt.</small></article></div><p class="online-help">De leerkracht beheert de accounts. Leerlingen zien elkaars gebruikersnamen en XP binnen dezelfde klas; andere klassen blijven afgeschermd.</p>`;
+      view.innerHTML = `<div class="online-home-grid"><article class="online-mini-card"><span>🏫</span><strong>Klasbeheer</strong><small>Beheer meerdere klassen, verdeel leerlingen en reset wachtwoorden.</small></article><article class="online-mini-card"><span>🏆</span><strong>XP-ranking per klas</strong><small>Kies zelf welke klasrangschikking je wilt bekijken.</small></article><article class="online-mini-card"><span>🔐</span><strong>Geen zelfregistratie</strong><small>Leerlingen kunnen alleen inloggen met een account dat jij aanmaakt.</small></article></div><p class="online-help">De leerkracht beheert meerdere klassen. Leerlingen zien alleen de gebruikersnamen en XP van hun eigen klas; battles zijn uitsluitend mogelijk met klasgenoten.</p>`;
       return;
     }
     view.innerHTML = `<div class="online-home-grid"><article class="online-mini-card"><span>⭐</span><strong>${xp} XP</strong><small>${rem}/100 XP tot level ${level + 1}</small><div class="online-xp-bar"><i style="width:${rem}%"></i></div></article><article class="online-mini-card"><span class="labcoin-mini-icon">${LABCOIN_ICON}</span><strong>${Number(currentProfile.coins)} LabCoins</strong><small>Verdien coins met de Elementensprint, de Zurenkennis-sprint en de virtuele kluisreactie.</small></article><article class="online-mini-card"><span>🧬</span><strong>Kaartenbataljon</strong><small>Koop stofkaarten en daag een klasgenoot uit.</small></article></div><p class="online-help">De gewone puzzels geven XP. LabCoins verdien je via de optionele Elementensprint, de Zurenkennis-sprint en de virtuele kluisreactie. Met coins koop je kaarten en skins. De ranking en battles zijn beperkt tot jouw klas.</p>`;
   }
   async function renderLeaderboard() {
-    const rows = await rpc('get_leaderboard', { p_limit: 20 });
-    view.innerHTML = `<div class="online-view-heading"><div><h3>🏆 XP-ranking</h3><p>Alleen leerlingen uit jouw klas zijn zichtbaar.</p></div><button class="online-small-btn" data-online-refresh>Vernieuwen</button></div><div class="online-table-wrap"><table class="online-table"><thead><tr><th>#</th><th>Speler</th><th>Level</th><th>XP</th></tr></thead><tbody>${(rows || []).map(r => `<tr class="${r.username === currentProfile?.username ? 'is-me' : ''}"><td>${Number(r.position)}</td><td>${esc(r.username)}${r.username === currentProfile?.username ? ' (jij)' : ''}</td><td>${Number(r.level)}</td><td>${Number(r.xp)}</td></tr>`).join('') || '<tr><td colspan="4">Nog geen rankinggegevens.</td></tr>'}</tbody></table></div>`;
+    let rows = [], classFilter = '';
+    if (currentProfile?.role === 'teacher') {
+      const data = await teacherFunction('teacher-list-students', { method: 'GET' });
+      teacherClassCache = data.classes || [];
+      if (!teacherClassCache.length) {
+        view.innerHTML = '<h3>🏆 XP-ranking</h3><p class="online-help">Maak eerst minstens één klas aan in Klasbeheer.</p>';
+        return;
+      }
+      if (!teacherClassCache.some(c => c.id === teacherLeaderboardClassId)) teacherLeaderboardClassId = teacherClassCache[0].id;
+      const options = teacherClassCache.map(c => `<option value="${esc(c.id)}" ${c.id === teacherLeaderboardClassId ? 'selected' : ''}>${esc(c.name)}</option>`).join('');
+      classFilter = `<label class="teacher-ranking-filter">Ranking van klas<select id="teacher-ranking-class">${options}</select></label>`;
+      rows = await rpc('get_leaderboard', { p_limit: 50, p_class_id: teacherLeaderboardClassId });
+    } else {
+      rows = await rpc('get_leaderboard', { p_limit: 20, p_class_id: null });
+    }
+    const table = `<div class="online-table-wrap"><table class="online-table"><thead><tr><th>#</th><th>Speler</th><th>Level</th><th>XP</th></tr></thead><tbody>${(rows || []).map(r => `<tr class="${r.username === currentProfile?.username ? 'is-me' : ''}"><td>${Number(r.position)}</td><td>${esc(r.username)}${r.username === currentProfile?.username ? ' (jij)' : ''}</td><td>${Number(r.level)}</td><td>${Number(r.xp)}</td></tr>`).join('') || '<tr><td colspan="4">Nog geen rankinggegevens voor deze klas.</td></tr>'}</tbody></table></div>`;
+    view.innerHTML = `<div class="online-view-heading"><div><h3>🏆 XP-ranking</h3><p>${currentProfile?.role === 'teacher' ? 'Kies een klas om de rangschikking van die leerlingen te bekijken.' : 'Alleen leerlingen uit jouw klas zijn zichtbaar.'}</p></div><button class="online-small-btn" data-online-refresh>Vernieuwen</button></div>${classFilter}${table}`;
   }
   async function renderSkins() {
     const [{ data: catalog, error: cErr }, econ] = await Promise.all([
@@ -180,16 +197,24 @@
   }
   async function renderTeacher() {
     if (currentProfile?.role !== 'teacher') throw new Error('Alleen de leerkracht heeft toegang tot klasbeheer.');
-    const { students = [] } = await teacherFunction('teacher-list-students', { method: 'GET' });
+    const { students = [], classes = [] } = await teacherFunction('teacher-list-students', { method: 'GET' });
+    teacherClassCache = classes;
+    if (!teacherClassCache.some(c => c.id === teacherCreateClassId)) teacherCreateClassId = teacherClassCache.find(c => c.id === currentProfile.class_id)?.id || teacherClassCache[0]?.id || '';
+    const selectedClassOptions = teacherClassCache.map(c => `<option value="${esc(c.id)}" ${c.id === teacherCreateClassId ? 'selected' : ''}>${esc(c.name)}</option>`).join('');
+    const counts = new Map(teacherClassCache.map(c => [c.id, 0]));
+    students.forEach(student => counts.set(student.class_id, (counts.get(student.class_id) || 0) + 1));
+    const classCards = teacherClassCache.map(c => `<article class="teacher-class-card"><strong>🏫 ${esc(c.name)}</strong><span>${counts.get(c.id) || 0} leerling(en)</span></article>`).join('');
     const studentRows = students.map(student => {
       const username = esc(student.username); const xp = Number(student.xp || 0); const level = Math.floor(xp / 100) + 1;
-      return `<tr><td><strong>${username}</strong></td><td>${xp}</td><td>${level}</td><td><button type="button" class="teacher-delete-btn" data-teacher-delete-student="${username}">Verwijderen</button></td></tr>`;
+      const moveOptions = teacherClassCache.map(c => `<option value="${esc(c.id)}" ${c.id === student.class_id ? 'selected' : ''}>${esc(c.name)}</option>`).join('');
+      return `<tr><td><strong>${username}</strong></td><td>${esc(student.class_name || 'Onbekende klas')}</td><td>${xp}</td><td>${level}</td><td><div class="teacher-student-class-action"><select data-student-class-select="${username}" aria-label="Nieuwe klas voor ${username}">${moveOptions}</select><button type="button" class="online-small-btn" data-teacher-move-student="${username}">Verplaats</button></div></td><td><button type="button" class="teacher-delete-btn" data-teacher-delete-student="${username}">Verwijderen</button></td></tr>`;
     }).join('');
-    view.innerHTML = `<div class="online-view-heading"><div><h3>🏫 Klasbeheer</h3><p>Accounts zijn gekoppeld aan jouw klas. Leerlingen kunnen zelf geen account registreren.</p></div><button class="online-small-btn" data-online-refresh>Vernieuwen</button></div>
-      <div class="online-auth-layout"><article class="online-auth-card"><h3>Leerlingaccounts aanmaken</h3><p>Voer één leerling per regel in als <code>gebruikersnaam;wachtwoord</code>. De gebruikersnaam gebruikt 3–20 kleine letters, cijfers, _ of -. Wachtwoorden zijn minstens 8 tekens. Maximaal 30 per keer.</p><form id="teacher-create-accounts-form" class="online-form"><label for="teacher-student-lines">Leerlingen (gebruikersnaam;wachtwoord)</label><textarea id="teacher-student-lines" rows="8" placeholder="chemicus01;TijdelijkWachtwoord1
-chemicus02;TijdelijkWachtwoord2" required></textarea><button type="submit" class="online-primary">Maak leerlingaccounts</button></form><div id="teacher-account-results" class="teacher-results hidden" aria-live="polite"></div></article>
-      <article class="online-auth-card"><h3>Leerlingwachtwoord resetten</h3><p>Gebruik dit wanneer een leerling het wachtwoord vergeten is. Het nieuwe wachtwoord wordt onmiddellijk actief.</p><form id="teacher-reset-form" class="online-form"><label for="teacher-reset-username">Gebruikersnaam</label><input id="teacher-reset-username" pattern="[a-zA-Z0-9_-]{3,20}" required><label for="teacher-reset-password">Nieuw wachtwoord (minstens 8 tekens)</label><input id="teacher-reset-password" type="password" minlength="8" autocomplete="new-password" required><button type="submit" class="online-secondary">Reset wachtwoord</button></form><p class="teacher-warn">Deel tijdelijke wachtwoorden alleen rechtstreeks met de leerling. Zet ze niet in een publiek klasdocument.</p></article></div>
-      <section class="teacher-student-list"><div class="online-view-heading"><div><h3>👥 Leerlingen in jouw klas</h3><p>${students.length} leerlingaccount${students.length === 1 ? '' : 's'} gevonden.</p></div></div><div class="online-table-wrap"><table class="online-table"><thead><tr><th>Gebruikersnaam</th><th>XP</th><th>Level</th><th>Accountbeheer</th></tr></thead><tbody>${studentRows || '<tr><td colspan="4">Er zijn nog geen leerlingaccounts in jouw klas.</td></tr>'}</tbody></table></div><p class="teacher-warn">Let op: verwijderen is definitief. Ook XP, LabCoins, kaarten, skins, sprintresultaten en battlegeschiedenis van die leerling worden verwijderd.</p></section>
+    view.innerHTML = `<div class="online-view-heading"><div><h3>🏫 Klasbeheer</h3><p>Beheer meerdere klassen, maak leerlingaccounts aan en verplaats leerlingen. Elke klas heeft een eigen ranking en eigen battlegroep.</p></div><button class="online-small-btn" data-online-refresh>Vernieuwen</button></div>
+      <section class="teacher-classes-overview"><div class="teacher-class-cards">${classCards || '<p class="online-help">Nog geen klassen aangemaakt.</p>'}</div><form id="teacher-create-class-form" class="online-form teacher-create-class-form"><label for="teacher-new-class-name">Nieuwe klas aanmaken</label><input id="teacher-new-class-name" minlength="2" maxlength="80" placeholder="bv. 4ChemieB" required><button type="submit" class="online-primary">Maak klas aan</button></form></section>
+      <div class="online-auth-layout"><article class="online-auth-card"><h3>Leerlingaccounts aanmaken</h3><p>Voer één leerling per regel in als <code>gebruikersnaam;wachtwoord</code>. Kies eerst de klas waarin je de nieuwe accounts wilt plaatsen.</p><form id="teacher-create-accounts-form" class="online-form"><label for="teacher-create-class">Klas voor nieuwe accounts<select id="teacher-create-class" required>${selectedClassOptions || '<option value="">Maak eerst een klas aan</option>'}</select></label><label for="teacher-student-lines">Leerlingen (gebruikersnaam;wachtwoord)</label><textarea id="teacher-student-lines" rows="8" placeholder="chemicus01;TijdelijkWachtwoord1
+chemicus02;TijdelijkWachtwoord2" required></textarea><button type="submit" class="online-primary" ${teacherClassCache.length ? '' : 'disabled'}>Maak leerlingaccounts</button></form><div id="teacher-account-results" class="teacher-results hidden" aria-live="polite"></div></article>
+      <article class="online-auth-card"><h3>Leerlingwachtwoord resetten</h3><p>Gebruik dit wanneer een leerling uit één van jouw klassen het wachtwoord vergeten is. Het nieuwe wachtwoord wordt onmiddellijk actief.</p><form id="teacher-reset-form" class="online-form"><label for="teacher-reset-username">Gebruikersnaam</label><input id="teacher-reset-username" pattern="[a-zA-Z0-9_-]{3,20}" required><label for="teacher-reset-password">Nieuw wachtwoord (minstens 8 tekens)</label><input id="teacher-reset-password" type="password" minlength="8" autocomplete="new-password" required><button type="submit" class="online-secondary">Reset wachtwoord</button></form><p class="teacher-warn">Deel tijdelijke wachtwoorden alleen rechtstreeks met de leerling. Zet ze niet in een publiek klasdocument.</p></article></div>
+      <section class="teacher-student-list"><div class="online-view-heading"><div><h3>👥 Leerlingen in jouw klassen</h3><p>${students.length} leerlingaccount${students.length === 1 ? '' : 's'} verdeeld over ${teacherClassCache.length} klas(sen).</p></div></div><div class="online-table-wrap"><table class="online-table"><thead><tr><th>Gebruikersnaam</th><th>Klas</th><th>XP</th><th>Level</th><th>Klas wijzigen</th><th>Accountbeheer</th></tr></thead><tbody>${studentRows || '<tr><td colspan="6">Er zijn nog geen leerlingaccounts in jouw klassen.</td></tr>'}</tbody></table></div><p class="teacher-warn">Een leerling verplaatsen beëindigt eventuele openstaande battles. Afgeronde battles blijven in de historie van de deelnemers staan.</p><p class="teacher-warn">Let op: verwijderen is definitief. Ook XP, LabCoins, kaarten, skins, sprintresultaten en spelgeschiedenis van die leerling worden verwijderd.</p></section>
       <section class="teacher-question-manager"><div class="online-view-heading"><div><h3>🧪 Vragenbeheer per leerjaar</h3><p>Elk leerjaar heeft een eigen vragenbank. Wijzigingen gelden voor leerlingen zodra ze de game opnieuw laden.</p></div></div>
         <div class="teacher-question-toolbar"><label for="teacher-question-level">Vragenset kiezen<select id="teacher-question-level">${LEVELS_FOR_QUESTIONS.map(l=>`<option value="${l.id}">${esc(l.name)}</option>`).join('')}</select></label></div>
         <div id="teacher-puzzle-settings" class="teacher-puzzle-settings"></div>
@@ -494,7 +519,9 @@ Optie D"></textarea></label>
     if (duplicates.length) throw new Error(`Dubbele gebruikersnaam in je invoer: ${[...new Set(duplicates)].join(', ')}`);
     const { data: { session } } = await supabase.auth.getSession();
     if (!session?.access_token) throw new Error('Je sessie is verlopen. Log opnieuw in.');
-    const response = await fetch('/.netlify/functions/teacher-create-students', { method: 'POST', headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${session.access_token}` }, body: JSON.stringify({ students }) });
+    const classId = document.getElementById('teacher-create-class')?.value || '';
+    if (!classId) throw new Error('Kies eerst de klas waarin je de leerlingaccounts wilt aanmaken.');
+    const response = await fetch('/.netlify/functions/teacher-create-students', { method: 'POST', headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${session.access_token}` }, body: JSON.stringify({ students, classId }) });
     const result = await response.json().catch(() => ({}));
     if (!response.ok) throw new Error(result.error || 'Leerlingaccounts aanmaken is mislukt.');
     const created = new Set((result.created || []).map(x => x.username));
@@ -503,7 +530,29 @@ Optie D"></textarea></label>
     const box = document.getElementById('teacher-account-results');
     if (box) { box.classList.remove('hidden'); box.textContent = `${result.created?.length || 0} account(s) aangemaakt. Bewaar deze inloggegevens en deel ze veilig uit:\n\n${report || '(geen nieuwe accounts)'}${failed ? `\n\nNiet gelukt:\n${failed}` : ''}`; }
     document.getElementById('teacher-student-lines').value = '';
-    msg(`${result.created?.length || 0} leerlingaccount(s) aangemaakt.`, 'good');
+    msg(`${result.created?.length || 0} leerlingaccount(s) aangemaakt in ${result.className || 'de gekozen klas'}.`, 'good');
+    await renderTeacher();
+  }
+  async function handleTeacherCreateClass(e) {
+    e.preventDefault();
+    const name = (document.getElementById('teacher-new-class-name')?.value || '').trim();
+    if (name.length < 2 || name.length > 80) throw new Error('Een klasnaam moet 2 tot 80 tekens bevatten.');
+    const result = await teacherFunction('teacher-manage-classes', { body: { action: 'create-class', name } });
+    teacherCreateClassId = result.class?.id || teacherCreateClassId;
+    teacherLeaderboardClassId = result.class?.id || teacherLeaderboardClassId;
+    msg(`Klas '${result.class?.name || name}' is aangemaakt.`, 'good');
+    await renderTeacher();
+  }
+  async function handleTeacherMoveStudent(button) {
+    const username = button.dataset.teacherMoveStudent;
+    const row = button.closest('tr');
+    const classId = row?.querySelector('[data-student-class-select]')?.value;
+    if (!username || !classId) throw new Error('Kies een geldige leerling en klas.');
+    const selected = teacherClassCache.find(c => c.id === classId);
+    if (!window.confirm(`Leerling '${username}' verplaatsen naar '${selected?.name || 'de gekozen klas'}'? Eventuele openstaande battles worden beëindigd.`)) return;
+    await teacherFunction('teacher-manage-classes', { body: { action: 'move-student', username, classId } });
+    msg(`Leerling '${username}' is verplaatst naar ${selected?.name || 'de gekozen klas'}.`, 'good');
+    await renderTeacher();
   }
   async function handleTeacherPasswordReset(e) {
     if (e) e.preventDefault();
@@ -560,6 +609,8 @@ Optie D"></textarea></label>
     const reactionArchive = e.target.closest('[data-teacher-reaction-archive]'); if (reactionArchive) { await action(async()=>{ await rpc('teacher_archive_reaction',{p_reaction_id:reactionArchive.dataset.teacherReactionArchive}); await renderTeacherCardManager(); }); return; }
     const cardTab = e.target.closest('[data-card-tab]'); if (cardTab) { cardShopTab=cardTab.dataset.cardTab; await renderCardsPanel(await getEconomy()); return; }
     const reactionRun = e.target.closest('#reaction-run'); if (reactionRun && reactionRun.dataset.reactionId) { await action(async()=>{ await rpc('perform_card_reaction',{p_reaction_id:reactionRun.dataset.reactionId}); cardShopTab='collection'; }); return; }
+    const moveStudent = e.target.closest('[data-teacher-move-student]');
+    if (moveStudent) { await action(() => handleTeacherMoveStudent(moveStudent)); return; }
     const deleteStudent = e.target.closest('[data-teacher-delete-student]');
     if (deleteStudent) {
       const username = deleteStudent.dataset.teacherDeleteStudent;
@@ -584,6 +635,7 @@ Optie D"></textarea></label>
     document.getElementById('online-teacher-setup-form')?.addEventListener('submit', e => action(() => handleTeacherSetup(e)));
     view?.addEventListener('submit', e => {
       if (e.target.id === 'teacher-create-accounts-form') { action(() => handleCreateStudentAccounts(e)); return; }
+      if (e.target.id === 'teacher-create-class-form') { action(() => handleTeacherCreateClass(e)); return; }
       if (e.target.id === 'teacher-reset-form') { action(() => handleTeacherPasswordReset(e)); return; }
       if (e.target.id === 'teacher-question-form') { e.preventDefault(); handleTeacherQuestionSave(e).catch(err => { console.error(err); msg(err.message || 'Vraag opslaan is mislukt.', 'bad'); }); return; }
       if (e.target.id === 'teacher-card-form') { action(()=>saveTeacherCard(e)); return; }
@@ -591,6 +643,8 @@ Optie D"></textarea></label>
       if (e.target.id === 'teacher-battle-settings-form') { e.preventDefault(); action(async()=>{const hp=Number(document.getElementById('teacher-battle-hp').value); await rpc('teacher_set_battle_settings',{p_starting_hp:hp}); msg('Startlevenskracht bijgewerkt.','good');}); return; }
     });
     view?.addEventListener('change', e => {
+      if (e.target.id === 'teacher-create-class') teacherCreateClassId = e.target.value;
+      if (e.target.id === 'teacher-ranking-class') { teacherLeaderboardClassId = e.target.value; renderLeaderboard().catch(err => { console.error(err); msg(err.message || 'Ranking laden is mislukt.', 'bad'); }); }
       if (e.target.id === 'teacher-question-level') renderTeacherQuestions(e.target.value).catch(err => { console.error(err); msg(err.message || 'Vragenset laden is mislukt.', 'bad'); });
       if (e.target.id === 'teacher-question-type') toggleQuestionEditorType();
       if (e.target.matches('[data-reaction-selector]')) renderReactionPreview();

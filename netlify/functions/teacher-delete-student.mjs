@@ -1,4 +1,4 @@
-import { json, readBody, env, validUsername, rest, adminAuth, verifyTeacher } from './_shared.mjs';
+import { json, readBody, env, validUsername, rest, adminAuth, verifyTeacher, getTeacherClasses } from './_shared.mjs';
 
 export default async (request) => {
   if (request.method === 'OPTIONS') return new Response(null, { status: 204 });
@@ -14,15 +14,17 @@ export default async (request) => {
       return json(400, { error: 'Vul een geldige gebruikersnaam in (3–20 kleine letters, cijfers, _ of -).' });
     }
 
-    // A teacher may only delete student accounts that belong to that teacher's own class.
-    const rows = await rest(
+    // A teacher may only delete students enrolled in one of their own classes.
+    const classes = await getTeacherClasses(url, service, teacher);
+    const classIds = classes.map(item => item.id);
+    const rows = classIds.length ? await rest(
       url,
       service,
-      `profiles?select=id,username,role&class_id=eq.${encodeURIComponent(teacher.class_id)}&username=eq.${encodeURIComponent(username)}&limit=1`
-    );
+      `profiles?select=id,username,role,class_id&class_id=${encodeURIComponent(`in.(${classIds.join(',')})`)}&username=eq.${encodeURIComponent(username)}&limit=1`
+    ) : [];
     const student = Array.isArray(rows) ? rows[0] : null;
     if (!student || student.role !== 'student') {
-      return json(404, { error: 'Geen leerling met die gebruikersnaam gevonden in jouw klas.' });
+      return json(404, { error: 'Geen leerling met die gebruikersnaam gevonden in jouw klassen.' });
     }
 
     // Removing the Auth user cascades to profiles and all user-owned game data

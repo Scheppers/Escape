@@ -1,4 +1,4 @@
-import { json, env, rest, verifyTeacher } from './_shared.mjs';
+import { json, env, rest, verifyTeacher, getTeacherClasses } from './_shared.mjs';
 
 export default async (request) => {
   if (request.method === 'OPTIONS') return new Response(null, { status: 204 });
@@ -7,13 +7,25 @@ export default async (request) => {
   try {
     const { url, service, anon } = env();
     const { profile: teacher } = await verifyTeacher(url, service, anon, request);
-    const students = await rest(
+    const classes = await getTeacherClasses(url, service, teacher);
+    const ids = classes.map(item => item.id);
+    if (!ids.length) return json(200, { classes: [], students: [] });
+    const classFilter = `in.(${ids.join(',')})`;
+    const rows = await rest(
       url,
       service,
-      `profiles?select=username,xp,created_at&class_id=eq.${encodeURIComponent(teacher.class_id)}&role=eq.student&order=username.asc`
+      `profiles?select=username,xp,created_at,class_id&class_id=${encodeURIComponent(classFilter)}&role=eq.student&order=username.asc`
     );
-    return json(200, { students: Array.isArray(students) ? students : [] });
+    const names = new Map(classes.map(item => [item.id, item.name]));
+    const students = (Array.isArray(rows) ? rows : []).map(student => ({
+      ...student,
+      class_name: names.get(student.class_id) || 'Onbekende klas',
+    }));
+    return json(200, {
+      classes: classes.map(({ id, name, created_at }) => ({ id, name, created_at })),
+      students,
+    });
   } catch (error) {
-    return json(403, { error: String(error?.message || 'Leerlingen ophalen is mislukt.') });
+    return json(403, { error: String(error?.message || 'Leerlingen en klassen ophalen is mislukt.') });
   }
 };
