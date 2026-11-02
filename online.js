@@ -42,7 +42,7 @@
     return result;
   }
   const LEVELS_FOR_QUESTIONS = [
-    { id: 'medieval', name: 'Leerjaar 1 · Middeleeuws labo', objects: { object1:'Scheidingstechnieken', object2:'Oud boek', object3:'Glazen potten', object4:'Werktafel' } },
+    { id: 'medieval', name: 'Leerjaar 1 · Middeleeuws labo', objects: { object1:'Kookpot', object2:'Oud boek', object3:'Glazen potten', object4:'Werktafel' } },
     { id: 'lavoisier', name: 'Leerjaar 2 · Lavoisierlabo', objects: { object1:'Balans', object2:'Notities van Lavoisier', object3:'Glaswerk', object4:'Proefopstelling' } },
     { id: 'modern', name: 'Leerjaar 3 · Modern labo', objects: { object1:'Reageerbuizen', object2:'Weegschaal', object3:'Maatkolf', object4:'Periodiek systeem' } },
     { id: 'future', name: 'Leerjaar 4 · Futuristisch labo', objects: { object1:'Robotarm', object2:'Hologram', object3:'Reactor', object4:'Tijdpoort' } }
@@ -221,7 +221,7 @@ chemicus02;TijdelijkWachtwoord2" required></textarea><button type="submit" class
         <div id="teacher-question-status" class="teacher-question-status" role="status">Vragen worden geladen…</div><div id="teacher-question-list" class="teacher-question-grid"></div>
         <form id="teacher-question-form" class="teacher-question-form"><input id="teacher-question-id" type="hidden"><label for="teacher-question-object">Puzzelplek<select id="teacher-question-object"><option value="object1">Puzzelplek 1</option><option value="object2">Puzzelplek 2</option><option value="object3">Puzzelplek 3</option><option value="object4">Puzzelplek 4</option></select></label>
         <label for="teacher-question-difficulty">Moeilijkheid<select id="teacher-question-difficulty"><option value="basis">Basis</option><option value="gemiddeld">Gemiddeld</option><option value="moeilijk">Moeilijk</option></select></label>
-        <label for="teacher-question-type">Vraagtype<select id="teacher-question-type"><option value="multiple_choice">Meerkeuzevraag</option><option value="numeric">Rekenvraag (geheel getal)</option></select></label>
+        <label for="teacher-question-type">Vraagtype<select id="teacher-question-type"><option value="multiple_choice">Meerkeuzevraag</option><option value="numeric">Rekenvraag (geheel getal)</option><option value="short_answer">Kort antwoord (open tekstveld)</option></select></label>
         <label for="teacher-question-text" class="span-all">Vraag<textarea id="teacher-question-text" rows="3" maxlength="1000" required placeholder="Typ hier de vraag…"></textarea></label>
         <label for="teacher-question-options" id="teacher-question-options-wrap" class="span-all">Vier antwoordopties (één per regel)<textarea id="teacher-question-options" rows="4" placeholder="Optie A
 Optie B
@@ -256,8 +256,10 @@ Optie D"></textarea></label>
     const opts = document.getElementById('teacher-question-options-wrap');
     const answer = document.getElementById('teacher-question-answer-label');
     if (opts) opts.classList.toggle('hidden', type !== 'multiple_choice');
-    if (type === 'numeric' && answer) answer.innerHTML = '<span>Correct antwoord (geheel getal)</span><input id="teacher-question-answer" type="number" step="1" required placeholder="bv. 42">';
-    if (type === 'multiple_choice' && answer) answer.innerHTML = '<span>Correct antwoord</span><select id="teacher-question-answer"><option value="1">Optie 1</option><option value="2">Optie 2</option><option value="3">Optie 3</option><option value="4">Optie 4</option></select>';
+    if (!answer) return;
+    if (type === 'numeric') answer.innerHTML = '<span>Correct antwoord (geheel getal)</span><input id="teacher-question-answer" type="number" step="1" required placeholder="bv. 42">';
+    else if (type === 'short_answer') answer.innerHTML = '<span>Correct kort antwoord</span><input id="teacher-question-answer" type="text" maxlength="200" required placeholder="Typ het verwachte antwoord…"><small>Hoofdletters en extra spaties worden bij het nakijken genegeerd.</small>';
+    else answer.innerHTML = '<span>Correct antwoord</span><select id="teacher-question-answer"><option value="1">Optie 1</option><option value="2">Optie 2</option><option value="3">Optie 3</option><option value="4">Optie 4</option></select>';
   }
   async function renderTeacherQuestions(level) {
     teacherQuestionLevel = level;
@@ -294,8 +296,9 @@ Optie D"></textarea></label>
     const total = teacherQuestionCache.length;
     if (status) status.textContent = `${total} actieve vragen in ${LEVELS_FOR_QUESTIONS.find(l=>l.id===level)?.name || level}. Elke vraag behoort tot één puzzelplek én één moeilijkheidsgraad.`;
     if (list) list.innerHTML = teacherQuestionCache.map(q => {
-      const answer = q.question_type === 'numeric' ? String(q.correct_answer) : (q.options?.[Number(q.correct_answer)] ?? '—');
-      return `<article class="teacher-question-item"><small>${esc(labels[q.object_id] || q.object_id)} · ${q.question_type === 'numeric' ? 'Rekenvraag' : 'Meerkeuze'} · <b class="difficulty-tag difficulty-tag-${esc(q.difficulty)}">${esc(difficultyLabels[q.difficulty] || q.difficulty)}</b></small><p>${esc(q.question_text)}</p><small>Correct antwoord: <strong>${esc(answer)}</strong></small><div class="teacher-question-actions"><button type="button" data-q-edit="${esc(q.question_id)}">Bewerken</button><button type="button" class="danger" data-q-delete="${esc(q.question_id)}">Archiveren</button></div></article>`;
+      const typeLabel = q.question_type === 'numeric' ? 'Rekenvraag' : q.question_type === 'short_answer' ? 'Kort antwoord' : 'Meerkeuze';
+      const answer = q.question_type === 'numeric' ? String(q.correct_answer) : q.question_type === 'short_answer' ? (q.correct_answer_text || '—') : (q.options?.[Number(q.correct_answer)] ?? '—');
+      return `<article class="teacher-question-item"><small>${esc(labels[q.object_id] || q.object_id)} · ${typeLabel} · <b class="difficulty-tag difficulty-tag-${esc(q.difficulty)}">${esc(difficultyLabels[q.difficulty] || q.difficulty)}</b></small><p>${esc(q.question_text)}</p><small>Correct antwoord: <strong>${esc(answer)}</strong></small><div class="teacher-question-actions"><button type="button" data-q-edit="${esc(q.question_id)}">Bewerken</button><button type="button" class="danger" data-q-delete="${esc(q.question_id)}">Archiveren</button></div></article>`;
     }).join('') || '<p class="online-help">Nog geen vragen voor dit leerjaar.</p>';
     resetTeacherQuestionForm();
     return teacherQuestionCache;
@@ -310,7 +313,7 @@ Optie D"></textarea></label>
     document.getElementById('teacher-question-options').value = (q.options || []).join('\n');
     toggleQuestionEditorType();
     const answer = document.getElementById('teacher-question-answer');
-    if (answer) answer.value = q.question_type === 'numeric' ? q.correct_answer : Number(q.correct_answer)+1;
+    if (answer) answer.value = q.question_type === 'numeric' ? q.correct_answer : q.question_type === 'short_answer' ? (q.correct_answer_text || '') : Number(q.correct_answer)+1;
     const save = document.getElementById('teacher-question-save'); if (save) save.textContent = 'Wijzigingen opslaan';
     document.getElementById('teacher-question-form')?.scrollIntoView({behavior:'smooth',block:'center'});
   }
@@ -322,7 +325,7 @@ Optie D"></textarea></label>
     const type = document.getElementById('teacher-question-type').value;
     const difficulty = document.getElementById('teacher-question-difficulty').value;
     const question = document.getElementById('teacher-question-text').value.trim();
-    let options = [], answer;
+    let options = [], answer = 0, correctAnswerText = null;
     if (!question) throw new Error('Vul de vraagtekst in.');
     if (type === 'multiple_choice') {
       options = document.getElementById('teacher-question-options').value.split(/\r?\n/).map(x=>x.trim()).filter(Boolean);
@@ -330,13 +333,20 @@ Optie D"></textarea></label>
       const index = Number(document.getElementById('teacher-question-answer').value);
       if (!Number.isInteger(index) || index < 1 || index > 4) throw new Error('Kies het juiste antwoord uit optie 1 tot en met 4.');
       answer = index - 1;
-    } else {
+    } else if (type === 'numeric') {
       answer = Number(document.getElementById('teacher-question-answer').value);
       if (!Number.isSafeInteger(answer)) throw new Error('Vul bij een rekenvraag een geheel getal in.');
+    } else if (type === 'short_answer') {
+      correctAnswerText = document.getElementById('teacher-question-answer').value.trim();
+      if (!correctAnswerText) throw new Error('Vul het correcte korte antwoord in.');
+      if (correctAnswerText.length > 200) throw new Error('Het correcte korte antwoord mag maximaal 200 tekens bevatten.');
+      options = [];
+    } else {
+      throw new Error('Onbekend vraagtype.');
     }
     let id = document.getElementById('teacher-question-id').value.trim();
     if (!id) id = `t_${level}_${(window.crypto?.randomUUID?.() || `${Date.now()}_${Math.random().toString(36).slice(2,9)}`).replace(/-/g,'').slice(0,30)}`;
-    await rpc('teacher_save_quiz_question', { p_question_id:id, p_level_id:level, p_object_id:object, p_question_text:question, p_options:options, p_correct_answer:answer, p_question_type:type, p_difficulty:difficulty });
+    await rpc('teacher_save_quiz_question', { p_question_id:id, p_level_id:level, p_object_id:object, p_question_text:question, p_options:options, p_correct_answer:answer, p_question_type:type, p_difficulty:difficulty, p_correct_answer_text:correctAnswerText });
     await renderTeacherQuestions(level);
     msg('De vraag is opgeslagen onder de gekozen puzzel en moeilijkheidsgraad.', 'good');
   }
@@ -670,9 +680,11 @@ Optie D"></textarea></label>
     async startPuzzleAttempt(levelId, objectId, difficulty) { requireLogin(); return rpc('start_puzzle_attempt', { p_level_id: levelId, p_object_id: objectId, p_difficulty: difficulty }); },
     async getActivePuzzleAttempt(levelId, objectId) { requireLogin(); return rpc('get_my_active_puzzle_attempt', { p_level_id: levelId, p_object_id: objectId }); },
     async unlockLevel(levelId, code) { requireLogin(); return rpc('unlock_level_with_code', { p_target_level: levelId, p_code: code }); },
-    async submitPuzzleAnswer(attemptId, questionId, answer) {
+    async submitPuzzleAnswer(attemptId, questionId, answer, questionType = 'multiple_choice') {
       requireLogin();
-      const result = await rpc('submit_puzzle_attempt_answer', { p_attempt_id: attemptId, p_question_id: questionId, p_answer: answer });
+      const result = questionType === 'short_answer'
+        ? await rpc('submit_puzzle_attempt_short_answer', { p_attempt_id: attemptId, p_question_id: questionId, p_answer: String(answer ?? '') })
+        : await rpc('submit_puzzle_attempt_answer', { p_attempt_id: attemptId, p_question_id: questionId, p_answer: Number(answer) });
       if (result?.completed && result?.coins_awarded) result.economy = await getEconomy();
       return result;
     },

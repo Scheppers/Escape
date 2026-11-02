@@ -1,52 +1,66 @@
-CHEMIE ESCAPE ROOM – BONUS LEVEL 3: THE OG OF CHEMISTRY
-======================================================
+CHEMIE ESCAPE ROOM — UPDATE VRAAGTYPE 'KORT ANTWOORD'
+=====================================================
 
-INHOUD
-------
-- game.js: voegt de derde bonusronde toe en wijzigt de kop/tekst van het Bonus-paneel.
-- online.js: koppelt de bonusronde aan de beveiligde Supabase-functies.
-- supabase/migrations/2026_11_level3_og_oxidation_sprint.sql: vragenbank met 50 oxidatiegetalvragen en servercontrole/beloningen.
-
-WAT IS TOEGEVOEGD?
+Wat is toegevoegd?
 ------------------
-- De sectiekop wordt 'BONUS'.
-- De korte tekst eronder luidt exact: 'Ben jij snel genoeg om LabCoins te scoren in één van de extra levels?'
-- In level 3 (het moderne labo) wordt de knop 'The OG of chemistry · 60 sec' actief.
-- De sprint toont willekeurig open vragen over oxidatiegetallen.
-- Formules zijn met subscripttekens in de vragenbank opgeslagen en worden ook zo getoond, bijvoorbeeld MgSO₄, Fe₂O₃ en Ca₃(PO₄)₂.
-- Antwoorden worden als Romeinse cijfers ingevoerd, met '+' of '-' voor positieve en negatieve oxidatiegetallen; '0' blijft gewoon 0.
-- Beloning volgt de bestaande bonusspeltrap: juiste antwoorden 1–5 geven elk 1 LabCoin, 6–10 elk 2, 11–15 elk 3, enzovoort. Elk juist antwoord geeft ook 2 XP.
-- De 50 vragen worden in willekeurige volgorde aangeboden. Pas na alle 50 vragen wordt een volgende willekeurige ronde gestart.
-- Bij online accounts controleert Supabase de antwoorden en kent Supabase LabCoins/XP toe. De verwachte antwoorden worden niet naar de browser gestuurd.
+Naast Meerkeuzevraag en Reken vraag (geheel getal) kun je nu ook
+'Kort antwoord (open tekstveld)' kiezen in het leerkracht-vragenbeheer.
 
-INSTALLATIE
+De leerling ziet dan geen antwoordopties, maar één tekstveld. Het antwoord
+wordt online door Supabase gecontroleerd. Het juiste antwoord wordt niet
+naar de browser van de leerling gestuurd.
+
+Antwoordcontrole:
+- Hoofdletters en kleine letters worden gelijk behandeld.
+- Spaties aan het begin/einde worden genegeerd.
+- Meerdere opeenvolgende spaties worden als één spatie behandeld.
+- De overige inhoud en leestekens moeten overeenkomen.
+- Het verwachte antwoord kan maximaal 200 tekens lang zijn.
+
+Installeren
 -----------
 1. Maak een back-up van je huidige GitHub-project.
-2. Pak deze ZIP uit.
-3. Vervang in de hoofdmap van je GitHub-project uitsluitend:
+2. Open Supabase > SQL Editor.
+3. Open het bestand:
+   supabase/migrations/2026_11_short_answer_question_type.sql
+4. Kopieer de volledige inhoud naar een nieuwe SQL-query en klik op Run.
+   Voer deze migratie één keer uit. Voer schema.sql of oudere migraties NIET
+   opnieuw uit.
+5. Vervang in de hoofdmap van je GitHub-project de volgende drie bestanden
+   door de versies uit deze ZIP:
+   - index.html
    - game.js
    - online.js
-4. Kopieer het SQL-bestand uit deze ZIP naar de map:
-   supabase/migrations/
-5. Open Supabase -> SQL Editor.
-6. Open 2026_11_level3_og_oxidation_sprint.sql, kopieer de volledige inhoud
-   en voer die één keer uit met Run.
-7. Commit game.js en online.js in GitHub. Netlify zal daarna opnieuw deployen.
+6. Commit de wijzigingen in GitHub. Netlify zal opnieuw deployen.
 
-BELANGRIJK
-----------
-- Voer alleen deze nieuwe migratie uit. Voer schema.sql of eerdere migraties niet opnieuw uit.
-- Laat config.js, netlify.toml, Netlify Functions en bestaande omgevingsvariabelen ongemoeid.
-- Er zijn geen nieuwe geheime sleutels of Netlify-variabelen nodig.
-- De vragenbank wordt gedeeld door alle klassen binnen hetzelfde Supabase-project. Scores, XP en LabCoins blijven gekoppeld aan het individuele account.
-- Test eerst met één leerlingaccount in level 3: start de sprint, antwoord bijvoorbeeld +II op Mg in MgSO₄, en controleer daarna de score en het LabCoin-saldo.
+Laat de volgende bestanden en mappen ongemoeid:
+- config.js
+- netlify.toml
+- netlify/functions/
+- style.css
+- vragen.json
+- de bestaande Supabase-tabellen en migraties
 
-CONTROLE
---------
-JavaScript-syntaxiscontrole voor game.js en online.js: geslaagd.
-Controle van alle 50 vraag/antwoordcombinaties tussen game.js en SQL: geslaagd.
-Controle dat alle getoonde formules subscriptnotatie gebruiken: geslaagd.
-Netlify static build: geslaagd.
-HTML-validatie van de bestaande pagina: geslaagd.
+Nieuwe vragen maken
+-------------------
+1. Log in met het leerkrachtenaccount.
+2. Open Klasbeheer > Vragenbeheer per leerjaar.
+3. Kies het juiste leerjaar en de juiste puzzelplek.
+4. Kies bij Vraagtype: 'Kort antwoord (open tekstveld)'.
+5. Vul de vraag in.
+6. Vul bij 'Correct kort antwoord' het verwachte antwoord in.
+7. Sla de vraag op.
 
-De SQL-migratie is nog niet uitgevoerd in jouw live Supabase-project. Test de online beloningen daarom na installatie met een testaccount.
+De vraag blijft gekoppeld aan het gekozen leerjaar, de puzzelplek en de
+moeilijkheidsgraad. Het ingestelde aantal vragen per puzzel (3, 5 of 10)
+blijft door de leerkracht bepaald.
+
+Bestaande meerkeuzevragen en rekenvragen blijven werken. XP, LabCoins,
+voortgang, herhalingen, Schaduw, kluis, kaartenwinkel en battles worden door
+deze update niet gewijzigd.
+
+Opmerking
+---------
+De JavaScript-bestanden en Netlify-build zijn lokaal gecontroleerd. De
+Supabase-migratie en online antwoordcontrole moeten na installatie nog in
+het eigen Supabase-project getest worden.

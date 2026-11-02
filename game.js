@@ -257,10 +257,15 @@ function showQuestion(q){
  activeQuestion=q;activeKind="question";
  const number=activeAttemptCorrectIds.length+1;
  $("modal-category").textContent=`${LEVELS[currentLevel].name.toUpperCase()} · ${DIFFICULTIES[activeDifficulty]} · VRAAG ${number}/${activeAttemptRequired}`;
- $("modal-title").textContent=q.type==="numeric"?"Rekenvraag":"Meerkeuzevraag";$("question-text").textContent=q.question;
+ $("modal-title").textContent=q.type==="numeric"?"Rekenvraag":q.type==="short_answer"?"Kort antwoord":"Meerkeuzevraag";$("question-text").textContent=q.question;
  const area=$("answer-area");area.innerHTML="";
- if(q.type==="numeric"){area.innerHTML='<input class="numeric-input" id="numeric-answer" type="number" step="1" placeholder="Vul een geheel getal in" required>';}
- else (q.options||[]).forEach((op,i)=>{const label=document.createElement("label");label.className="option-label";label.innerHTML=`<input type="radio" name="choice" value="${i}"><span></span>`;label.querySelector("span").textContent=op;area.append(label);});
+ if(q.type==="numeric"){
+  area.innerHTML='<input class="numeric-input" id="numeric-answer" type="number" step="1" placeholder="Vul een geheel getal in" required>';
+ }else if(q.type==="short_answer"){
+  area.innerHTML='<input class="numeric-input short-answer-input" id="short-answer" type="text" maxlength="200" placeholder="Typ je antwoord…" autocomplete="off" autocapitalize="sentences" required>';
+ }else{
+  (q.options||[]).forEach((op,i)=>{const label=document.createElement("label");label.className="option-label";label.innerHTML=`<input type="radio" name="choice" value="${i}"><span></span>`;label.querySelector("span").textContent=op;area.append(label);});
+ }
  $("check-button").classList.remove("hidden");$("check-button").textContent="Controleer antwoord";$("check-button").disabled=false;$("feedback").className="feedback hidden";$("modal-backdrop").classList.remove("hidden");
 }
 function showDifficultyChoice(obj){
@@ -348,6 +353,8 @@ async function submitAnswer(e){
  const q=activeQuestion;let submittedAnswer=null;
  if(q.type==="numeric"){
   const value=$("numeric-answer")?.value.trim();if(value===""||value===undefined){feedback("Vul eerst een antwoord in.","bad");return;}submittedAnswer=Number(value);
+ }else if(q.type==="short_answer"){
+  const value=$("short-answer")?.value??"";if(!value.trim()){feedback("Vul eerst een antwoord in.","bad");$("short-answer")?.focus();return;}submittedAnswer=value.trim();
  }else{
   const selected=document.querySelector('input[name="choice"]:checked');if(!selected){feedback("Kies eerst een antwoord.","bad");return;}submittedAnswer=Number(selected.value);
  }
@@ -357,10 +364,14 @@ async function submitAnswer(e){
  try{
   if(online){
    if(!activeAttemptId)throw new Error("Deze online puzzelpoging is niet gekoppeld. Open de puzzel opnieuw om je reeks te hervatten.");
-   verified=await window.ChemieOnline.submitPuzzleAnswer(activeAttemptId,String(q.id),submittedAnswer);
+   verified=await window.ChemieOnline.submitPuzzleAnswer(activeAttemptId,String(q.id),submittedAnswer,q.type);
    if(!verified||!verified.ok)throw new Error(verified?.error||"De online controle lukte niet.");
   }else{
-   const localCorrect=q.type==="numeric"?submittedAnswer===Number(q.answer):submittedAnswer===Number(q.answer);
+   const localCorrect=q.type==="numeric"
+    ? submittedAnswer===Number(q.answer)
+    : q.type==="short_answer"
+     ? String(submittedAnswer??"").normalize("NFKC").trim().replace(/\s+/g," ").toLocaleLowerCase("nl-BE")===String(q.answer??"").normalize("NFKC").trim().replace(/\s+/g," ").toLocaleLowerCase("nl-BE")
+     : submittedAnswer===Number(q.answer);
    const nextCount=(activeAttemptCorrectIds.length||0)+(localCorrect?1:0);
    verified={ok:true,correct:localCorrect,completed:localCorrect&&nextCount>=activeAttemptRequired,correct_count:nextCount,required_count:activeAttemptRequired,xp_awarded:0,coins_awarded:0};
   }
@@ -416,7 +427,7 @@ async function submitAnswer(e){
   if(sameRun){
    showQuestion(nextQ);
    setStatus(`Goed! Vraag ${activeAttemptCorrectIds.length+1} van ${activeAttemptRequired} wordt geopend.`);
-   const input=$("numeric-answer")||document.querySelector('input[name="choice"]');
+   const input=$("numeric-answer")||$("short-answer")||document.querySelector('input[name="choice"]');
    input?.focus?.();
   }
  },550);
