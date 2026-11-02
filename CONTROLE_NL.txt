@@ -1,13 +1,23 @@
-TECHNISCHE CONTROLE — KORT ANTWOORD
+LOKALE CONTROLES
+- game.js: node --check geslaagd
+- online.js: node --check geslaagd
+- Netlify-build was bij de vorige eindmissie-update geslaagd; in deze aanvulling is alleen online.js gewijzigd.
+- Door-hotspot: start verborgen; alleen zichtbaar wanneer currentLevel === 'future'
+- Eindcode: 5,2,8,1 → 1258
+- Eindbeloning: accountgebonden registratie via complete_escape_room_with_code
+- Vrije verkenning: alle level-unlocks worden na voltooiing server-side opgeslagen
+- Au: afzonderlijke eindkaart, uitgesloten van winkel/reacties/battlebeloningen maar toegestaan in battledecks mits bezit; databaseblokkade verwijderd en frontendfilter aangepast
 
-- node --check game.js: geslaagd
-- node --check online.js: geslaagd
-- node scripts/build.mjs: geslaagd op de projectbasis
-- node --check dist/game.js: geslaagd
-- node --check dist/online.js: geslaagd
-- Korte antwoorden worden lokaal genormaliseerd op hoofdletters en spaties.
-- Online korte antwoorden gebruiken een aparte Supabase-RPC.
-- Correcte antwoorden worden uitsluitend via de leerkracht-RPC opgehaald.
-- XP en herhalingsbeloningen volgen dezelfde serverlogica als bestaande puzzels.
+NIET LIVE GETEST
+- De SQL-migratie is niet uitgevoerd op het Supabase-project van de gebruiker.
+- Het aanmaken van de kaart en het spelen van de eindmissie moeten nog met testleerlingen op de live omgeving worden gecontroleerd.
 
-Niet live getest: uitvoering van de SQL-migratie in het Supabase-project van de gebruiker.
+- Battledeckopties en automatische deckvoorstellen nemen de Au-eindkaart mee als de leerling ze bezit.
+- SQL-aanvullingsmigratie verwijdert de oude battledeck-blokkade; create_battle/respond_to_battle blijven eigendomsaantallen valideren.
+
+- Battledeck: automatische suggestie selecteert vijf verschillende kaart-ID's, nooit dubbele exemplaren.
+- Battledeck: geselecteerde kaartsoort wordt in de andere selecties tijdelijk uitgeschakeld; na wissen is ze opnieuw beschikbaar.
+- Battledeck: selectedDeck weigert herhaalde kaart-ID's vóór een RPC-aanroep.
+- Supabase: create_battle en respond_to_battle controleren server-side op exact vijf unieke kaart-ID's.
+- Au-eindkaart: zichtbaar en toegestaan in battledecks, mits eigendom; niet in winkel, battlebeloningen of reacties.
+- JavaScript-syntaxcontrole na deze aanvulling: node --check game.js en node --check online.js geslaagd.

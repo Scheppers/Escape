@@ -1,66 +1,64 @@
-CHEMIE ESCAPE ROOM — UPDATE VRAAGTYPE 'KORT ANTWOORD'
-=====================================================
+CHEMIE ESCAPE ROOM — EXCLUSIEVE AU-EINDBELONING EN VRIJE VERKENNING
 
-Wat is toegevoegd?
-------------------
-Naast Meerkeuzevraag en Reken vraag (geheel getal) kun je nu ook
-'Kort antwoord (open tekstveld)' kiezen in het leerkracht-vragenbeheer.
+WAT VERANDERT ER?
+1. De knop 'Uitgang / tijdslot' is alleen zichtbaar in level 4 (het futuristische labo). In levels 1, 2 en 3 is de knop verborgen.
+2. In level 4 verschijnt de uitgang zodra de speler daar is. De vier verdiende cijfers moeten van klein naar groot worden ingevoerd. Voor de huidige code is dat 1258.
+3. Supabase controleert of de leerling alle vier puzzels in level 4 minstens één keer heeft voltooid en of de code juist is.
+4. Na een correcte eindcode ontvangt de leerling één exclusieve stofkaart: Au — Goud. De kaart wordt aan het account gekoppeld en verschijnt in 'Mijn collectie'.
+5. De Au-eindbeloning is niet te koop en niet bruikbaar als beginstof of reactieproduct, maar mag wel in een battledeck worden opgenomen. Ook oudere Au-kaartvarianten worden uit de winkel, nieuwe battledecks en reacties gehouden.
+6. Na het voltooien worden alle vier labo's accountgebonden vrijgegeven. Leerlingen kunnen daarna vrij tussen de labo's bewegen en extra puzzels en bonusspellen spelen.
+7. De voltooiing en de eindkaart blijven bewaard na uitloggen en opnieuw aanmelden.
 
-De leerling ziet dan geen antwoordopties, maar één tekstveld. Het antwoord
-wordt online door Supabase gecontroleerd. Het juiste antwoord wordt niet
-naar de browser van de leerling gestuurd.
+INSTALLATIE — VOOR DE REEDS GEÏNSTALLEERDE EINDMISSIE-AU-UPDATE
 
-Antwoordcontrole:
-- Hoofdletters en kleine letters worden gelijk behandeld.
-- Spaties aan het begin/einde worden genegeerd.
-- Meerdere opeenvolgende spaties worden als één spatie behandeld.
-- De overige inhoud en leestekens moeten overeenkomen.
-- Het verwachte antwoord kan maximaal 200 tekens lang zijn.
+A. Maak eerst een back-up van je huidige GitHub-project.
 
-Installeren
------------
-1. Maak een back-up van je huidige GitHub-project.
-2. Open Supabase > SQL Editor.
-3. Open het bestand:
-   supabase/migrations/2026_11_short_answer_question_type.sql
-4. Kopieer de volledige inhoud naar een nieuwe SQL-query en klik op Run.
-   Voer deze migratie één keer uit. Voer schema.sql of oudere migraties NIET
-   opnieuw uit.
-5. Vervang in de hoofdmap van je GitHub-project de volgende drie bestanden
-   door de versies uit deze ZIP:
-   - index.html
-   - game.js
+B. Vervang in de hoofdmap van je GitHub-project alleen:
    - online.js
-6. Commit de wijzigingen in GitHub. Netlify zal opnieuw deployen.
 
-Laat de volgende bestanden en mappen ongemoeid:
-- config.js
-- netlify.toml
-- netlify/functions/
-- style.css
-- vragen.json
-- de bestaande Supabase-tabellen en migraties
+   De andere websitebestanden uit het vorige eindmissiepakket hoeven niet gewijzigd te worden.
+   Laat config.js, netlify.toml, vragen.json, assets en de bestaande Netlify Functions ongemoeid.
 
-Nieuwe vragen maken
--------------------
-1. Log in met het leerkrachtenaccount.
-2. Open Klasbeheer > Vragenbeheer per leerjaar.
-3. Kies het juiste leerjaar en de juiste puzzelplek.
-4. Kies bij Vraagtype: 'Kort antwoord (open tekstveld)'.
-5. Vul de vraag in.
-6. Vul bij 'Correct kort antwoord' het verwachte antwoord in.
-7. Sla de vraag op.
+C. Supabase:
+   1. Open Supabase → SQL Editor.
+   2. Maak een nieuwe query aan en voer de volledige inhoud van dit bestand uit:
+      supabase/migrations/2026_11_au_battledeck_access.sql
+   3. Maak daarna een tweede nieuwe query aan en voer de volledige inhoud van dit bestand uit:
+      supabase/migrations/2026_11_battledeck_distinct_cards.sql
 
-De vraag blijft gekoppeld aan het gekozen leerjaar, de puzzelplek en de
-moeilijkheidsgraad. Het ingestelde aantal vragen per puzzel (3, 5 of 10)
-blijft door de leerkracht bepaald.
+   De eerste migratie haalt de oude blokkade op de exclusieve Au-kaart uit battledecks.
+   De tweede migratie zorgt ervoor dat de uitdager én de speler die een uitdaging aanvaardt
+   precies vijf verschillende kaart-ID's moeten kiezen. De bestaande kaartbezitcontrole blijft actief.
+   Voer schema.sql of de oorspronkelijke eindmissiemigratie hiervoor niet opnieuw uit.
 
-Bestaande meerkeuzevragen en rekenvragen blijven werken. XP, LabCoins,
-voortgang, herhalingen, Schaduw, kluis, kaartenwinkel en battles worden door
-deze update niet gewijzigd.
+D. Commit online.js in GitHub. Netlify publiceert daarna automatisch opnieuw.
 
-Opmerking
----------
-De JavaScript-bestanden en Netlify-build zijn lokaal gecontroleerd. De
-Supabase-migratie en online antwoordcontrole moeten na installatie nog in
-het eigen Supabase-project getest worden.
+CONTROLE NA PUBLICATIE
+1. Open Online → Chemiebattles.
+2. Controleer dat een gekozen kaart automatisch niet meer selecteerbaar is in de andere vier slots.
+3. Controleer dat een kaart die je uit een slot verwijdert opnieuw in een ander slot gekozen kan worden.
+4. Controleer dat een deck met vijf verschillende kaartsoorten kan worden verstuurd en aanvaard.
+5. Controleer dat vijf exemplaren van dezelfde kaart niet samen in één deck kunnen worden gekozen.
+6. Test dit zowel bij het versturen van een uitdaging als bij het aanvaarden van een uitdaging.
+7. Na het voltooien van de tijdreis moet Au — Goud zichtbaar zijn in de battledeckselectie en één keer gekozen kunnen worden.
+8. Controleer dat Au niet te koop is, niet als battlebeloning wordt uitgereikt en niet in chemische reacties kan worden gebruikt.
+
+OUDE AU-KAARTEN
+- Eerder aangekochte Goud/Au-kaarten worden niet uit leerlingcollecties verwijderd.
+- Ze zijn niet langer te koop en kunnen niet in nieuwe battledecks of reacties worden gebruikt.
+- De nieuwe eindbeloning heeft een eigen kaart-ID ('au-final-timeline') en wordt één keer per leerlingaccount uitgereikt.
+
+VEILIGHEID EN BEHOUD
+- Er zijn geen nieuwe Netlify-omgevingsvariabelen nodig.
+- config.js en geheime sleutels worden niet aangepast.
+- De server controleert de eindcode, de level-4-voortgang en de eenmalige uitreiking.
+- Bestaande accounts, LabCoins, XP, inventarissen, skins en kaarten blijven behouden.
+
+De JavaScript-bestanden en de Netlify-build zijn lokaal gecontroleerd. De SQL-migratie en de volledige beloningsflow moeten nog met jouw eigen Supabase-project en een testleerling worden uitgevoerd.
+
+
+AANVULLENDE REGELS
+- Meerdere exemplaren van dezelfde kaart blijven in de inventaris behouden. Ze leveren geen extra slots op: een kaart-ID mag maximaal één keer in elk battledeck voorkomen.
+- Een speler heeft vijf verschillende kaartsoorten nodig om een volledig deck te maken.
+- De Au-eindkaart blijft exclusief: niet te koop, niet verkrijgbaar als battlebeloning en niet bruikbaar in chemische reacties; ze mag wel één keer in het battledeck.
+- De database controleert de unieke kaartkeuze en het bezit van alle vijf kaarten opnieuw aan de serverkant.
