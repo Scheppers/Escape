@@ -1,0 +1,26 @@
+CHEMIE ESCAPE ROOM – VISUELE OPSCHONING
+
+Deze update past uitsluitend teksten en zichtbare onderdelen aan. De bestaande escape-roomlogica, kaartwinkel, reactiekamer, battles, Schaduw, inventarisopslag, accounts, LabCoins en Supabase-koppeling blijven behouden.
+
+AANGEPAST
+1. De introductiebalk 'De Schaduw van de Tijd' is verwijderd; het Missieoverzicht blijft staan.
+2. De uitlegregel onder Grondstoffeninventaris is verwijderd.
+3. De tekst bij De kluis luidt nu: 'Verdien 30 LabCoins door de kluis op te blazen met buskruit.'
+4. De reactievergelijking toont nette chemische notatie: 2 KNO₃ + 3 C + S → K₂S + 3 CO₂ + N₂.
+5. De knop 'Spel opnieuw starten' is verwijderd. De bijbehorende event-handler is ook verwijderd zodat er geen fout ontstaat.
+6. Het LabCoin-symbool is vervangen door een ingebouwd SVG-munticoon. Zo is het niet langer afhankelijk van emoji-ondersteuning op het toestel.
+
+INSTALLATIE
+1. Maak eventueel een back-up van de vier huidige bestanden.
+2. Vervang in de hoofdmap van je GitHub-project deze vier bestanden:
+   - index.html
+   - game.js
+   - online.js
+   - style.css
+3. Commit de wijzigingen in GitHub. Netlify bouwt en publiceert de website opnieuw.
+
+BELANGRIJK
+- Voer geen SQL uit; deze update bevat geen databasewijzigingen.
+- Vervang config.js, netlify.toml en de map netlify/functions NIET.
+- online.js bevat ook de eerdere correctie waardoor de reactiekamer niet langer 'first is not defined' geeft. Behoud daarom deze online.js-versie.
+- De buildmap dist wordt automatisch opnieuw aangemaakt door het bestaande buildscript.

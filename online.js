@@ -10,6 +10,7 @@
   const nav = document.getElementById('online-nav');
   const summary = document.getElementById('online-summary');
   let supabase = null, currentUser = null, currentProfile = null, currentView = 'home';
+  const LABCOIN_ICON = '<svg class="labcoin-coin-icon" viewBox="0 0 32 32" aria-hidden="true" focusable="false"><circle cx="16" cy="16" r="13.4" fill="#f5c85c" stroke="#9a681c" stroke-width="1.5"/><circle cx="16" cy="16" r="10.2" fill="none" stroke="#fff0a3" stroke-width="1.4"/><path d="M16 9.6l1.9 4.1 4.5.5-3.3 3 1 4.4-4.1-2.2-4.1 2.2 1-4.4-3.3-3 4.5-.5z" fill="#936015"/></svg>';
   const AUTH_DOMAIN = 'accounts.chemieescape.invalid';
   const authEmail = (username) => `${String(username || '').trim().toLowerCase()}@${AUTH_DOMAIN}`;
   let refreshTimer = null, lastBattleIds = '';
@@ -63,7 +64,7 @@
     teacherNav?.classList.toggle('hidden', data.role !== 'teacher');
     nav?.querySelectorAll('[data-online-view="cards"],[data-online-view="skins"],[data-online-view="battles"]').forEach(b => b.classList.toggle('hidden', data.role === 'teacher'));
     const level = Math.floor(Number(data.xp) / 100) + 1;
-    summary.innerHTML = `<div class="online-profile"><span class="online-avatar">${esc((window.ChemieGameBridge?.getEconomyState?.().equippedSkin === 'brass') ? '🥽' : '🧪')}</span><div class="online-profile-copy"><strong>${esc(data.username)}</strong><small>Level ${level} · ${Number(data.xp)} XP</small></div><div class="online-currency">🪙 ${Number(data.coins)}<small>LabCoins</small></div></div>`;
+    summary.innerHTML = `<div class="online-profile"><span class="online-avatar">${esc((window.ChemieGameBridge?.getEconomyState?.().equippedSkin === 'brass') ? '🥽' : '🧪')}</span><div class="online-profile-copy"><strong>${esc(data.username)}</strong><small>Level ${level} · ${Number(data.xp)} XP</small></div><div class="online-currency"><span class="online-currency-amount">${LABCOIN_ICON} ${Number(data.coins)}</span><small>LabCoins</small></div></div>`;
     if (window.ChemieGameBridge) {
       const econ = await getEconomy();
       window.ChemieGameBridge.applyOnlineEconomy(econ);
@@ -98,7 +99,7 @@
       view.innerHTML = `<div class="online-home-grid"><article class="online-mini-card"><span>🏫</span><strong>Klasbeheer</strong><small>Maak leerlingaccounts aan en reset wachtwoorden via het tabblad Klasbeheer.</small></article><article class="online-mini-card"><span>🏆</span><strong>XP-ranking van je klas</strong><small>Je ziet de voortgang van de leerlingen uit jouw klas.</small></article><article class="online-mini-card"><span>🔐</span><strong>Geen zelfregistratie</strong><small>Leerlingen kunnen alleen inloggen met een account dat jij aanmaakt.</small></article></div><p class="online-help">De leerkracht beheert de accounts. Leerlingen zien elkaars gebruikersnamen en XP binnen dezelfde klas; andere klassen blijven afgeschermd.</p>`;
       return;
     }
-    view.innerHTML = `<div class="online-home-grid"><article class="online-mini-card"><span>⭐</span><strong>${xp} XP</strong><small>${rem}/100 XP tot level ${level + 1}</small><div class="online-xp-bar"><i style="width:${rem}%"></i></div></article><article class="online-mini-card"><span>🪙</span><strong>${Number(currentProfile.coins)} LabCoins</strong><small>Verdien coins met de Elementensprint, de Zurenkennis-sprint en de virtuele kluisreactie.</small></article><article class="online-mini-card"><span>🧬</span><strong>Kaartenbataljon</strong><small>Koop stofkaarten en daag een klasgenoot uit.</small></article></div><p class="online-help">De gewone puzzels geven XP. LabCoins verdien je via de optionele Elementensprint, de Zurenkennis-sprint en de virtuele kluisreactie. Met coins koop je kaarten en skins. De ranking en battles zijn beperkt tot jouw klas.</p>`;
+    view.innerHTML = `<div class="online-home-grid"><article class="online-mini-card"><span>⭐</span><strong>${xp} XP</strong><small>${rem}/100 XP tot level ${level + 1}</small><div class="online-xp-bar"><i style="width:${rem}%"></i></div></article><article class="online-mini-card"><span class="labcoin-mini-icon">${LABCOIN_ICON}</span><strong>${Number(currentProfile.coins)} LabCoins</strong><small>Verdien coins met de Elementensprint, de Zurenkennis-sprint en de virtuele kluisreactie.</small></article><article class="online-mini-card"><span>🧬</span><strong>Kaartenbataljon</strong><small>Koop stofkaarten en daag een klasgenoot uit.</small></article></div><p class="online-help">De gewone puzzels geven XP. LabCoins verdien je via de optionele Elementensprint, de Zurenkennis-sprint en de virtuele kluisreactie. Met coins koop je kaarten en skins. De ranking en battles zijn beperkt tot jouw klas.</p>`;
   }
   async function renderLeaderboard() {
     const rows = await rpc('get_leaderboard', { p_limit: 20 });
@@ -112,7 +113,7 @@
     const cards = (catalog || []).map(s => {
       const owned = econ.ownedSkins.includes(s.id), equipped = econ.equippedSkin === s.id;
       let label = equipped ? '✓ Uitgerust' : owned ? 'Uitrusten' : `Koop · ${s.price} coins`;
-      return `<article class="online-store-card"><div class="online-store-emoji">${esc(s.emoji)}</div><h4>${esc(s.name)}</h4><p>${esc(s.description)}</p><strong>🪙 ${Number(s.price)}</strong><button data-skin-action="${owned ? 'equip' : 'buy'}" data-id="${esc(s.id)}" ${equipped ? 'disabled' : ''}>${label}</button></article>`;
+      return `<article class="online-store-card"><div class="online-store-emoji">${esc(s.emoji)}</div><h4>${esc(s.name)}</h4><p>${esc(s.description)}</p><strong>${LABCOIN_ICON} ${Number(s.price)}</strong><button data-skin-action="${owned ? 'equip' : 'buy'}" data-id="${esc(s.id)}" ${equipped ? 'disabled' : ''}>${label}</button></article>`;
     }).join('');
     view.innerHTML = `<div class="online-view-heading"><div><h3>🎭 Skinwinkel</h3><p>Je saldo: ${econ.coins} LabCoins. Alleen uiterlijke aanpassingen.</p></div><button class="online-small-btn" data-online-refresh>Vernieuwen</button></div><div class="online-store-grid">${cards}</div>`;
   }
@@ -140,7 +141,7 @@
       const shop = cardCatalogCache.filter(c => c.is_shop_item && !c.is_reward_only);
       body = `<p class="online-help">Koop kaarten van enkelvoudige stoffen. Je mag meerdere exemplaren van dezelfde kaart bezitten. Samengestelde stoffen maak je in de reactiekamer.</p><div class="online-store-grid online-card-grid">${shop.map(c => {
         const quantity = ownedMap.get(c.id) || 0;
-        return `<article class="online-card"><div class="online-card-top"><span>${esc(c.card_type || c.category)}</span><span>${esc(c.rarity)}</span></div><div class="online-formula">${esc(c.formula)}</div><h4>${esc(c.name)}</h4><p>${esc(c.description)}</p><div class="online-stats"><span>💪 Kracht ${Number(c.power ?? c.attack)}</span><span>📦 ${quantity} in bezit</span></div><button data-card-buy="${esc(c.id)}">Koop exemplaar · ${Number(c.price)} 🪙</button></article>`;
+        return `<article class="online-card"><div class="online-card-top"><span>${esc(c.card_type || c.category)}</span><span>${esc(c.rarity)}</span></div><div class="online-formula">${esc(c.formula)}</div><h4>${esc(c.name)}</h4><p>${esc(c.description)}</p><div class="online-stats"><span>💪 Kracht ${Number(c.power ?? c.attack)}</span><span>📦 ${quantity} in bezit</span></div><button data-card-buy="${esc(c.id)}">Koop exemplaar · ${Number(c.price)} ${LABCOIN_ICON}</button></article>`;
       }).join('') || '<p class="online-help">De leerkracht heeft nog geen winkelkaarten geactiveerd.</p>'}</div>`;
     } else if (cardShopTab === 'collection') {
       body = `<p class="online-help">Je verzameling bevat ${ownedCards.reduce((sum,c)=>sum+(ownedMap.get(c.id)||0),0)} kaart(en). Dubbele kaarten tellen als aparte exemplaren en mogen allemaal in je battledeck.</p><div class="online-store-grid online-card-grid">${ownedCards.map(c => `<article class="online-card owned"><div class="online-card-top"><span>${esc(c.card_type || c.category)}</span><span>${esc(c.rarity)}</span></div><div class="online-formula">${esc(c.formula)}</div><h4>${esc(c.name)}</h4><p>${esc(c.description)}</p><div class="online-stats"><span>💪 Kracht ${Number(c.power ?? c.attack)}</span><span>📦 ×${ownedMap.get(c.id)}</span></div>${c.support_effect && c.support_effect !== 'none' ? `<small class="card-support">✨ ${esc(c.support_description || 'Speciale ondersteuning')}</small>` : ''}${c.is_reward_only ? '<span class="card-reward-tag">🏆 Exclusieve battlekaart</span>' : ''}</article>`).join('') || '<p class="online-help">Je collectie is nog leeg. Koop eerst enkele enkelvoudige stoffen in de winkel.</p>'}</div>`;

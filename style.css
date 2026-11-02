@@ -160,3 +160,10 @@
 #battle-invite-form>strong{color:#f0d18b;margin-top:4px}
 .battle-accept-form{padding:12px;border:1px solid #36586c;border-radius:10px;background:#0c1e2c}
 .battle-reward{padding:10px 12px;border-radius:9px;background:#51401d;color:#ffe6a4;font-weight:800}
+
+
+/* Consistent LabCoin icon: SVG avoids missing-emoji square glyphs across devices. */
+.labcoin-coin-icon{display:inline-block;width:1.22em;height:1.22em;vertical-align:-.22em;flex:0 0 auto;filter:drop-shadow(0 1px 1px #0003)}
+.online-currency-amount{display:inline-flex;align-items:center;justify-content:flex-end;gap:5px}
+.online-mini-card>.labcoin-mini-icon{display:flex;align-items:center;font-size:1rem}
+.online-mini-card>.labcoin-mini-icon .labcoin-coin-icon{width:1.8rem;height:1.8rem}

@@ -11,6 +11,7 @@ const DIFFICULTIES={basis:"Basis",gemiddeld:"Gemiddeld",moeilijk:"Moeilijk"};
 let codeEntered=Object.fromEntries(Object.keys(LEVELS).map(k=>[k,false]));
 let questions=[], pendingOnlineQuestionBank=null, objectProgress={}, puzzleSolved={}, puzzleCompletions={}, currentLevel="medieval", progress={}, levelSolved={}, levelQuestions={}, lockouts={}, inventory={kno3:0,carbon:0,sulfur:0}, activeQuestion=null, activeObject=null, activeKind="question", activeAttemptId=null, activeAttemptQuestions=[], activeAttemptCorrectIds=[], activeAttemptIndex=0, activeAttemptRequired=QUESTIONS_PER_PUZZLE, activeDifficulty="basis", activeRunLevel=null, activeRunObject=null, activeRunToken=0, shadowVisible=false, shadowTimer=null, appearanceTimer=null, shadowEncounterId=null, localShadowMaterial=null, codes={}, unlocked=Object.fromEntries(Object.keys(LEVELS).map((k,i)=>[k,i===0]));
 const $=id=>document.getElementById(id);
+const LABCOIN_ICON='<svg class="labcoin-coin-icon" viewBox="0 0 32 32" aria-hidden="true" focusable="false"><circle cx="16" cy="16" r="13.4" fill="#f5c85c" stroke="#9a681c" stroke-width="1.5"/><circle cx="16" cy="16" r="10.2" fill="none" stroke="#fff0a3" stroke-width="1.4"/><path d="M16 9.6l1.9 4.1 4.5.5-3.3 3 1 4.4-4.1-2.2-4.1 2.2 1-4.4-3.3-3 4.5-.5z" fill="#936015"/></svg>';
 
 const MATERIAL_INFO={
  kno3:{name:"kaliumnitraat",formula:"KNO3",emoji:"🧂"},
@@ -28,7 +29,6 @@ function applyMaterials(value){inventory=normalizeMaterials(value);saveLocalMate
 function renderInventory(){
  const target=$("inventory-items");
  if(!target)return;
- const total=Object.values(inventory||{}).reduce((sum,value)=>sum+Math.max(0,Number(value)||0),0);
  target.innerHTML=Object.entries(MATERIAL_INFO).map(([key,item])=>{
   const amount=Math.max(0,Math.floor(Number(inventory?.[key])||0));
   const stockClass=amount>0?"has-stock":"empty";
@@ -39,12 +39,6 @@ function renderInventory(){
    <small>${item.formula}</small>
   </div>`;
  }).join("");
- const note=$("inventory-note");
- if(note){
-  note.textContent=total>0
-   ? `Je hebt in totaal ${total} mol grondstoffen verzameld. Verzamel de juiste hoeveelheden om de kluisreactie uit te voeren.`
-   : "Elke keer dat je de Schaduw op tijd aantikt, laat hij 1 mol van één grondstof vallen.";
- }
 }
 
 
@@ -443,7 +437,7 @@ async function collectShadowDrop(){
    setStatus(error.message||'De grondstof kon niet worden verzameld.');scheduleShadow();
  }finally{if(node)node.disabled=false;}
 }
-const REACTION_EQUATION='2 KNO3 + 3 C + S --> K2S + 3 CO2 + N2';
+const REACTION_EQUATION='2 KNO₃ + 3 C + S → K₂S + 3 CO₂ + N₂';
 function showInsufficientMaterials(){
  showSafeFeedback(`<strong>Onvoldoende grondstoffen.</strong><div class="reaction-equation">${REACTION_EQUATION}</div><p>Weet je zeker dat je de juiste ingrediënten hebt?</p>`, 'needs-items');
  setStatus('Je hebt nog niet voldoende grondstoffen om de virtuele reactie uit te voeren.');
@@ -501,7 +495,6 @@ document.querySelectorAll(".level-tab").forEach(b=>b.addEventListener("click",()
 document.querySelectorAll(".hotspot").forEach(b=>b.addEventListener("click",()=>{if(b.dataset.object==="door"){if(levelSolved.future)askCode("exit",true);else setStatus("De uitgang blijft gesloten. Los eerst alle vier puzzels in het futuristische labo minstens één keer op.");return;}openObject(b.dataset.object)}));
 $("answer-form").addEventListener("submit",submitAnswer);$("close-modal").addEventListener("click",closeModal);$("answer-area").addEventListener("click",e=>{const choice=e.target.closest("[data-puzzle-difficulty]");if(choice){e.preventDefault();startPuzzleRun(choice.dataset.puzzleDifficulty);}});
 $("blow-safe-button")?.addEventListener("click",blowSafe);
-$("reset-button").addEventListener("click",()=>{if(!$("win-screen").classList.contains("game-finished"))location.reload();});
 if($("play-again")){$("play-again").classList.add("hidden");$("play-again").disabled=true;}
 
 
@@ -513,7 +506,7 @@ function initEconomyUI(){
  const panel=document.createElement("section");
  panel.id="labcoins-panel";panel.className="labcoins-panel";
  panel.innerHTML=`
-  <div class="labcoins-heading"><div><p class="economy-eyebrow">BONUSSPEL</p><h3>🪙 LabCoins</h3></div><div class="coin-count"><span id="labcoin-balance">0</span><small>coins</small></div></div>
+  <div class="labcoins-heading"><div><p class="economy-eyebrow">BONUSSPEL</p><h3>${LABCOIN_ICON} LabCoins</h3></div><div class="coin-count"><span id="labcoin-balance">0</span><small>coins</small></div></div>
   <p class="labcoins-copy">Verdien munten met de Elementensprint in level 1 en de Zurenkennis-sprint in level 2. Gewone puzzels geven alleen hun deurcijfer.</p>
   <div class="skin-preview"><span class="skin-preview-icon" id="equipped-skin-icon">🧪</span><span><small>Huidige skin</small><strong id="equipped-skin-name">Beginnende alchemist</strong></span></div>
   <button type="button" class="primary full economy-action" id="element-sprint-open">⚡ Elementensprint · 60 sec</button>
@@ -574,8 +567,8 @@ function renderShop(){
   if(isEquipped){label="✓ In gebruik";disabled=true;buttonClass="secondary";}
   else if(isOwned){label="Draag deze skin";buttonClass="secondary";}
   else if(labCoins<skin.price){label=`Nog ${skin.price-labCoins} coins nodig`;disabled=true;buttonClass="secondary";}
-  else label=`Koop voor ${skin.price} 🪙`;
-  return `<article class="shop-item ${isEquipped?"equipped":""}"><div class="shop-item-top"><span class="shop-item-icon" aria-hidden="true">${skin.emoji}</span><div><h3>${skin.name}</h3><div class="shop-price">${skin.price===0?"Gratis startskin":`${skin.price} LabCoins`}</div></div></div>${isEquipped?'<span class="shop-tag">Momenteel gedragen</span>':""}<p class="shop-detail">${skin.detail}</p><button type="button" class="${buttonClass}" data-skin-id="${skin.id}" ${disabled?"disabled":""}>${label}</button></article>`;
+  else label=`Koop voor ${skin.price} ${LABCOIN_ICON}`;
+  return `<article class="shop-item ${isEquipped?"equipped":""}"><div class="shop-item-top"><span class="shop-item-icon" aria-hidden="true">${skin.emoji}</span><div><h3>${skin.name}</h3><div class="shop-price">${skin.price===0?"Gratis startskin":`${skin.price} ${LABCOIN_ICON} LabCoins`}</div></div></div>${isEquipped?'<span class="shop-tag">Momenteel gedragen</span>':""}<p class="shop-detail">${skin.detail}</p><button type="button" class="${buttonClass}" data-skin-id="${skin.id}" ${disabled?"disabled":""}>${label}</button></article>`;
  }).join("");
  showEconomyOverlay(`<p class="economy-eyebrow">LABCOIN-WINKEL</p><h2 class="economy-title" id="economy-title">🛍️ De skinwinkel</h2><p class="economy-lead">Koop alleen uiterlijke aanpassingen voor je chemicus. Skins geven geen voordeel bij de vragen. Je saldo: <strong>${labCoins} LabCoins</strong>.</p><div class="shop-grid">${cards}</div>`);
 }
