@@ -42,10 +42,10 @@
     return result;
   }
   const LEVELS_FOR_QUESTIONS = [
-    { id: 'medieval', name: 'Leerjaar 1 · Middeleeuws labo', objects: { object1:'Kookpot', object2:'Oud boek', object3:'Glazen potten', object4:'Werktafel' } },
-    { id: 'lavoisier', name: 'Leerjaar 2 · Lavoisierlabo', objects: { object1:'Balans', object2:'Notities van Lavoisier', object3:'Glaswerk', object4:'Proefopstelling' } },
-    { id: 'modern', name: 'Leerjaar 3 · Modern labo', objects: { object1:'Reageerbuizen', object2:'Weegschaal', object3:'Maatkolf', object4:'Periodiek systeem' } },
-    { id: 'future', name: 'Leerjaar 4 · Futuristisch labo', objects: { object1:'Robotarm', object2:'Hologram', object3:'Reactor', object4:'Tijdpoort' } }
+    { id: 'medieval', name: 'Leerjaar 1 · Middeleeuws labo', objects: { object1:'Scheidingstechnieken', object2:'Aspecten en wetten', object3:'Atoommodellen', object4:'De chemische binding' } },
+    { id: 'lavoisier', name: 'Leerjaar 2 · Lavoisierlabo', objects: { object1:'Reacties in waterig midden', object2:'Kwantitatieve aspecten', object3:'Koolstofchemie', object4:'Redoxreacties' } },
+    { id: 'modern', name: 'Leerjaar 3 · Modern labo', objects: { object1:'Chemisch evenwicht', object2:'pH van een oplossing', object3:'Redoxreacties', object4:'Elektronenconfiguratie' } },
+    { id: 'future', name: 'Leerjaar 4 · Futuristisch labo', objects: { object1:'Koolwaterstoffen', object2:'Monofunctionele verbindingsklassen', object3:'Polyfunctionele verbindingsklassen', object4:'Kunststoffen' } }
   ];
 
 
