@@ -217,7 +217,7 @@ function renderLevel(){
  const solvedCount=Object.values(puzzleSolved[currentLevel]||{}).filter(Boolean).length;
  const inProgress=Object.values(objectProgress[currentLevel]||{}).reduce((a,b)=>a+Number(b||0),0);
  $("level-status").textContent=`${l.name}: ${solvedCount} van 4 puzzels voor het eerst voltooid · ${inProgress} vragen juist in de huidige poging`;
- $("scene-caption").textContent=levelSolved[currentLevel]?"Alle vier puzzels zijn minstens één keer opgelost. Je kunt ze opnieuw oefenen en LabCoins verdienen.":"Onderzoek de voorwerpen. Kies per puzzel je moeilijkheid. Let op: de Schaduw kan elk moment verschijnen.";
+ $("scene-caption").textContent=levelSolved[currentLevel]?"Alle vier puzzels zijn minstens één keer opgelost. Je kunt ze opnieuw oefenen en LabCoins verdienen.":"Kies per puzzel je moeilijkheid. Let op: de Schaduw kan elk moment verschijnen.";
  renderInventory();renderEconomyPanel();
 }
 function updateProgress(){const n=Object.values(levelSolved).filter(Boolean).length;$("progress-text").textContent=`${n} van ${LEVEL_TOTAL} levels voltooid`;$("progress-fill").style.width=`${n/LEVEL_TOTAL*100}%`;}
