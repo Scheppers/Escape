@@ -14,11 +14,14 @@
   const AUTH_DOMAIN = 'accounts.chemieescape.invalid';
   const authEmail = (username) => `${String(username || '').trim().toLowerCase()}@${AUTH_DOMAIN}`;
   let refreshTimer = null, lastBattleIds = '';
-  let teacherQuestionCache = [], teacherQuestionLevel = 'medieval';
+  let teacherQuestionCache = [], teacherQuestionLevel = 'medieval', teacherActiveTab = 'classes';
   let teacherClassCache = [], teacherLeaderboardClassId = null, teacherCreateClassId = null;
   let cardCatalogCache = [], ownedCardCache = [], reactionCache = [], cardShopTab = 'shop';
   let teacherCardCache = [], teacherReactionCache = [];
   const esc = (s) => String(s ?? '').replace(/[&<>"']/g, ch => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[ch]));
+  const isAuCard = (card) => String(card?.formula ?? '').trim().toUpperCase() === 'AU';
+  const isFinalRewardAu = (card) => Boolean(card?.is_final_reward) && isAuCard(card);
+  const isObsoleteAuCard = (card) => isAuCard(card) && !Boolean(card?.is_final_reward);
   const msg = (text, kind = '') => { if (authStatus) { authStatus.textContent = text; authStatus.className = `online-status ${kind}`; } };
   const configured = Boolean(config.url && config.anonKey && !/VUL|YOUR_|PASTE/i.test(config.url + config.anonKey));
   const rpc = async (name, args = {}) => {
@@ -92,13 +95,14 @@
     nav?.querySelectorAll('[data-online-view]').forEach(b => b.classList.toggle('active', b.dataset.onlineView === name));
     const renderers = { home: renderHome, leaderboard: renderLeaderboard, cards: renderCards, skins: renderSkins, battles: renderBattles, teacher: renderTeacher };
     if (name === 'teacher' && currentProfile?.role !== 'teacher') { name = 'home'; currentView = name; }
+    if (name !== 'battles') refreshBattleActionBadge().catch(e => console.warn('Battlemeldingen konden niet worden bijgewerkt.', e));
     Promise.resolve(renderers[name]?.()).catch(e => { console.error(e); if (view) view.innerHTML = `<p class="online-status bad">${esc(e.message || 'Er ging iets mis.')}</p>`; });
   }
   async function renderHome() {
     if (!view || !currentProfile) return;
     const xp = Number(currentProfile.xp), level = Math.floor(xp / 100) + 1, rem = xp % 100;
     if (currentProfile.role === 'teacher') {
-      view.innerHTML = `<div class="online-home-grid"><article class="online-mini-card"><span>🏫</span><strong>Klasbeheer</strong><small>Beheer meerdere klassen, verdeel leerlingen en reset wachtwoorden.</small></article><article class="online-mini-card"><span>🏆</span><strong>XP-ranking per klas</strong><small>Kies zelf welke klasrangschikking je wilt bekijken.</small></article><article class="online-mini-card"><span>🔐</span><strong>Geen zelfregistratie</strong><small>Leerlingen kunnen alleen inloggen met een account dat jij aanmaakt.</small></article></div><p class="online-help">De leerkracht beheert meerdere klassen. Leerlingen zien alleen de gebruikersnamen en XP van hun eigen klas; battles zijn uitsluitend mogelijk met klasgenoten.</p>`;
+      view.innerHTML = `<div class="online-home-grid"><article class="online-mini-card"><span>🏫</span><strong>Leerkrachtbeheer</strong><small>Beheer klassen, vragenbanken, kaarten, reacties en gevechtsinstellingen in aparte tabs.</small></article><article class="online-mini-card"><span>🏆</span><strong>XP-ranking per klas</strong><small>Kies zelf welke klasrangschikking je wilt bekijken.</small></article><article class="online-mini-card"><span>🔐</span><strong>Geen zelfregistratie</strong><small>Leerlingen kunnen alleen inloggen met een account dat jij aanmaakt.</small></article></div><p class="online-help">De leerkracht beheert meerdere klassen. Leerlingen zien alleen de gebruikersnamen en XP van hun eigen klas; battles zijn uitsluitend mogelijk met klasgenoten.</p>`;
       return;
     }
     view.innerHTML = `<div class="online-home-grid"><article class="online-mini-card"><span>⭐</span><strong>${xp} XP</strong><small>${rem}/100 XP tot level ${level + 1}</small><div class="online-xp-bar"><i style="width:${rem}%"></i></div></article><article class="online-mini-card"><span class="labcoin-mini-icon">${LABCOIN_ICON}</span><strong>${Number(currentProfile.coins)} LabCoins</strong><small>Verdien coins met de Elementensprint, de Zurenkennis-sprint, The OG of chemistry en de virtuele kluisreactie.</small></article><article class="online-mini-card"><span>🧬</span><strong>Kaartenbataljon</strong><small>Koop stofkaarten en daag een klasgenoot uit.</small></article></div><p class="online-help">De gewone puzzels geven XP. LabCoins verdien je via de optionele Elementensprint, de Zurenkennis-sprint, The OG of chemistry en de virtuele kluisreactie. Met coins koop je kaarten en skins. De ranking en battles zijn beperkt tot jouw klas.</p>`;
@@ -136,7 +140,7 @@
   }
   async function renderCards() {
     const [{ data: catalog, error: cErr }, { data: owned, error: oErr }, { data: reactions, error: rErr }, econ] = await Promise.all([
-      supabase.from('card_catalog').select('id,name,formula,category,rarity,price,attack,shield,description,card_type,power,support_target_type,support_effect,support_description,is_shop_item,is_reward_only,is_final_reward').order('price'),
+      supabase.from('card_catalog').select('id,name,formula,category,rarity,price,attack,shield,description,card_type,power,support_target_type,support_effect,support_description,support_target_type_2,support_effect_2,support_description_2,is_shop_item,is_reward_only,is_final_reward').order('price'),
       supabase.from('user_cards').select('card_id,quantity').eq('user_id', currentUser.id),
       supabase.from('card_reactions').select('id,name,reactant_a_id,reactant_a_qty,reactant_b_id,reactant_b_qty,product_a_id,product_a_qty,product_b_id,product_b_qty,equation_text,active').eq('active', true).order('name'),
       getEconomy()
@@ -147,7 +151,9 @@
   }
   function renderCardsPanel(econ = null) {
     const ownedMap = new Map(ownedCardCache.map(row => [row.card_id, Number(row.quantity) || 0]));
-    const ownedCards = cardCatalogCache.filter(c => (ownedMap.get(c.id) || 0) > 0);
+    // Verberg de oude, niet-beschikbare Au-cataloguskaart. De echte tijdreisbeloning
+    // blijft zichtbaar omdat die expliciet als is_final_reward gemarkeerd is.
+    const ownedCards = cardCatalogCache.filter(c => (ownedMap.get(c.id) || 0) > 0 && !isObsoleteAuCard(c));
     const reactionCards = ownedCards.filter(c => !c.is_final_reward && String(c.formula).trim().toUpperCase() !== 'AU');
     const tabs = `<div class="card-system-tabs"><button type="button" data-card-tab="shop" class="${cardShopTab==='shop'?'active':''}">🛍️ Winkel</button><button type="button" data-card-tab="collection" class="${cardShopTab==='collection'?'active':''}">📚 Mijn collectie</button><button type="button" data-card-tab="reactor" class="${cardShopTab==='reactor'?'active':''}">⚗️ Reactiekamer</button></div>`;
     let body = '';
@@ -159,10 +165,10 @@
       const shop = cardCatalogCache.filter(c => c.is_shop_item && !c.is_reward_only && String(c.formula).trim().toUpperCase() !== 'AU');
       body = `<p class="online-help">Koop kaarten van enkelvoudige stoffen. Je mag meerdere exemplaren van dezelfde kaart bezitten. Samengestelde stoffen maak je in de reactiekamer.</p><div class="online-store-grid online-card-grid">${shop.map(c => {
         const quantity = ownedMap.get(c.id) || 0;
-        return `<article class="online-card"><div class="online-card-top"><span>${esc(c.card_type || c.category)}</span><span>${esc(c.rarity)}</span></div><div class="online-formula">${esc(c.formula)}</div><h4>${esc(c.name)}</h4><p>${esc(c.description)}</p><div class="online-stats"><span>💪 Kracht ${Number(c.power ?? c.attack)}</span><span>📦 ${quantity} in bezit</span></div><button data-card-buy="${esc(c.id)}">Koop exemplaar · ${Number(c.price)} ${LABCOIN_ICON}</button></article>`;
+        return `<article class="online-card"><div class="online-card-top"><span>${esc(c.card_type || c.category)}</span><span>${esc(c.rarity)}</span></div><div class="online-formula">${esc(c.formula)}</div><h4>${esc(c.name)}</h4><p>${esc(c.description)}</p>${[c.support_description,c.support_description_2].filter(Boolean).map(t=>`<small class="card-support">✨ ${esc(t)}</small>`).join('')}<div class="online-stats"><span>💪 Kracht ${Number(c.power ?? c.attack)}</span><span>📦 ${quantity} in bezit</span></div><button data-card-buy="${esc(c.id)}">Koop exemplaar · ${Number(c.price)} ${LABCOIN_ICON}</button></article>`;
       }).join('') || '<p class="online-help">De leerkracht heeft nog geen winkelkaarten geactiveerd.</p>'}</div>`;
     } else if (cardShopTab === 'collection') {
-      body = `<p class="online-help">Je verzameling bevat ${ownedCards.reduce((sum,c)=>sum+(ownedMap.get(c.id)||0),0)} kaart(en). Dubbele kaarten tellen als aparte exemplaren. De exclusieve tijdreisbeloning is niet te koop en niet bruikbaar in reacties, maar kan wel in een battledeck.</p><div class="online-store-grid online-card-grid">${ownedCards.map(c => `<article class="online-card owned"><div class="online-card-top"><span>${esc(c.card_type || c.category)}</span><span>${esc(c.rarity)}</span></div><div class="online-formula">${esc(c.formula)}</div><h4>${esc(c.name)}</h4><p>${esc(c.description)}</p><div class="online-stats"><span>💪 Kracht ${Number(c.power ?? c.attack)}</span><span>📦 ×${ownedMap.get(c.id)}</span></div>${c.support_effect && c.support_effect !== 'none' ? `<small class="card-support">✨ ${esc(c.support_description || 'Speciale ondersteuning')}</small>` : ''}${c.is_final_reward ? '<span class="card-reward-tag final-reward-tag">🏆 Exclusieve tijdreisbeloning · niet te koop of inzetbaar in reacties · wel inzetbaar in battles</span>' : String(c.formula).trim() === 'Au' ? '<span class="card-reward-tag">Oude Au-kaart · niet langer te koop of inzetbaar in nieuwe battles</span>' : c.is_reward_only ? '<span class="card-reward-tag">🏆 Exclusieve battlekaart</span>' : ''}</article>`).join('') || '<p class="online-help">Je collectie is nog leeg. Koop eerst enkele enkelvoudige stoffen in de winkel.</p>'}</div>`;
+      body = `<p class="online-help">Je verzameling bevat ${ownedCards.reduce((sum,c)=>sum+(ownedMap.get(c.id)||0),0)} kaart(en). Dubbele kaarten tellen als aparte exemplaren. De exclusieve tijdreisbeloning is niet te koop en niet bruikbaar in reacties, maar kan wel in een battledeck.</p><div class="online-store-grid online-card-grid">${ownedCards.map(c => `<article class="online-card owned"><div class="online-card-top"><span>${esc(c.card_type || c.category)}</span><span>${esc(c.rarity)}</span></div><div class="online-formula">${esc(c.formula)}</div><h4>${esc(c.name)}</h4><p>${esc(c.description)}</p><div class="online-stats"><span>💪 Kracht ${Number(c.power ?? c.attack)}</span><span>📦 ×${ownedMap.get(c.id)}</span></div>${[c.support_description,c.support_description_2].filter(Boolean).map(t=>`<small class="card-support">✨ ${esc(t)}</small>`).join('')}${c.is_final_reward ? '<span class="card-reward-tag final-reward-tag">🏆 Exclusieve tijdreisbeloning · niet te koop of inzetbaar in reacties · wel inzetbaar in battles</span>' : String(c.formula).trim() === 'Au' ? '<span class="card-reward-tag">Oude Au-kaart · niet langer te koop of inzetbaar in nieuwe battles</span>' : c.is_reward_only ? '<span class="card-reward-tag">🏆 Exclusieve battlekaart</span>' : ''}</article>`).join('') || '<p class="online-help">Je collectie is nog leeg. Koop eerst enkele enkelvoudige stoffen in de winkel.</p>'}</div>`;
     } else {
       const ownedOptions = reactionCards.map(c => `<option value="${esc(c.id)}">${esc(c.formula)} · ${esc(c.name)} (bezit: ${ownedMap.get(c.id)})</option>`).join('');
       firstCardId = reactionCards[0]?.id || '';
@@ -210,12 +216,21 @@
       const moveOptions = teacherClassCache.map(c => `<option value="${esc(c.id)}" ${c.id === student.class_id ? 'selected' : ''}>${esc(c.name)}</option>`).join('');
       return `<tr><td><strong>${username}</strong></td><td>${esc(student.class_name || 'Onbekende klas')}</td><td>${xp}</td><td>${level}</td><td><div class="teacher-student-class-action"><select data-student-class-select="${username}" aria-label="Nieuwe klas voor ${username}">${moveOptions}</select><button type="button" class="online-small-btn" data-teacher-move-student="${username}">Verplaats</button></div></td><td><button type="button" class="teacher-delete-btn" data-teacher-delete-student="${username}">Verwijderen</button></td></tr>`;
     }).join('');
-    view.innerHTML = `<div class="online-view-heading"><div><h3>🏫 Klasbeheer</h3><p>Beheer meerdere klassen, maak leerlingaccounts aan en verplaats leerlingen. Elke klas heeft een eigen ranking en eigen battlegroep.</p></div><button class="online-small-btn" data-online-refresh>Vernieuwen</button></div>
+    view.innerHTML = `<div class="teacher-management-shell">
+      <nav class="teacher-management-tabs" role="tablist" aria-label="Leerkrachtbeheer">
+        <button type="button" class="teacher-management-tab" role="tab" data-teacher-tab="classes" aria-controls="teacher-panel-classes">🏫 Klasbeheer</button>
+        <button type="button" class="teacher-management-tab" role="tab" data-teacher-tab="questions" aria-controls="teacher-panel-questions">🧪 Vragenbeheer</button>
+        <button type="button" class="teacher-management-tab" role="tab" data-teacher-tab="cards" aria-controls="teacher-panel-cards">🃏 Kaartenbeheer</button>
+      </nav>
+      <section id="teacher-panel-classes" class="teacher-tab-panel" data-teacher-panel="classes" role="tabpanel">
+      <div class="online-view-heading"><div><h3>🏫 Klasbeheer</h3><p>Beheer meerdere klassen, maak leerlingaccounts aan en verplaats leerlingen. Elke klas heeft een eigen ranking en eigen battlegroep.</p></div><button class="online-small-btn" data-online-refresh>Vernieuwen</button></div>
       <section class="teacher-classes-overview"><div class="teacher-class-cards">${classCards || '<p class="online-help">Nog geen klassen aangemaakt.</p>'}</div><form id="teacher-create-class-form" class="online-form teacher-create-class-form"><label for="teacher-new-class-name">Nieuwe klas aanmaken</label><input id="teacher-new-class-name" minlength="2" maxlength="80" placeholder="bv. 4ChemieB" required><button type="submit" class="online-primary">Maak klas aan</button></form></section>
       <div class="online-auth-layout"><article class="online-auth-card"><h3>Leerlingaccounts aanmaken</h3><p>Voer één leerling per regel in als <code>gebruikersnaam;wachtwoord</code>. Kies eerst de klas waarin je de nieuwe accounts wilt plaatsen.</p><form id="teacher-create-accounts-form" class="online-form"><label for="teacher-create-class">Klas voor nieuwe accounts<select id="teacher-create-class" required>${selectedClassOptions || '<option value="">Maak eerst een klas aan</option>'}</select></label><label for="teacher-student-lines">Leerlingen (gebruikersnaam;wachtwoord)</label><textarea id="teacher-student-lines" rows="8" placeholder="chemicus01;TijdelijkWachtwoord1
 chemicus02;TijdelijkWachtwoord2" required></textarea><button type="submit" class="online-primary" ${teacherClassCache.length ? '' : 'disabled'}>Maak leerlingaccounts</button></form><div id="teacher-account-results" class="teacher-results hidden" aria-live="polite"></div></article>
       <article class="online-auth-card"><h3>Leerlingwachtwoord resetten</h3><p>Gebruik dit wanneer een leerling uit één van jouw klassen het wachtwoord vergeten is. Het nieuwe wachtwoord wordt onmiddellijk actief.</p><form id="teacher-reset-form" class="online-form"><label for="teacher-reset-username">Gebruikersnaam</label><input id="teacher-reset-username" pattern="[a-zA-Z0-9_-]{3,20}" required><label for="teacher-reset-password">Nieuw wachtwoord (minstens 8 tekens)</label><input id="teacher-reset-password" type="password" minlength="8" autocomplete="new-password" required><button type="submit" class="online-secondary">Reset wachtwoord</button></form><p class="teacher-warn">Deel tijdelijke wachtwoorden alleen rechtstreeks met de leerling. Zet ze niet in een publiek klasdocument.</p></article></div>
       <section class="teacher-student-list"><div class="online-view-heading"><div><h3>👥 Leerlingen in jouw klassen</h3><p>${students.length} leerlingaccount${students.length === 1 ? '' : 's'} verdeeld over ${teacherClassCache.length} klas(sen).</p></div></div><div class="online-table-wrap"><table class="online-table"><thead><tr><th>Gebruikersnaam</th><th>Klas</th><th>XP</th><th>Level</th><th>Klas wijzigen</th><th>Accountbeheer</th></tr></thead><tbody>${studentRows || '<tr><td colspan="6">Er zijn nog geen leerlingaccounts in jouw klassen.</td></tr>'}</tbody></table></div><p class="teacher-warn">Een leerling verplaatsen beëindigt eventuele openstaande battles. Afgeronde battles blijven in de historie van de deelnemers staan.</p><p class="teacher-warn">Let op: verwijderen is definitief. Ook XP, LabCoins, kaarten, skins, sprintresultaten en spelgeschiedenis van die leerling worden verwijderd.</p></section>
+      </section>
+      <section id="teacher-panel-questions" class="teacher-tab-panel" data-teacher-panel="questions" role="tabpanel" hidden>
       <section class="teacher-question-manager"><div class="online-view-heading"><div><h3>🧪 Vragenbeheer per leerjaar</h3><p>Elk leerjaar heeft een eigen vragenbank. Wijzigingen gelden voor leerlingen zodra ze de game opnieuw laden.</p></div></div>
         <div class="teacher-question-toolbar"><label for="teacher-question-level">Vragenset kiezen<select id="teacher-question-level">${LEVELS_FOR_QUESTIONS.map(l=>`<option value="${l.id}">${esc(l.name)}</option>`).join('')}</select></label></div>
         <div id="teacher-puzzle-settings" class="teacher-puzzle-settings"></div>
@@ -232,18 +247,37 @@ Optie D"></textarea></label>
         <div class="span-all" style="display:flex;gap:9px;flex-wrap:wrap"><button type="submit" class="online-primary" id="teacher-question-save">Vraag opslaan</button><button type="button" class="online-secondary" id="teacher-question-new">Nieuwe vraag / formulier leegmaken</button></div>
         <p class="teacher-question-status span-all">Label elke vraag als Basis, Gemiddeld of Moeilijk. Het aantal vragen (3, 5 of 10) stel je bovenaan per puzzelplek in. Zorg dat de gekozen moeilijkheid voldoende actieve vragen bevat.</p>
         </form></section>
+      </section>
+      <section id="teacher-panel-cards" class="teacher-tab-panel" data-teacher-panel="cards" role="tabpanel" hidden>
       <section class="teacher-question-manager teacher-card-manager"><div class="online-view-heading"><div><h3>🃏 Kaarten en reacties beheren</h3><p>Beheer de winkelkaarten, kracht, type, speciale ondersteuning en chemische reacties. De kaartcatalogus en reacties worden gedeeld binnen dit Supabase-project.</p></div></div>
         <div class="teacher-card-layout">
           <article class="online-auth-card"><h4>Kaartcatalogus</h4><div id="teacher-card-list" class="teacher-card-list">Kaarten worden geladen…</div></article>
-          <form id="teacher-card-form" class="teacher-question-form"><h4 class="span-all">Kaart toevoegen / aanpassen</h4><label>Kaart-ID<input id="teacher-card-id" pattern="[a-z0-9][a-z0-9-]{1,49}" placeholder="bv. water" required></label><label>Naam<input id="teacher-card-name" required></label><label>Formule<input id="teacher-card-formula" placeholder="H₂O" required></label><label>Kaarttype<input id="teacher-card-type" list="teacher-card-types" value="gas" required><datalist id="teacher-card-types"><option value="water"><option value="vuur"><option value="steen"><option value="metaal"><option value="gas"><option value="vloeistof"><option value="zout"><option value="edelgas"><option value="vaste stof"></datalist></label><label>Winkelprijs (LabCoins)<input id="teacher-card-price" type="number" min="0" max="10000" value="5" required></label><label>Kracht (1–20)<input id="teacher-card-power" type="number" min="1" max="20" value="1" required></label><label class="span-all">Beschrijving<textarea id="teacher-card-description" rows="2"></textarea></label><label>Ondersteuning tegen type<input id="teacher-card-target" list="teacher-card-types" placeholder="leeg = geen ondersteuning"></label><label>Ondersteuningseffect<select id="teacher-card-effect"><option value="none">Geen</option><option value="halve">Halveert kracht van doeltype</option><option value="cancel_damage">Voorkomt alle schade in dit duel</option></select></label><label class="span-all">Tekst ondersteuning<textarea id="teacher-card-support-description" rows="2" placeholder="bv. Halveert de kracht van een vuurkaart."></textarea></label><label><span><input id="teacher-card-shop" type="checkbox"> Te koop in de winkel</span></label><label><span><input id="teacher-card-reward" type="checkbox"> Exclusieve battlebeloning</span></label><div class="span-all" style="display:flex;gap:8px;flex-wrap:wrap"><button type="submit" class="online-primary">Kaart opslaan</button><button type="button" class="online-secondary" id="teacher-card-new">Nieuw formulier</button></div></form>
+          <form id="teacher-card-form" class="teacher-question-form"><h4 class="span-all">Kaart toevoegen / aanpassen</h4><label>Kaart-ID<input id="teacher-card-id" pattern="[a-z0-9][a-z0-9-]{1,49}" placeholder="bv. water" required></label><label>Naam<input id="teacher-card-name" required></label><label>Formule<input id="teacher-card-formula" placeholder="H₂O" required></label><label>Kaarttype<input id="teacher-card-type" list="teacher-card-types" value="gas" required><datalist id="teacher-card-types"><option value="water"><option value="vuur"><option value="steen"><option value="metaal"><option value="gas"><option value="vloeistof"><option value="zout"><option value="edelgas"><option value="vaste stof"></datalist></label><label>Winkelprijs (LabCoins)<input id="teacher-card-price" type="number" min="0" max="10000" value="5" required></label><label>Kracht (1–20)<input id="teacher-card-power" type="number" min="1" max="20" value="1" required></label><label class="span-all">Beschrijving<textarea id="teacher-card-description" rows="2"></textarea></label><label>Ondersteuning 1 · doeltype<input id="teacher-card-target" list="teacher-card-types" placeholder="leeg = geen ondersteuning"></label><label>Ondersteuning 1 · effect<select id="teacher-card-effect"><option value="none">Geen</option><option value="reduce_1">Vermindert kracht met 1</option><option value="reduce_2">Vermindert kracht met 2</option><option value="reduce_3">Vermindert kracht met 3</option><option value="set_zero">Herleidt kracht naar 0</option><option value="cancel_damage">Voorkomt alle schade in dit duel</option></select></label><label class="span-all">Tekst ondersteuning 1<textarea id="teacher-card-support-description" rows="2" placeholder="bv. Vermindert de kracht van vuur met 2."></textarea></label><label>Ondersteuning 2 · doeltype<input id="teacher-card-target-2" list="teacher-card-types" placeholder="optioneel tweede type"></label><label>Ondersteuning 2 · effect<select id="teacher-card-effect-2"><option value="none">Geen</option><option value="reduce_1">Vermindert kracht met 1</option><option value="reduce_2">Vermindert kracht met 2</option><option value="reduce_3">Vermindert kracht met 3</option><option value="set_zero">Herleidt kracht naar 0</option><option value="cancel_damage">Voorkomt alle schade in dit duel</option></select></label><label class="span-all">Tekst ondersteuning 2<textarea id="teacher-card-support-description-2" rows="2" placeholder="bv. Voorkomt alle schade tegen metaal."></textarea></label><label><span><input id="teacher-card-shop" type="checkbox"> Te koop in de winkel</span></label><label><span><input id="teacher-card-reward" type="checkbox"> Exclusieve battlebeloning</span></label><div class="span-all" style="display:flex;gap:8px;flex-wrap:wrap"><button type="submit" class="online-primary">Kaart opslaan</button><button type="button" class="online-secondary" id="teacher-card-new">Nieuw formulier</button></div></form>
         </div>
         <div class="teacher-card-layout teacher-reaction-layout"><article class="online-auth-card"><h4>Reacties</h4><div id="teacher-reaction-list" class="teacher-card-list">Reacties worden geladen…</div></article>
           <form id="teacher-reaction-form" class="teacher-question-form"><h4 class="span-all">Reactie toevoegen / aanpassen</h4><input type="hidden" id="teacher-reaction-id"><label class="span-all">Naam van de reactie<input id="teacher-reaction-name" required placeholder="Vorming van water"></label><label>Beginstof 1<select id="teacher-reaction-a"></select></label><label>Aantal beginstof 1<input id="teacher-reaction-a-qty" type="number" min="1" max="99" value="2" required></label><label>Beginstof 2<select id="teacher-reaction-b"></select></label><label>Aantal beginstof 2<input id="teacher-reaction-b-qty" type="number" min="1" max="99" value="1" required></label><label>Product 1<select id="teacher-reaction-pa"></select></label><label>Aantal product 1<input id="teacher-reaction-pa-qty" type="number" min="1" max="99" value="2" required></label><label>Product 2 (optioneel)<select id="teacher-reaction-pb"></select></label><label>Aantal product 2<input id="teacher-reaction-pb-qty" type="number" min="0" max="99" value="0"></label><label class="span-all">Weergave reactievergelijking<input id="teacher-reaction-equation" placeholder="2 H₂ + O₂ → 2 H₂O"></label><label><span><input id="teacher-reaction-active" type="checkbox" checked> Actief voor leerlingen</span></label><div class="span-all" style="display:flex;gap:8px;flex-wrap:wrap"><button type="submit" class="online-primary">Reactie opslaan</button><button type="button" class="online-secondary" id="teacher-reaction-new">Nieuwe reactie</button></div></form>
         </div>
-        <form id="teacher-battle-settings-form" class="teacher-question-form"><h4 class="span-all">⚔️ Battle-instellingen</h4><label>Startlevenskracht per speler<input id="teacher-battle-hp" type="number" min="1" max="200" value="20" required></label><div><button type="submit" class="online-primary">Battle-instelling opslaan</button></div><p class="teacher-question-status span-all">Elke speler kiest vijf kaarten. Hogere kracht veroorzaakt schade gelijk aan het verschil; gelijke kracht veroorzaakt geen schade. Een halvering wordt naar beneden afgerond op een geheel getal. Speciale ondersteuning werkt onafhankelijk van de aanvals- of verdedigingsrol. Na elk duel wisselen de rollen. De ingestelde startlevenskracht geldt voor nieuwe battles binnen dit project.</p></form>
-      </section>`;
+        <form id="teacher-battle-settings-form" class="teacher-question-form"><h4 class="span-all">⚔️ Battle-instellingen</h4><label>Startlevenskracht per speler<input id="teacher-battle-hp" type="number" min="1" max="200" value="20" required></label><div><button type="submit" class="online-primary">Battle-instelling opslaan</button></div><p class="teacher-question-status span-all">Elke speler kiest vijf verschillende kaarten; per speler worden maximaal vier kaarten ingezet, dus blijft één kaart ongebruikt. Een battle stopt na vier volledige rondes (of eerder wanneer een speler 0 HP bereikt). Hogere aangepaste kracht veroorzaakt schade gelijk aan het verschil; gelijke kracht veroorzaakt geen schade. Elke kaart kan ondersteuning bieden tegen maximaal twee doeltypes: kracht −1, −2 of −3, kracht naar 0, of alle schade in het duel voorkomen. Beide kaarten kunnen tegelijk ondersteuning toepassen. Na elke ronde wisselen de rollen. De ingestelde startlevenskracht geldt voor nieuwe battles binnen dit project.</p></form>
+      </section>
+      </section>
+      </div>`;
+    applyTeacherTab(teacherActiveTab);
     try { await renderTeacherQuestions('medieval'); } catch (questionError) { console.error(questionError); const status=document.getElementById('teacher-question-status'); if(status) status.textContent='Vragenbeheer is nog niet geactiveerd. Voer de SQL-migratie uit die in het updatepakket staat.'; const list=document.getElementById('teacher-question-list'); if(list) list.innerHTML='<p class="online-help">Voer eerst de meegeleverde Supabase-migratie uit om vragensets online te beheren.</p>'; }
     try { await renderTeacherCardManager(); } catch (cardError) { console.error(cardError); const list=document.getElementById('teacher-card-list'); if(list) list.textContent='Kaartbeheer kon niet laden. Controleer of de kaartenmigratie in Supabase is uitgevoerd.'; }
+  }
+
+  function applyTeacherTab(name = 'classes') {
+    const allowed = new Set(['classes', 'questions', 'cards']);
+    teacherActiveTab = allowed.has(name) ? name : 'classes';
+    view?.querySelectorAll('[data-teacher-tab]').forEach(button => {
+      const active = button.dataset.teacherTab === teacherActiveTab;
+      button.classList.toggle('active', active);
+      button.setAttribute('aria-selected', String(active));
+      button.tabIndex = active ? 0 : -1;
+    });
+    view?.querySelectorAll('[data-teacher-panel]').forEach(panel => {
+      panel.hidden = panel.dataset.teacherPanel !== teacherActiveTab;
+    });
   }
 
   function resetTeacherQuestionForm() {
@@ -305,18 +339,22 @@ Optie D"></textarea></label>
     return teacherQuestionCache;
   }
   function editTeacherQuestion(id) {
-    const q = teacherQuestionCache.find(x=>x.question_id===id); if (!q) return;
-    document.getElementById('teacher-question-id').value = q.question_id;
-    document.getElementById('teacher-question-object').value = q.object_id;
-    document.getElementById('teacher-question-difficulty').value = q.difficulty || 'basis';
-    document.getElementById('teacher-question-type').value = q.question_type;
-    document.getElementById('teacher-question-text').value = q.question_text;
-    document.getElementById('teacher-question-options').value = (q.options || []).join('\n');
+    const q = teacherQuestionCache.find(x => String(x.question_id) === String(id));
+    if (!q) { msg('Deze vraag kon niet worden teruggevonden. Vernieuw Vragenbeheer en probeer opnieuw.', 'bad'); return; }
+    const type = ['multiple_choice', 'numeric', 'short_answer'].includes(q.question_type) ? q.question_type : 'multiple_choice';
+    const field = (fieldId) => document.getElementById(fieldId);
+    field('teacher-question-id').value = String(q.question_id);
+    field('teacher-question-object').value = q.object_id || 'object1';
+    field('teacher-question-difficulty').value = q.difficulty || 'basis';
+    field('teacher-question-type').value = type;
+    field('teacher-question-text').value = q.question_text || '';
+    field('teacher-question-options').value = Array.isArray(q.options) ? q.options.join('\n') : '';
     toggleQuestionEditorType();
-    const answer = document.getElementById('teacher-question-answer');
-    if (answer) answer.value = q.question_type === 'numeric' ? q.correct_answer : q.question_type === 'short_answer' ? (q.correct_answer_text || '') : Number(q.correct_answer)+1;
-    const save = document.getElementById('teacher-question-save'); if (save) save.textContent = 'Wijzigingen opslaan';
-    document.getElementById('teacher-question-form')?.scrollIntoView({behavior:'smooth',block:'center'});
+    const answer = field('teacher-question-answer');
+    if (answer) answer.value = type === 'numeric' ? String(q.correct_answer ?? '') : type === 'short_answer' ? (q.correct_answer_text || '') : String(Number(q.correct_answer) + 1);
+    const save = field('teacher-question-save'); if (save) save.textContent = 'Wijzigingen opslaan';
+    const status = field('teacher-question-status'); if (status) status.textContent = `Je bewerkt nu vraag ${q.question_id}. Pas de gegevens aan en sla ze op.`;
+    field('teacher-question-form')?.scrollIntoView({behavior:'smooth',block:'center'});
   }
   async function handleTeacherQuestionSave(e) {
     e.preventDefault(); requireLogin();
@@ -364,6 +402,30 @@ Optie D"></textarea></label>
 
 
   async function getMyBattles() { const data = await rpc('get_my_battles'); return Array.isArray(data) ? data : []; }
+  function updateBattleActionBadge(battles = []) {
+    const button = nav?.querySelector('[data-online-view="battles"]');
+    const badge = document.getElementById('battle-action-count');
+    if (!button || !badge) return;
+    const count = currentProfile?.role === 'student' && currentUser
+      ? (Array.isArray(battles) ? battles : []).filter(b =>
+          (b.status === 'pending' && b.opponent_id === currentUser.id) ||
+          (b.status === 'active' && b.current_turn === currentUser.id)
+        ).length
+      : 0;
+    badge.textContent = String(count);
+    badge.classList.toggle('hidden', count === 0);
+    badge.setAttribute('aria-hidden', String(count === 0));
+    const label = count === 1 ? '1 actie verwacht' : `${count} acties verwacht`;
+    button.setAttribute('aria-label', count ? `Battles, ${label}` : 'Battles');
+    badge.title = count ? label : '';
+  }
+  async function refreshBattleActionBadge() {
+    if (!currentUser || currentProfile?.role !== 'student') {
+      updateBattleActionBadge([]);
+      return;
+    }
+    updateBattleActionBadge(await getMyBattles());
+  }
   function deckSelectMarkup(cards, ownedRows, prefix, selectedValues = []) {
     const quantity = new Map(ownedRows.map(row => [row.card_id, Number(row.quantity) || 0]));
     const options = cards.filter(c => (c.is_final_reward || String(c.formula).trim().toUpperCase() !== 'AU') && (quantity.get(c.id) || 0) > 0).map(c => `<option value="${esc(c.id)}">${esc(c.formula)} · ${esc(c.name)} (bezit: ${quantity.get(c.id)})</option>`).join('');
@@ -405,14 +467,16 @@ Optie D"></textarea></label>
   }
   async function renderBattles() {
     const [battles, { data: owned, error: oErr }, { data: catalog, error: cErr }] = await Promise.all([
-      getMyBattles(), supabase.from('user_cards').select('card_id,quantity').eq('user_id', currentUser.id), supabase.from('card_catalog').select('id,name,formula,card_type,power,support_description,support_effect,is_reward_only,is_final_reward')
+      getMyBattles(), supabase.from('user_cards').select('card_id,quantity').eq('user_id', currentUser.id), supabase.from('card_catalog').select('id,name,formula,card_type,power,support_description,support_effect,support_description_2,support_effect_2,is_reward_only,is_final_reward')
     ]);
     if (oErr) throw oErr; if (cErr) throw cErr;
+    updateBattleActionBadge(battles);
     const cards = catalog || []; ownedCardCache = owned || [];
     const battleMarkup = await Promise.all(battles.map(async b => {
       const isChallenger = b.challenger_id === currentUser.id;
       const opponentName = isChallenger ? b.opponent_username : b.challenger_username;
       const isMyTurn = b.current_turn === currentUser.id;
+      const needsAction = (b.status === 'pending' && b.opponent_id === currentUser.id) || (b.status === 'active' && isMyTurn);
       let sub = '';
       if (b.status === 'pending' && b.opponent_id === currentUser.id) {
         sub = `<p>${esc(b.challenger_username)} daagt je uit. Kies vijf kaarten voor jouw deck voordat je aanvaardt.</p><form class="battle-accept-form" data-battle-accept-form="${b.battle_id}"><div class="battle-deck-builder">${deckSelectMarkup(cards,ownedCardCache,`accept-${b.battle_id}`)}</div><div class="online-actions"><button type="button" data-battle-response="accept" data-id="${b.battle_id}">Aanvaarden met dit deck</button><button type="button" class="danger" data-battle-response="decline" data-id="${b.battle_id}">Weigeren</button></div></form>`;
@@ -436,14 +500,14 @@ Optie D"></textarea></label>
           const outcome=damage===0?'Geen levenspunten verloren.':`${damage} HP schade aan ${recipient}.`;
           return `<li><strong>Ronde ${round}</strong> · Aanval: ${esc(atkCard?.formula||'')} (${Number(atk.effective_power)} kracht) · Verdediging: ${esc(defCard?.formula||'')} (${Number(def.effective_power)} kracht). <b>${esc(outcome)}</b>${notes}</li>`;
         }).join('');
-        const hand = isMyTurn ? `<div class="online-hand"><strong>${b.current_role==='attacker'?'🗡️ Jij valt aan':'🛡️ Jij verdedigt'} — kies één kaart:</strong><div class="online-hand-grid">${(ownDeck||[]).filter(d=>!usedSlots.has(Number(d.slot_number))).map(d=>{const c=cards.find(x=>x.id===d.card_id);return `<button class="online-play-card" data-play-slot="${Number(d.slot_number)}" data-battle-id="${b.battle_id}"><b>${esc(c?.formula||d.card_id)}</b><span>${esc(c?.name||'Kaart')}</span><small>💪 Kracht ${Number(c?.power)||1} · ${esc(c?.card_type||'')}</small>${c?.support_description?`<em>${esc(c.support_description)}</em>`:''}<small>Deckslot ${Number(d.slot_number)}</small></button>`;}).join('') || '<p>Je hebt alle vijf kaarten al gespeeld.</p>'}</div></div>` : `<p class="battle-waiting">${b.current_role==='attacker'?'Tegenstander kiest een aanvalskaart.':'Tegenstander kiest een verdedigingskaart.'}</p>`;
+        const hand = isMyTurn ? `<div class="online-hand"><strong>${b.current_role==='attacker'?'🗡️ Jij valt aan':'🛡️ Jij verdedigt'} — kies één kaart:</strong><div class="online-hand-grid">${(ownDeck||[]).filter(d=>!usedSlots.has(Number(d.slot_number))).map(d=>{const c=cards.find(x=>x.id===d.card_id);return `<button class="online-play-card" data-play-slot="${Number(d.slot_number)}" data-battle-id="${b.battle_id}"><b>${esc(c?.formula||d.card_id)}</b><span>${esc(c?.name||'Kaart')}</span><small>💪 Kracht ${Number(c?.power)||1} · ${esc(c?.card_type||'')}</small>${[c?.support_description,c?.support_description_2].filter(Boolean).map(t=>`<em>✨ ${esc(t)}</em>`).join('')}<small>Deckslot ${Number(d.slot_number)}</small></button>`;}).join('') || '<p>Je hebt alle vier ingezette kaarten al gespeeld. Eén kaart blijft ongebruikt.</p>'}</div></div>` : `<p class="battle-waiting">${b.current_role==='attacker'?'Tegenstander kiest een aanvalskaart.':'Tegenstander kiest een verdedigingskaart.'}</p>`;
         const role = isMyTurn ? (b.current_role==='attacker'?'Jij bent de aanvaller':'Jij bent de verdediger') : (b.current_role==='attacker'?'Tegenstander is de aanvaller':'Tegenstander is de verdediger');
-        sub = `<div class="battle-turn-banner ${isMyTurn?'your-turn':'waiting-turn'}"><strong>${isMyTurn?'JOUW BEURT':'BEURT TEGENSTANDER'}</strong><span>${role}</span></div><div class="online-hp"><span>🧪 Jij: ${isChallenger ? b.challenger_hp : b.opponent_hp}/${b.starting_hp} HP</span><span>⚗ ${esc(opponentName)}: ${isChallenger ? b.opponent_hp : b.challenger_hp}/${b.starting_hp} HP</span></div><p class="battle-round-indicator">Duel ${Number(b.round_count)+1}/5 · ${b.current_role==='attacker'?'aanval':'verdediging'}</p><ol class="online-moves">${moveList || '<li>De battle is gestart. De uitdager valt aan.</li>'}</ol>${hand}`;
+        sub = `<div class="battle-turn-banner ${isMyTurn?'your-turn':'waiting-turn'}"><strong>${isMyTurn?'JOUW BEURT':'BEURT TEGENSTANDER'}</strong><span>${role}</span></div><div class="online-hp"><span>🧪 Jij: ${isChallenger ? b.challenger_hp : b.opponent_hp}/${b.starting_hp} HP</span><span>⚗ ${esc(opponentName)}: ${isChallenger ? b.opponent_hp : b.challenger_hp}/${b.starting_hp} HP</span></div><p class="battle-round-indicator">Ronde ${Number(b.round_count)+1}/4 · ${b.current_role==='attacker'?'aanval':'verdediging'}</p><ol class="online-moves">${moveList || '<li>De battle is gestart. De uitdager valt aan.</li>'}</ol>${hand}`;
       }
-      return `<article class="online-battle-card"><div class="online-view-heading"><div><h4>⚔️ Jij vs. ${esc(opponentName)}</h4><small>${esc(b.status)} · ${new Date(b.updated_at).toLocaleString('nl-BE')}</small></div><span class="online-pill">${b.status === 'active' ? `${isChallenger ? b.challenger_hp : b.opponent_hp} HP` : esc(b.status)}</span></div>${sub}</article>`;
+      return `<article class="online-battle-card ${needsAction ? 'battle-action-needed' : ''}"><div class="online-view-heading"><div><h4>⚔️ Jij vs. ${esc(opponentName)}</h4><small>${esc(b.status)} · ${new Date(b.updated_at).toLocaleString('nl-BE')}</small></div><div class="battle-status-tags"><span class="online-pill">${b.status === 'active' ? `${isChallenger ? b.challenger_hp : b.opponent_hp} HP` : esc(b.status)}</span>${needsAction ? '<span class="battle-needs-action">ACTIE VEREIST</span>' : ''}</div></div>${sub}</article>`;
     }));
     const deckOptions = deckSelectMarkup(cards,ownedCardCache,'challenge');
-    view.innerHTML = `<div class="online-view-heading"><div><h3>⚔️ Chemiebattles</h3><p>Stel een battledeck van vijf verschillende kaarten samen en daag een klasgenoot uit. Elke kaartsoort mag maar één keer voorkomen, ook als je meerdere exemplaren bezit. De Au-eindkaart mag wel mee in je deck.</p></div><button class="online-small-btn" data-online-refresh>Vernieuwen</button></div><form id="battle-invite-form" class="online-invite-form"><label for="battle-opponent">Gebruikersnaam tegenstander</label><input id="battle-opponent" name="username" minlength="3" maxlength="20" pattern="[a-z0-9_-]{3,20}" placeholder="bv. chemicus_123" required><strong>Kies jouw vijf kaarten</strong><div class="battle-deck-builder">${deckOptions}</div><button>Verstuur uitdaging</button></form><div class="online-battles-list">${battleMarkup.join('') || '<p class="online-help">Nog geen uitdagingen of battles. Daag een klasgenoot uit!</p>'}</div>`;
+    view.innerHTML = `<div class="online-view-heading"><div><h3>⚔️ Chemiebattles</h3><p>Stel een battledeck van vijf verschillende kaarten samen en daag een klasgenoot uit. Elke kaartsoort mag maar één keer voorkomen, ook als je meerdere exemplaren bezit. Een battle duurt maximaal vier rondes: per speler blijft dus één kaart ongebruikt. De Au-eindkaart mag wel mee in je deck.</p></div><button class="online-small-btn" data-online-refresh>Vernieuwen</button></div><form id="battle-invite-form" class="online-invite-form"><label for="battle-opponent">Gebruikersnaam tegenstander</label><input id="battle-opponent" name="username" minlength="3" maxlength="20" pattern="[a-z0-9_-]{3,20}" placeholder="bv. chemicus_123" required><strong>Kies jouw vijf kaarten</strong><div class="battle-deck-builder">${deckOptions}</div><button>Verstuur uitdaging</button></form><div class="online-battles-list">${battleMarkup.join('') || '<p class="online-help">Nog geen uitdagingen of battles. Daag een klasgenoot uit!</p>'}</div>`;
     const suggestions = suggestDeck(cards,ownedCardCache);
     const inviteForm = document.querySelector('#battle-invite-form');
     inviteForm?.querySelectorAll('.deck-slot-select').forEach((select,i)=>{if(suggestions[i])select.value=suggestions[i];});
@@ -458,7 +522,7 @@ Optie D"></textarea></label>
   async function renderTeacherCardManager() {
     if (currentProfile?.role !== 'teacher') return;
     const [{ data: cards, error: cErr }, { data: reactions, error: rErr }, { data: settings, error: sErr }] = await Promise.all([
-      supabase.from('card_catalog').select('id,name,formula,card_type,price,power,description,support_target_type,support_effect,support_description,is_shop_item,is_reward_only,is_final_reward,rarity').order('name'),
+      supabase.from('card_catalog').select('id,name,formula,card_type,price,power,description,support_target_type,support_effect,support_description,support_target_type_2,support_effect_2,support_description_2,is_shop_item,is_reward_only,is_final_reward,rarity').order('name'),
       supabase.from('card_reactions').select('*').order('name'),
       supabase.from('battle_settings').select('starting_hp').eq('singleton',true).single()
     ]);
@@ -467,7 +531,7 @@ Optie D"></textarea></label>
     const options = teacherCardCache.filter(c=>!c.is_final_reward && String(c.formula).trim().toUpperCase() !== 'AU').map(c=>`<option value="${esc(c.id)}">${esc(c.formula)} · ${esc(c.name)}</option>`).join('');
     ['teacher-reaction-a','teacher-reaction-b','teacher-reaction-pa','teacher-reaction-pb'].forEach(id=>{const el=document.getElementById(id);if(el)el.innerHTML=(id==='teacher-reaction-pb'?'<option value="">Geen tweede product</option>':'')+options;});
     const list=document.getElementById('teacher-card-list');
-    if(list)list.innerHTML=teacherCardCache.map(c=>{const isAu=String(c.formula).trim().toUpperCase()==='AU';const isFinalAu=Boolean(c.is_final_reward)&&isAu;const fixed=c.is_final_reward||isAu;const cardLabel=c.is_final_reward?'exclusieve eindbeloning':isAu?'oude Au-kaart · niet beschikbaar':c.is_shop_item?'winkel':c.is_reward_only?'battlebeloning':'alleen reactieproduct';const editor=isFinalAu?`<div class="teacher-au-strength-editor"><label for="teacher-au-power-${esc(c.id)}">Kracht (1–20)<input id="teacher-au-power-${esc(c.id)}" type="number" min="1" max="20" step="1" value="${Number(c.power)||1}" data-au-final-power></label><button type="button" data-au-final-power-save="${esc(c.id)}">Kracht opslaan</button></div>`:fixed?'<span class="card-reward-tag final-reward-tag">Vast · niet aanpassen</span>':`<button type="button" data-teacher-card-edit="${esc(c.id)}">Bewerken</button>`;return `<article class="teacher-card-row"><div><strong>${esc(c.formula)} · ${esc(c.name)}</strong><small>${esc(c.card_type)} · kracht ${Number(c.power)} · ${Number(c.price)} coins · ${cardLabel}</small>${c.support_description?`<small>✨ ${esc(c.support_description)}</small>`:''}</div>${editor}</article>`;}).join('');
+    if(list)list.innerHTML=teacherCardCache.filter(c=>!isObsoleteAuCard(c)).map(c=>{const isAu=isAuCard(c);const isFinalAu=isFinalRewardAu(c);const fixed=c.is_final_reward||isAu;const cardLabel=c.is_final_reward?'exclusieve eindbeloning':c.is_shop_item?'winkel':c.is_reward_only?'battlebeloning':'alleen reactieproduct';const editor=isFinalAu?`<div class="teacher-au-strength-editor"><label for="teacher-au-power-${esc(c.id)}">Kracht (1–20)<input id="teacher-au-power-${esc(c.id)}" type="number" min="1" max="20" step="1" value="${Number(c.power)||1}" data-au-final-power></label><button type="button" data-au-final-power-save="${esc(c.id)}">Kracht opslaan</button></div>`:fixed?'<span class="card-reward-tag final-reward-tag">Vast · niet aanpassen</span>':`<button type="button" data-teacher-card-edit="${esc(c.id)}">Bewerken</button>`;return `<article class="teacher-card-row"><div><strong>${esc(c.formula)} · ${esc(c.name)}</strong><small>${esc(c.card_type)} · kracht ${Number(c.power)} · ${Number(c.price)} coins · ${cardLabel}</small>${[c.support_description,c.support_description_2].filter(Boolean).map(t=>`<small>✨ ${esc(t)}</small>`).join('')}</div>${editor}</article>`;}).join('');
     const rlist=document.getElementById('teacher-reaction-list');
     if(rlist)rlist.innerHTML=teacherReactionCache.map(r=>{const byId=new Map(teacherCardCache.map(c=>[c.id,c]));const text= r.equation_text || `${r.reactant_a_qty} ${byId.get(r.reactant_a_id)?.formula||r.reactant_a_id} + ${r.reactant_b_qty} ${byId.get(r.reactant_b_id)?.formula||r.reactant_b_id}`;return `<article class="teacher-card-row"><div><strong>${esc(r.name)}</strong><small>${esc(text)}</small><small>${r.active?'Actief':'Gearchiveerd'}</small></div><div><button type="button" data-teacher-reaction-edit="${r.id}">Bewerken</button>${r.active?`<button type="button" class="danger" data-teacher-reaction-archive="${r.id}">Archiveren</button>`:''}</div></article>`;}).join('')||'<p>Er zijn nog geen reacties.</p>';
     const hp=document.getElementById('teacher-battle-hp');if(hp)hp.value=Number(settings.starting_hp)||20;
@@ -481,8 +545,9 @@ Optie D"></textarea></label>
   }
   function editTeacherCard(id){
     const c=teacherCardCache.find(x=>x.id===id);if(!c)return;
-    const values={id:c.id,name:c.name,formula:c.formula,card_type:c.card_type,price:c.price,power:c.power,description:c.description,support_target_type:c.support_target_type||'',support_effect:c.support_effect||'none',support_description:c.support_description||''};
-    Object.entries(values).forEach(([key,value])=>{const el=document.getElementById('teacher-card-'+(key==='card_type'?'type':key==='support_target_type'?'target':key==='support_effect'?'effect':key==='support_description'?'support-description':key));if(el)el.value=value??'';});
+    const values={id:c.id,name:c.name,formula:c.formula,card_type:c.card_type,price:c.price,power:c.power,description:c.description,support_target_type:c.support_target_type||'',support_effect:c.support_effect||'none',support_description:c.support_description||'',support_target_type_2:c.support_target_type_2||'',support_effect_2:c.support_effect_2||'none',support_description_2:c.support_description_2||''};
+    const fieldIds={card_type:'type',support_target_type:'target',support_effect:'effect',support_description:'support-description',support_target_type_2:'target-2',support_effect_2:'effect-2',support_description_2:'support-description-2'};
+    Object.entries(values).forEach(([key,value])=>{const el=document.getElementById('teacher-card-'+(fieldIds[key]||key));if(el)el.value=value??'';});
     document.getElementById('teacher-card-shop').checked=Boolean(c.is_shop_item);document.getElementById('teacher-card-reward').checked=Boolean(c.is_reward_only);
     const idEl=document.getElementById('teacher-card-id');if(idEl)idEl.readOnly=true;
     document.getElementById('teacher-card-form').scrollIntoView({behavior:'smooth',block:'center'});
@@ -502,7 +567,7 @@ Optie D"></textarea></label>
   }
   async function saveTeacherCard(e){
     e.preventDefault();requireLogin();if(currentProfile?.role!=='teacher')throw new Error('Alleen de leerkracht kan kaarten beheren.');
-    const card={id:document.getElementById('teacher-card-id').value.trim(),name:document.getElementById('teacher-card-name').value.trim(),formula:document.getElementById('teacher-card-formula').value.trim(),card_type:document.getElementById('teacher-card-type').value,price:Number(document.getElementById('teacher-card-price').value),power:Number(document.getElementById('teacher-card-power').value),description:document.getElementById('teacher-card-description').value.trim(),support_target_type:document.getElementById('teacher-card-target').value,support_effect:document.getElementById('teacher-card-effect').value,support_description:document.getElementById('teacher-card-support-description').value.trim(),is_shop_item:document.getElementById('teacher-card-shop').checked,is_reward_only:document.getElementById('teacher-card-reward').checked};
+    const card={id:document.getElementById('teacher-card-id').value.trim(),name:document.getElementById('teacher-card-name').value.trim(),formula:document.getElementById('teacher-card-formula').value.trim(),card_type:document.getElementById('teacher-card-type').value,price:Number(document.getElementById('teacher-card-price').value),power:Number(document.getElementById('teacher-card-power').value),description:document.getElementById('teacher-card-description').value.trim(),support_target_type:document.getElementById('teacher-card-target').value,support_effect:document.getElementById('teacher-card-effect').value,support_description:document.getElementById('teacher-card-support-description').value.trim(),support_target_type_2:document.getElementById('teacher-card-target-2').value,support_effect_2:document.getElementById('teacher-card-effect-2').value,support_description_2:document.getElementById('teacher-card-support-description-2').value.trim(),is_shop_item:document.getElementById('teacher-card-shop').checked,is_reward_only:document.getElementById('teacher-card-reward').checked};
     await rpc('teacher_save_card',{p_card:card});await renderTeacherCardManager();msg('Kaartinstellingen opgeslagen.','good');
   }
   async function saveTeacherReaction(e){
@@ -609,6 +674,7 @@ Optie D"></textarea></label>
   }
   async function afterAuth() {
     showDashboard(); await loadProfile();
+    try { await refreshBattleActionBadge(); } catch (badgeError) { console.warn('Battlemeldingen konden niet worden geladen.', badgeError); }
     try {
       const materials = await rpc('get_my_materials');
       window.ChemieGameBridge?.applyMaterials?.(materials);
@@ -619,11 +685,17 @@ Optie D"></textarea></label>
     window.ChemieGameBridge?.onOnlineLogin?.();
     setView('home');
     if (refreshTimer) clearInterval(refreshTimer);
-    refreshTimer = setInterval(async () => { if (currentUser && currentView === 'battles' && !view?.querySelector(':focus')) { try { await renderBattles(); } catch(e) { console.warn(e); } } }, 8000);
+    refreshTimer = setInterval(async () => {
+      if (!currentUser) return;
+      try {
+        if (currentView === 'battles' && !view?.querySelector(':focus')) await renderBattles();
+        else await refreshBattleActionBadge();
+      } catch(e) { console.warn('Battleoverzicht kon niet automatisch worden vernieuwd.', e); }
+    }, 8000);
   }
   async function signOut() {
     const { error } = await supabase.auth.signOut(); if (error) throw error;
-    currentUser = null; currentProfile = null; showAuth(); msg('Je bent afgemeld.');
+    currentUser = null; currentProfile = null; updateBattleActionBadge([]); showAuth(); msg('Je bent afgemeld.');
     if (refreshTimer) clearInterval(refreshTimer);
     if (window.ChemieGameBridge) {
       window.ChemieGameBridge.applyOnlineEconomy({ coins: 0, ownedSkins: ['starter'], equippedSkin: 'starter' });
@@ -633,6 +705,8 @@ Optie D"></textarea></label>
     }
   }
   async function handleClick(e) {
+    const teacherTab = e.target.closest('[data-teacher-tab]');
+    if (teacherTab) { applyTeacherTab(teacherTab.dataset.teacherTab); return; }
     const viewButton = e.target.closest('[data-online-view]'); if (viewButton) { setView(viewButton.dataset.onlineView); return; }
     const qEdit = e.target.closest('[data-q-edit]'); if (qEdit) { editTeacherQuestion(qEdit.dataset.qEdit); return; }
     const cardEdit = e.target.closest('[data-teacher-card-edit]'); if (cardEdit) { editTeacherCard(cardEdit.dataset.teacherCardEdit); return; }
