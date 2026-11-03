@@ -257,7 +257,7 @@ Optie D"></textarea></label>
         <div class="teacher-card-layout teacher-reaction-layout"><article class="online-auth-card"><h4>Reacties</h4><div id="teacher-reaction-list" class="teacher-card-list">Reacties worden geladen…</div></article>
           <form id="teacher-reaction-form" class="teacher-question-form"><h4 class="span-all">Reactie toevoegen / aanpassen</h4><input type="hidden" id="teacher-reaction-id"><label class="span-all">Naam van de reactie<input id="teacher-reaction-name" required placeholder="Vorming van water"></label><label>Beginstof 1<select id="teacher-reaction-a"></select></label><label>Aantal beginstof 1<input id="teacher-reaction-a-qty" type="number" min="1" max="99" value="2" required></label><label>Beginstof 2<select id="teacher-reaction-b"></select></label><label>Aantal beginstof 2<input id="teacher-reaction-b-qty" type="number" min="1" max="99" value="1" required></label><label>Product 1<select id="teacher-reaction-pa"></select></label><label>Aantal product 1<input id="teacher-reaction-pa-qty" type="number" min="1" max="99" value="2" required></label><label>Product 2 (optioneel)<select id="teacher-reaction-pb"></select></label><label>Aantal product 2<input id="teacher-reaction-pb-qty" type="number" min="0" max="99" value="0"></label><label class="span-all">Weergave reactievergelijking<input id="teacher-reaction-equation" placeholder="2 H₂ + O₂ → 2 H₂O"></label><label><span><input id="teacher-reaction-active" type="checkbox" checked> Actief voor leerlingen</span></label><div class="span-all" style="display:flex;gap:8px;flex-wrap:wrap"><button type="submit" class="online-primary">Reactie opslaan</button><button type="button" class="online-secondary" id="teacher-reaction-new">Nieuwe reactie</button></div></form>
         </div>
-        <form id="teacher-battle-settings-form" class="teacher-question-form"><h4 class="span-all">⚔️ Battle-instellingen</h4><label>Startlevenskracht per speler<input id="teacher-battle-hp" type="number" min="1" max="200" value="20" required></label><div><button type="submit" class="online-primary">Battle-instelling opslaan</button></div><p class="teacher-question-status span-all">Elke speler kiest vijf verschillende kaarten; per speler worden maximaal vier kaarten ingezet, dus blijft één kaart ongebruikt. Een battle stopt na vier volledige rondes (of eerder wanneer een speler 0 HP bereikt). Hogere aangepaste kracht veroorzaakt schade gelijk aan het verschil; gelijke kracht veroorzaakt geen schade. Elke kaart kan ondersteuning bieden tegen maximaal twee doeltypes: kracht −1, −2 of −3, kracht naar 0, of alle schade in het duel voorkomen. Beide kaarten kunnen tegelijk ondersteuning toepassen. Na elke ronde wisselen de rollen. De ingestelde startlevenskracht geldt voor nieuwe battles binnen dit project.</p></form>
+        <form id="teacher-battle-settings-form" class="teacher-question-form"><h4 class="span-all">⚔️ Battle-instellingen</h4><label>Startlevenskracht per speler<input id="teacher-battle-hp" type="number" min="1" max="200" value="20" required></label><div><button type="submit" class="online-primary">Battle-instelling opslaan</button><small id="teacher-battle-settings-status" class="teacher-question-status" role="status"></small></div><p class="teacher-question-status span-all">Elke speler kiest vijf verschillende kaarten; per speler worden maximaal vier kaarten ingezet, dus blijft één kaart ongebruikt. Een battle stopt na vier volledige rondes (of eerder wanneer een speler 0 HP bereikt). Hogere aangepaste kracht veroorzaakt schade gelijk aan het verschil; gelijke kracht veroorzaakt geen schade. Elke kaart kan ondersteuning bieden tegen maximaal twee doeltypes: kracht −1, −2 of −3, kracht naar 0, of alle schade in het duel voorkomen. Beide kaarten kunnen tegelijk ondersteuning toepassen. Na elke ronde wisselen de rollen. De ingestelde startlevenskracht geldt voor nieuwe battles binnen dit project.</p></form>
       </section>
       </section>
       </div>`;
@@ -521,21 +521,66 @@ Optie D"></textarea></label>
 
   async function renderTeacherCardManager() {
     if (currentProfile?.role !== 'teacher') return;
-    const [{ data: cards, error: cErr }, { data: reactions, error: rErr }, { data: settings, error: sErr }] = await Promise.all([
-      supabase.from('card_catalog').select('id,name,formula,card_type,price,power,description,support_target_type,support_effect,support_description,support_target_type_2,support_effect_2,support_description_2,is_shop_item,is_reward_only,is_final_reward,rarity').order('name'),
+
+    // Laad de drie onderdelen onafhankelijk. Een ontbrekende battle_settings-rij
+    // mag de kaartcatalogus en reacties niet onzichtbaar maken.
+    const [cardsResult, reactionsResult, settingsResult] = await Promise.all([
+      supabase.from('card_catalog').select('*').order('name'),
       supabase.from('card_reactions').select('*').order('name'),
-      supabase.from('battle_settings').select('starting_hp').eq('singleton',true).single()
+      supabase.from('battle_settings').select('starting_hp').eq('singleton', true).maybeSingle()
     ]);
-    if (cErr) throw cErr; if (rErr) throw rErr; if (sErr) throw sErr;
-    teacherCardCache=cards||[]; teacherReactionCache=reactions||[];
-    const options = teacherCardCache.filter(c=>!c.is_final_reward && String(c.formula).trim().toUpperCase() !== 'AU').map(c=>`<option value="${esc(c.id)}">${esc(c.formula)} · ${esc(c.name)}</option>`).join('');
-    ['teacher-reaction-a','teacher-reaction-b','teacher-reaction-pa','teacher-reaction-pb'].forEach(id=>{const el=document.getElementById(id);if(el)el.innerHTML=(id==='teacher-reaction-pb'?'<option value="">Geen tweede product</option>':'')+options;});
-    const list=document.getElementById('teacher-card-list');
-    if(list)list.innerHTML=teacherCardCache.filter(c=>!isObsoleteAuCard(c)).map(c=>{const isAu=isAuCard(c);const isFinalAu=isFinalRewardAu(c);const fixed=c.is_final_reward||isAu;const cardLabel=c.is_final_reward?'exclusieve eindbeloning':c.is_shop_item?'winkel':c.is_reward_only?'battlebeloning':'alleen reactieproduct';const editor=isFinalAu?`<div class="teacher-au-strength-editor"><label for="teacher-au-power-${esc(c.id)}">Kracht (1–20)<input id="teacher-au-power-${esc(c.id)}" type="number" min="1" max="20" step="1" value="${Number(c.power)||1}" data-au-final-power></label><button type="button" data-au-final-power-save="${esc(c.id)}">Kracht opslaan</button></div>`:fixed?'<span class="card-reward-tag final-reward-tag">Vast · niet aanpassen</span>':`<button type="button" data-teacher-card-edit="${esc(c.id)}">Bewerken</button>`;return `<article class="teacher-card-row"><div><strong>${esc(c.formula)} · ${esc(c.name)}</strong><small>${esc(c.card_type)} · kracht ${Number(c.power)} · ${Number(c.price)} coins · ${cardLabel}</small>${[c.support_description,c.support_description_2].filter(Boolean).map(t=>`<small>✨ ${esc(t)}</small>`).join('')}</div>${editor}</article>`;}).join('');
-    const rlist=document.getElementById('teacher-reaction-list');
-    if(rlist)rlist.innerHTML=teacherReactionCache.map(r=>{const byId=new Map(teacherCardCache.map(c=>[c.id,c]));const text= r.equation_text || `${r.reactant_a_qty} ${byId.get(r.reactant_a_id)?.formula||r.reactant_a_id} + ${r.reactant_b_qty} ${byId.get(r.reactant_b_id)?.formula||r.reactant_b_id}`;return `<article class="teacher-card-row"><div><strong>${esc(r.name)}</strong><small>${esc(text)}</small><small>${r.active?'Actief':'Gearchiveerd'}</small></div><div><button type="button" data-teacher-reaction-edit="${r.id}">Bewerken</button>${r.active?`<button type="button" class="danger" data-teacher-reaction-archive="${r.id}">Archiveren</button>`:''}</div></article>`;}).join('')||'<p>Er zijn nog geen reacties.</p>';
-    const hp=document.getElementById('teacher-battle-hp');if(hp)hp.value=Number(settings.starting_hp)||20;
-    resetTeacherCardForm();resetTeacherReactionForm();
+
+    const list = document.getElementById('teacher-card-list');
+    const rlist = document.getElementById('teacher-reaction-list');
+    const settingsStatus = document.getElementById('teacher-battle-settings-status');
+
+    teacherCardCache = cardsResult.error ? [] : (cardsResult.data || []);
+    teacherReactionCache = reactionsResult.error ? [] : (reactionsResult.data || []);
+
+    if (cardsResult.error) {
+      console.error('Kaartcatalogus laden mislukt:', cardsResult.error);
+      if (list) list.textContent = `Kaartcatalogus kon niet laden: ${cardsResult.error.message || cardsResult.error.details || 'onbekende Supabase-fout'}. Controleer de kaartmigraties en de leesrechten.`;
+    } else if (list) {
+      list.innerHTML = teacherCardCache.filter(c => !isObsoleteAuCard(c)).map(c => {
+        const isAu = isAuCard(c), isFinalAu = isFinalRewardAu(c), fixed = c.is_final_reward || isAu;
+        const cardLabel = c.is_final_reward ? 'exclusieve eindbeloning' : c.is_shop_item ? 'winkel' : c.is_reward_only ? 'battlebeloning' : 'alleen reactieproduct';
+        const editor = isFinalAu
+          ? `<div class="teacher-au-strength-editor"><label for="teacher-au-power-${esc(c.id)}">Kracht (1–20)<input id="teacher-au-power-${esc(c.id)}" type="number" min="1" max="20" step="1" value="${Number(c.power) || 1}" data-au-final-power></label><button type="button" data-au-final-power-save="${esc(c.id)}">Kracht opslaan</button></div>`
+          : fixed ? '<span class="card-reward-tag final-reward-tag">Vast · niet aanpassen</span>' : `<button type="button" data-teacher-card-edit="${esc(c.id)}">Bewerken</button>`;
+        return `<article class="teacher-card-row"><div><strong>${esc(c.formula)} · ${esc(c.name)}</strong><small>${esc(c.card_type || 'type niet ingesteld')} · kracht ${Number(c.power) || 1} · ${Number(c.price) || 0} coins · ${cardLabel}</small>${[c.support_description, c.support_description_2].filter(Boolean).map(t => `<small>✨ ${esc(t)}</small>`).join('')}</div>${editor}</article>`;
+      }).join('') || '<p>Er zijn nog geen kaarten in de catalogus.</p>';
+    }
+
+    const options = teacherCardCache
+      .filter(c => !c.is_final_reward && String(c.formula || '').trim().toUpperCase() !== 'AU')
+      .map(c => `<option value="${esc(c.id)}">${esc(c.formula)} · ${esc(c.name)}</option>`).join('');
+    ['teacher-reaction-a', 'teacher-reaction-b', 'teacher-reaction-pa', 'teacher-reaction-pb'].forEach(id => {
+      const el = document.getElementById(id);
+      if (el) el.innerHTML = (id === 'teacher-reaction-pb' ? '<option value="">Geen tweede product</option>' : '') + options;
+    });
+
+    if (reactionsResult.error) {
+      console.error('Reacties laden mislukt:', reactionsResult.error);
+      if (rlist) rlist.textContent = `Reacties konden niet laden: ${reactionsResult.error.message || reactionsResult.error.details || 'onbekende Supabase-fout'}. Controleer de card_reactions-tabel en de leesrechten.`;
+    } else if (rlist) {
+      const byId = new Map(teacherCardCache.map(c => [c.id, c]));
+      rlist.innerHTML = teacherReactionCache.map(r => {
+        const text = r.equation_text || `${r.reactant_a_qty} ${byId.get(r.reactant_a_id)?.formula || r.reactant_a_id} + ${r.reactant_b_qty} ${byId.get(r.reactant_b_id)?.formula || r.reactant_b_id}`;
+        return `<article class="teacher-card-row"><div><strong>${esc(r.name)}</strong><small>${esc(text)}</small><small>${r.active ? 'Actief' : 'Gearchiveerd'}</small></div><div><button type="button" data-teacher-reaction-edit="${r.id}">Bewerken</button>${r.active ? `<button type="button" class="danger" data-teacher-reaction-archive="${r.id}">Archiveren</button>` : ''}</div></article>`;
+      }).join('') || '<p>Er zijn nog geen reacties.</p>';
+    }
+
+    const hp = document.getElementById('teacher-battle-hp');
+    if (hp) hp.value = Number(settingsResult.data?.starting_hp) || 20;
+    if (settingsStatus) {
+      settingsStatus.textContent = settingsResult.error
+        ? 'De huidige battle-instelling kon niet worden opgehaald. 20 HP wordt voorlopig getoond; voer de herstelmigratie uit en sla de instelling opnieuw op.'
+        : 'De battle-instellingen zijn geladen.';
+    }
+    if (settingsResult.error) console.warn('Battle-instellingen konden niet worden geladen; 20 HP wordt als veilige standaard getoond:', settingsResult.error);
+
+    resetTeacherCardForm();
+    resetTeacherReactionForm();
   }
   function resetTeacherCardForm(){
     const form=document.getElementById('teacher-card-form');if(!form)return;form.reset();
