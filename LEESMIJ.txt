@@ -12,3 +12,12 @@ Lokale speltest (alleen escape-roombasis): voer start_windows.bat uit en open de
 Online accounts, ranking en battles vereisen een gedeployde Netlify-site + Supabase-project en werken niet via de eenvoudige Python-server.
 
 De service_role/secret key mag nooit in browserbestanden of een publieke Git-repository staan.
+
+NIEUW BONUSLEVEL — ALKANENARCHITECT
+- Het vierde labo bevat nu het bonuslevel Alkanenarchitect.
+- Leerlingen tekenen vertakte alkanen in skeletnotatie met een interactieve tekenaar.
+- Per speelsessie worden 10 verschillende moleculen uit 25 mogelijkheden gekozen.
+- Per molecule is er één poging; na een fout antwoord verschijnt de correcte structuur.
+- Beloning: 1 t/m 10 LabCoins, maximaal 55.
+- Voor online gebruik moet `supabase/2026_11_alkane_architect.sql` na `schema.sql` worden uitgevoerd.
+- De Supabase-RPC controleert koolstofgrafen op isomorfie, zodat rotatie, spiegeling en andere tekenvolgorde geen invloed hebben op de beoordeling.

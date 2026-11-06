@@ -21,3 +21,13 @@ NIET LIVE GETEST
 - Supabase: create_battle en respond_to_battle controleren server-side op exact vijf unieke kaart-ID's.
 - Au-eindkaart: zichtbaar en toegestaan in battledecks, mits eigendom; niet in winkel, battlebeloningen of reacties.
 - JavaScript-syntaxcontrole na deze aanvulling: node --check game.js en node --check online.js geslaagd.
+
+- Alkanenarchitect: 25 vertakte alkanen, 10 unieke per sessie, beloning 1 t/m 10 LabCoins.
+- Alkanenarchitect: skeletnotatie wordt als koolstofboom gecontroleerd; de server vergelijkt graf-isomorfie en accepteert rotatie/spiegeling/andere nummering.
+- Alkanenarchitect: fout antwoord toont de correcte structuur en gaat zonder herkansing verder.
+- Nieuwe Supabase-migratie: supabase/2026_11_alkane_architect.sql (nog uitvoeren op het project).
+- Lokale syntaxcontrole: node --check game.js en node --check online.js.
+
+NIET LIVE GETEST
+- De nieuwe Supabase-migratie moet nog op het Supabase-project worden uitgevoerd.
+- De online LabCoin-uitbetaling en server-side grafcontrole zijn voorbereid via RPC, maar moeten na migratie met een testleerling worden doorlopen.

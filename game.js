@@ -623,6 +623,192 @@ if($("play-again")){$("play-again").classList.add("hidden");$("play-again").disa
 
 // LabCoins, de optionele Elementensprint en de winkel worden door game.js opgebouwd.
 // Daardoor hoeft alleen dit bestand vervangen te worden.
+
+// Bonuslevel level 4: Alkanenarchitect. Elk skelet wordt als een koolstofboom
+// voorgesteld; de controle gebruikt een canonieke boomcode en is dus onafhankelijk
+// van rotatie, spiegeling, translatie en de volgorde waarin bindingen getekend zijn.
+const ALKANE_ARCHITECT_POOL = [
+ {name:"2-methylbutaan",chain:4,branches:[[1,1]]},
+ {name:"2-methylpentaan",chain:5,branches:[[1,1]]},
+ {name:"3-methylpentaan",chain:5,branches:[[2,1]]},
+ {name:"2-methylhexaan",chain:6,branches:[[1,1]]},
+ {name:"3-methylhexaan",chain:6,branches:[[2,1]]},
+ {name:"2-methylheptaan",chain:7,branches:[[1,1]]},
+ {name:"3-methylheptaan",chain:7,branches:[[2,1]]},
+ {name:"4-methylheptaan",chain:7,branches:[[3,1]]},
+ {name:"2-methyloctaan",chain:8,branches:[[1,1]]},
+ {name:"3-methyloctaan",chain:8,branches:[[2,1]]},
+ {name:"4-methyloctaan",chain:8,branches:[[3,1]]},
+ {name:"2,2-dimethylbutaan",chain:4,branches:[[1,1],[1,1]]},
+ {name:"2,3-dimethylbutaan",chain:4,branches:[[1,1],[2,1]]},
+ {name:"2,2-dimethylpentaan",chain:5,branches:[[1,1],[1,1]]},
+ {name:"2,3-dimethylpentaan",chain:5,branches:[[1,1],[2,1]]},
+ {name:"2,4-dimethylpentaan",chain:5,branches:[[1,1],[3,1]]},
+ {name:"3,3-dimethylpentaan",chain:5,branches:[[2,1],[2,1]]},
+ {name:"2,2-dimethylhexaan",chain:6,branches:[[1,1],[1,1]]},
+ {name:"2,3-dimethylhexaan",chain:6,branches:[[1,1],[2,1]]},
+ {name:"2,4-dimethylhexaan",chain:6,branches:[[1,1],[3,1]]},
+ {name:"3,3-dimethylhexaan",chain:6,branches:[[2,1],[2,1]]},
+ {name:"3-ethylpentaan",chain:5,branches:[[2,2]]},
+ {name:"3-ethylhexaan",chain:6,branches:[[2,2]]},
+ {name:"3-ethylheptaan",chain:7,branches:[[2,2]]},
+ {name:"4-ethylheptaan",chain:7,branches:[[3,2]]}
+];
+function alkaneTargetGraph(item){
+ const edges=[];let count=item.chain;
+ for(let i=0;i<item.chain-1;i++)edges.push([i,i+1]);
+ for(const [at,length] of item.branches){let previous=at;for(let j=0;j<length;j++){edges.push([previous,count]);previous=count++;}}
+ return {nodes:count,edges};
+}
+function alkaneTreeCode(graph){
+ const n=Number(graph?.nodes)||0, edges=Array.isArray(graph?.edges)?graph.edges:[];
+ if(n<2||n>14||edges.length!==n-1)return null;
+ const adj=Array.from({length:n},()=>[]);
+ for(const edge of edges){
+  if(!Array.isArray(edge)||edge.length!==2)return null;
+  const a=Number(edge[0]),b=Number(edge[1]);
+  if(!Number.isInteger(a)||!Number.isInteger(b)||a<0||b<0||a>=n||b>=n||a===b)return null;
+  if(adj[a].includes(b))return null;
+  adj[a].push(b);adj[b].push(a);
+ }
+ if(adj.some(a=>a.length<1||a.length>4))return null;
+ const seen=new Set([0]),stack=[0];
+ while(stack.length){for(const v of adj[stack.pop()])if(!seen.has(v)){seen.add(v);stack.push(v);}}
+ if(seen.size!==n)return null;
+ let centers=Array.from({length:n},(_,i)=>i), degree=adj.map(a=>a.length);
+ while(centers.length>2){
+  const leaves=centers.filter(v=>degree[v]<=1);
+  if(!leaves.length)return null;
+  centers=centers.filter(v=>degree[v]>1);
+  for(const v of leaves){degree[v]=0;for(const w of adj[v])degree[w]--;}
+ }
+ const rooted=(v,parent)=>"("+adj[v].filter(w=>w!==parent).map(w=>rooted(w,v)).sort().join("")+")";
+ if(centers.length===1)return rooted(centers[0],-1);
+ const [a,b]=centers;
+ return "["+[rooted(a,b),rooted(b,a)].sort().join("|")+"]";
+}
+function shuffleAlkanes(items){const a=[...items];for(let i=a.length-1;i>0;i--){const j=Math.floor(Math.random()*(i+1));[a[i],a[j]]=[a[j],a[i]];}return a;}
+let alkaneArchitectState={running:false,queue:[],index:0,correct:0,earned:0,graph:{nodes:[],edges:[]},selectedNode:null,mode:"add",results:[]};
+function openAlkaneArchitect(){
+ if(currentLevel!=="future"){setStatus("De Alkanenarchitect is beschikbaar in level 4, het futuristische chemielabo.");return;}
+ if(alkaneArchitectState.running){setStatus("Maak eerst de huidige Alkanenarchitect-ronde af.");return;}
+ showEconomyOverlay(`<p class="economy-eyebrow">BONUSLEVEL · LEVEL 4</p><h2 class="economy-title" id="economy-title">🏗️ Alkanenarchitect</h2><p class="economy-lead">Krijg 10 namen van vertakte alkanen en teken telkens de koolstofketen in skeletnotatie. Je krijgt één poging per molecule. Een correcte tekening levert steeds meer LabCoins op: van 1 tot en met 10.</p><div class="sprint-rules"><strong>Maximale beloning: 55 LabCoins.</strong><br>Elke hoek en elk uiteinde stelt een koolstofatoom voor. Waterstofatomen teken je niet. Maak eerst de punten en verbind ze daarna met bindingen.</div><button type="button" class="primary full" id="alkane-architect-start">Start de architect</button><p class="muted">Er worden 10 verschillende alkanen gekozen uit een verzameling van 25.</p>`);
+}
+async function startAlkaneArchitect(){
+ let queue=shuffleAlkanes(ALKANE_ARCHITECT_POOL).slice(0,10),onlineSessionId=null;
+ if(window.ChemieOnline&&window.ChemieOnline.isAuthenticated()){
+  try{
+   const remote=await window.ChemieOnline.startAlkaneArchitect();
+   if(!remote?.ok)throw new Error(remote?.error||"De Alkanenarchitect kon niet starten.");
+   onlineSessionId=remote.session_id;
+   queue=(remote.items||[]).map(name=>({name}));
+  }catch(error){setStatus(error.message||"De Alkanenarchitect kon niet starten.");return;}
+ }
+ alkaneArchitectState={running:true,queue,index:0,correct:0,earned:0,graph:{nodes:[],edges:[]},selectedNode:null,mode:"add",results:[],onlineSessionId};
+ renderEconomyPanel();renderAlkaneQuestion();
+}
+function renderAlkaneQuestion(){
+ const st=alkaneArchitectState,item=st.queue[st.index];
+ if(!item){finishAlkaneArchitect();return;}
+ st.graph={nodes:[],edges:[]};st.selectedNode=null;st.mode="add";
+ showEconomyOverlay(`<p class="economy-eyebrow">ALKANENARCHITECT · LEVEL 4</p><div class="alkane-progress"><strong>Molecule ${st.index+1} van 10</strong><span>${st.correct} juist · ${st.earned} LabCoins</span></div><div class="alkane-progress-track"><span style="width:${st.index*10}%"></span></div><h2 class="economy-title">${escapeHtml(item.name)}</h2><p class="economy-lead">Teken de koolstofstructuur in skeletnotatie.</p><div class="alkane-tools"><button type="button" class="secondary" data-alkane-mode="add">＋ Koolstofpunt</button><button type="button" class="secondary" data-alkane-mode="bond">↔ Binding</button><button type="button" class="secondary" id="alkane-undo">↶ Ongedaan</button><button type="button" class="secondary" id="alkane-clear">Wis alles</button></div><p class="alkane-instruction" id="alkane-instruction">Klik in het tekenvlak om koolstofpunten te plaatsen.</p><svg id="alkane-drawing" class="alkane-drawing" viewBox="0 0 600 330" role="img" aria-label="Tekenveld voor skeletnotatie"><rect x="1" y="1" width="598" height="328" rx="14" fill="#fbfdff" stroke="#cbd8e2"/></svg><div class="alkane-count" id="alkane-count">0 koolstofpunten · 0 bindingen</div><button type="button" class="primary full" id="alkane-submit">Controleer tekening</button><p class="muted">Een molecule bestaat uit één onvertakte of vertakte keten. Ringen zijn niet van toepassing op alkanen in dit bonuslevel.</p>`);
+ renderAlkaneDrawing();
+}
+function renderAlkaneDrawing(){
+ const svg=$("alkane-drawing");if(!svg)return;
+ const g=alkaneArchitectState.graph;
+ const lines=g.edges.map(([a,b])=>{const p=g.nodes[a],q=g.nodes[b];return `<line x1="${p.x}" y1="${p.y}" x2="${q.x}" y2="${q.y}" stroke="#243b53" stroke-width="4" stroke-linecap="round"/>`;}).join("");
+ const nodes=g.nodes.map((p,i)=>`<circle cx="${p.x}" cy="${p.y}" r="9" fill="${alkaneArchitectState.selectedNode===i?"#f2b84b":"#ffffff"}" stroke="#176f96" stroke-width="3" data-alkane-node="${i}"/><circle cx="${p.x}" cy="${p.y}" r="18" fill="transparent" data-alkane-node="${i}"/>`).join("");
+ svg.innerHTML=`<rect x="1" y="1" width="598" height="328" rx="14" fill="#fbfdff" stroke="#cbd8e2"/>${lines}${nodes}`;
+ const count=$("alkane-count");if(count)count.textContent=`${g.nodes.length} koolstofpunten · ${g.edges.length} bindingen`;
+ const instruction=$("alkane-instruction");if(instruction)instruction.textContent=alkaneArchitectState.mode==="add"?"Klik in het tekenvlak om koolstofpunten te plaatsen.":"Selecteer twee koolstofpunten om ze met een binding te verbinden.";
+}
+function handleAlkaneDrawingClick(event){
+ const svg=$("alkane-drawing");if(!svg||!alkaneArchitectState.running)return;
+ const target=event.target.closest("[data-alkane-node]");
+ if(alkaneArchitectState.mode==="bond"&&target){
+  const idx=Number(target.dataset.alkaneNode),st=alkaneArchitectState;
+  if(st.selectedNode===null){st.selectedNode=idx;}
+  else if(st.selectedNode!==idx){
+   const pair=[st.selectedNode,idx].sort((a,b)=>a-b);
+   if(!st.graph.edges.some(e=>e[0]===pair[0]&&e[1]===pair[1]))st.graph.edges.push(pair);
+   st.selectedNode=null;
+  }else st.selectedNode=null;
+  renderAlkaneDrawing();return;
+ }
+ if(alkaneArchitectState.mode!=="add"||target)return;
+ const rect=svg.getBoundingClientRect(),vbX=(event.clientX-rect.left)/rect.width*600,vbY=(event.clientY-rect.top)/rect.height*330;
+ if(vbX<18||vbX>582||vbY<18||vbY>312)return;
+ alkaneArchitectState.graph.nodes.push({x:Math.round(vbX),y:Math.round(vbY)});
+ renderAlkaneDrawing();
+}
+function undoAlkaneAction(){
+ const st=alkaneArchitectState;
+ if(st.selectedNode!==null){st.selectedNode=null;renderAlkaneDrawing();return;}
+ if(st.graph.edges.length)st.graph.edges.pop();else st.graph.nodes.pop();
+ st.graph.edges=st.graph.edges.filter(e=>e[0]<st.graph.nodes.length&&e[1]<st.graph.nodes.length);
+ renderAlkaneDrawing();
+}
+async function submitAlkaneAnswer(){
+ const st=alkaneArchitectState,item=st.queue[st.index];
+ let correct=false,reward=0,solution=null;
+ if(st.onlineSessionId&&window.ChemieOnline){
+  try{
+   const result=await window.ChemieOnline.submitAlkaneArchitectAnswer(st.onlineSessionId,st.graph.nodes.length,st.graph.edges);
+   if(!result?.ok)throw new Error(result?.error||"De tekening kon niet gecontroleerd worden.");
+   correct=Boolean(result.correct);reward=Number(result.reward)||0;solution=result.solution||null;
+   if(Number.isFinite(Number(result.coins)))labCoins=Number(result.coins);
+   st.serverCompleted=Boolean(result.completed);
+   st.serverCorrect=Number(result.correct_count)||0;
+   st.serverEarned=Number(result.total_awarded)||0;
+   if(result.next_name)st.queue[st.index+1]={name:result.next_name};
+   st.correct=st.serverCorrect;st.earned=st.serverEarned;
+   renderEconomyPanel();
+  }catch(error){setStatus(error.message||"De tekening kon niet gecontroleerd worden.");return;}
+ }else{
+  const target=alkaneTargetGraph(item),valid=alkaneTreeCode({nodes:st.graph.nodes.length,edges:st.graph.edges}),expected=alkaneTreeCode(target);
+  correct=Boolean(valid&&expected&&valid===expected);reward=correct?st.index+1:0;
+  if(correct){st.correct++;st.earned+=reward;labCoins+=reward;renderEconomyPanel();}
+  else solution=target;
+ }
+ st.results.push({name:item.name,correct,reward});
+ showEconomyOverlay(`<p class="economy-eyebrow">MOLECULE ${st.index+1} VAN 10</p><h2 class="economy-title">${correct?"✅ Correct getekend!":"❌ Niet helemaal juist"}</h2><p class="economy-lead">${correct?`Je hebt ${escapeHtml(item.name)} correct getekend en verdient ${reward} LabCoin${reward===1?"":"s"}.`:`De getekende koolstofstructuur komt niet overeen met ${escapeHtml(item.name)}. Bekijk hieronder de correcte skeletnotatie.`}</p>${correct?`<div class="alkane-reward">+${reward} LabCoins</div>`:`<div class="alkane-solution"><strong>Correcte skeletnotatie van ${escapeHtml(item.name)}</strong>${solution?alkaneSolutionSvg(solution):"<p>De oplossing kon niet worden weergegeven.</p>"}</div>`}<button type="button" class="primary full" id="alkane-next">${st.index===9?"Bekijk resultaat":"Volgende molecule"}</button>`);
+}
+function alkaneSolutionSvg(graph){
+ const n=graph.nodes,edges=graph.edges,coords=[];
+ // Deterministische boom-layout voor het antwoordmodel: teken een eenvoudige
+ // chain met vertakkingen op basis van de adjacency, onafhankelijk van de leerlingtekening.
+ const adj=Array.from({length:graph.nodes},()=>[]);
+ edges.forEach(([a,b])=>{adj[a].push(b);adj[b].push(a);});
+ const root=adj.findIndex(a=>a.length>2);const start=root>=0?root:0;
+ const parent=Array(n).fill(-1),order=[start];parent[start]=start;
+ for(let i=0;i<order.length;i++)for(const v of adj[order[i]])if(parent[v]===-1){parent[v]=order[i];order.push(v);}
+ // Lay out each child as a short angled segment; root at the center.
+ coords[start]={x:300,y:120};
+ const childCount=Array(n).fill(0);
+ for(const v of order.slice(1)){
+  const p=parent[v],slot=childCount[p]++;const base=coords[p];
+  const angle=(adj[p].length===2?0:(slot-(adj[p].length-1)/2)*0.95)+(p===start?0:Math.PI/3);
+  coords[v]={x:base.x+Math.cos(angle)*70,y:base.y+Math.sin(angle)*65};
+ }
+ const paths=edges.map(([a,b])=>`<line x1="${coords[a].x}" y1="${coords[a].y}" x2="${coords[b].x}" y2="${coords[b].y}" stroke="#243b53" stroke-width="4" stroke-linecap="round"/>`).join("");
+ return `<svg class="alkane-solution-svg" viewBox="0 0 600 250" role="img" aria-label="Correcte skeletnotatie">${paths}</svg>`;
+}
+function finishAlkaneArchitect(){
+ const st=alkaneArchitectState;st.running=false;renderEconomyPanel();
+ showEconomyOverlay(`<p class="economy-eyebrow">BONUSLEVEL VOLTOOID · LEVEL 4</p><h2 class="economy-title">🏆 Architect aan het werk!</h2><p class="economy-lead">Je hebt alle 10 alkanen behandeld. Je tekende er ${st.correct} correct.</p><div class="sprint-results"><div class="sprint-result"><strong>${st.correct}/10</strong><small>Correct</small></div><div class="sprint-result"><strong>+${st.earned}</strong><small>Verdiende LabCoins</small></div></div><div class="sprint-rules">Maximumscore: 55 LabCoins. Je kunt het bonuslevel opnieuw spelen met een nieuwe willekeurige selectie.</div><button type="button" class="primary full" id="alkane-architect-retry">Opnieuw spelen</button><button type="button" class="secondary full" id="economy-done">Terug naar het labo</button>`);
+ setStatus(`Alkanenarchitect voltooid: ${st.correct}/10 correct, ${st.earned} LabCoins verdiend.`);
+ if(window.ChemieOnline)window.ChemieOnline.refreshDashboardSoon();
+}
+function handleAlkaneArchitectClick(e){
+ const mode=e.target.closest("[data-alkane-mode]");if(mode){alkaneArchitectState.mode=mode.dataset.alkaneMode;alkaneArchitectState.selectedNode=null;renderAlkaneDrawing();return;}
+ if(e.target.closest("#alkane-architect-start")||e.target.closest("#alkane-architect-retry")){startAlkaneArchitect();return;}
+ if(e.target.closest("#alkane-undo")){undoAlkaneAction();return;}
+ if(e.target.closest("#alkane-clear")){alkaneArchitectState.graph={nodes:[],edges:[]};alkaneArchitectState.selectedNode=null;renderAlkaneDrawing();return;}
+ if(e.target.closest("#alkane-submit")){submitAlkaneAnswer();return;}
+ if(e.target.closest("#alkane-next")){alkaneArchitectState.index++;renderAlkaneQuestion();return;}
+}
+
 function initEconomyUI(){
  const side=document.querySelector(".side-panel");
  if(!side||$("labcoins-panel"))return;
@@ -635,6 +821,7 @@ function initEconomyUI(){
   <button type="button" class="primary full economy-action" id="element-sprint-open">⚡ Elementensprint · 60 sec</button>
   <button type="button" class="primary full economy-action" id="acid-sprint-open">🧪 Zurenkennis · 60 sec</button>
   <button type="button" class="primary full economy-action" id="og-sprint-open">⚗️ The OG of chemistry · 60 sec</button>
+  <button type="button" class="primary full economy-action" id="alkane-architect-open">🏗️ Alkanenarchitect · level 4</button>
   <button type="button" class="secondary full economy-action" id="skin-shop-open">🛍️ Open de skinwinkel</button>`;
  const inventory=side.querySelector(".inventory");
  const safeBox=side.querySelector(".safe-box");
@@ -658,20 +845,38 @@ function initEconomyUI(){
  $("element-sprint-open").addEventListener("click",openElementSprint);
  $("acid-sprint-open").addEventListener("click",openAcidSprint);
  $("og-sprint-open").addEventListener("click",openOgSprint);
+ $("alkane-architect-open").addEventListener("click",openAlkaneArchitect);
+ $("economy-content").addEventListener("click",e=>{if(e.target.closest("#alkane-drawing"))handleAlkaneDrawingClick(e);});
  $("skin-shop-open").addEventListener("click",openSkinShop);
  $("economy-content").addEventListener("click",handleEconomyClick);
  $("economy-content").addEventListener("submit",e=>{if(e.target&&e.target.id==="sprint-answer-form")submitSprintAnswer(e);else if(e.target&&e.target.id==="acid-sprint-answer-form")submitAcidSprintAnswer(e);else if(e.target&&e.target.id==="og-sprint-answer-form")submitOgSprintAnswer(e)});
- document.addEventListener("keydown",e=>{if(e.key==="Escape"&&!$("economy-overlay").classList.contains("hidden")){if(sprintState.running||acidSprintState.running||ogSprintState.running){setStatus("De bonusronde loopt nog; sluit de opdracht pas na afloop.");return;}closeEconomyOverlay();}});
+ document.addEventListener("keydown",e=>{if(e.key==="Escape"&&!$("economy-overlay").classList.contains("hidden")){if(sprintState.running||acidSprintState.running||ogSprintState.running||alkaneArchitectState.running){setStatus("De bonusronde loopt nog; sluit de opdracht pas na afloop.");return;}closeEconomyOverlay();}});
+ const alkaneStyle=document.createElement("style");alkaneStyle.textContent=`
+ .alkane-progress{display:flex;justify-content:space-between;gap:12px;align-items:center;font-size:.9rem;color:#29445b;font-weight:800;margin:12px 0 7px}
+ .alkane-progress-track{height:7px;background:#e5edf2;border-radius:20px;overflow:hidden;margin-bottom:18px}
+ .alkane-progress-track span{display:block;height:100%;background:#176f96;border-radius:20px}
+ .alkane-tools{display:flex;flex-wrap:wrap;gap:7px;margin:14px 0 8px}
+ .alkane-tools button{flex:1 1 auto;min-width:105px;padding:9px 10px}
+ .alkane-instruction{font-size:.83rem;color:#536b7c;margin:8px 0}
+ .alkane-drawing{display:block;width:100%;height:auto;max-height:380px;touch-action:manipulation;cursor:crosshair;background:#fbfdff;border-radius:14px}
+ .alkane-drawing [data-alkane-node]{cursor:pointer}
+ .alkane-count{font-size:.8rem;color:#536b7c;text-align:right;margin:6px 0 12px}
+ .alkane-reward{font-size:2rem;font-weight:950;color:#18724f;text-align:center;padding:14px}
+ .alkane-solution{border:1px solid #d8e3e9;border-radius:12px;padding:12px;margin:14px 0;background:#f8fbfd}
+ .alkane-solution-svg{display:block;width:100%;height:auto;max-height:210px}
+ @media(max-width:560px){.alkane-tools button{min-width:calc(50% - 8px)}.alkane-progress{font-size:.78rem}}
+ `;document.head.append(alkaneStyle);
  renderEconomyPanel();applyEquippedSkin();
 }
 function renderEconomyPanel(){
  const balance=$("labcoin-balance");if(balance)balance.textContent=String(labCoins);
  const icon=$("equipped-skin-icon"),name=$("equipped-skin-name"),skin=COSMETIC_SKINS.find(x=>x.id===equippedSkin)||COSMETIC_SKINS[0];
  if(icon)icon.textContent=skin.emoji;if(name)name.textContent=skin.name;
- const anySprintRunning=sprintState.running||acidSprintState.running||ogSprintState.running;
+ const anySprintRunning=sprintState.running||acidSprintState.running||ogSprintState.running||alkaneArchitectState.running;
  const quest=$("element-sprint-open");if(quest){quest.disabled=currentLevel!=="medieval"||anySprintRunning;quest.textContent=currentLevel==="medieval"?"⚡ Elementensprint · 60 sec":"⚡ Beschikbaar in level 1";quest.title=currentLevel==="medieval"?"Start de optionele quiz over elementsymbolen":"Keer terug naar het middeleeuwse labo voor de sidequest";}
  const acidQuest=$("acid-sprint-open");if(acidQuest){acidQuest.disabled=currentLevel!=="lavoisier"||anySprintRunning;acidQuest.textContent=currentLevel==="lavoisier"?"🧪 Zurenkennis · 60 sec":"🧪 Beschikbaar in level 2";acidQuest.title=currentLevel==="lavoisier"?"Start de open vragenronde over zuren en zuurrestnamen":"Keer terug naar het labo van Lavoisier voor deze sidequest";}
  const ogQuest=$("og-sprint-open");if(ogQuest){ogQuest.disabled=currentLevel!=="modern"||anySprintRunning;ogQuest.textContent=currentLevel==="modern"?"⚗️ The OG of chemistry · 60 sec":"⚗️ Beschikbaar in level 3";ogQuest.title=currentLevel==="modern"?"Oefen oxidatiegetallen in één minuut":"Keer terug naar het moderne chemielabo voor deze sidequest";}
+ const alkaneQuest=$("alkane-architect-open");if(alkaneQuest){alkaneQuest.disabled=currentLevel!=="future"||anySprintRunning||alkaneArchitectState.running;alkaneQuest.textContent=currentLevel==="future"?"🏗️ Alkanenarchitect · level 4":"🏗️ Beschikbaar in level 4";alkaneQuest.title=currentLevel==="future"?"Teken tien vertakte alkanen in skeletnotatie":"Keer terug naar het futuristische chemielabo voor deze sidequest";}
  applyEquippedSkin();
 }
 function applyEquippedSkin(){
@@ -680,7 +885,7 @@ function applyEquippedSkin(){
  const panelIcon=$("equipped-skin-icon"),panelName=$("equipped-skin-name");if(panelIcon)panelIcon.textContent=skin.emoji;if(panelName)panelName.textContent=skin.name;
 }
 function showEconomyOverlay(content){$("economy-content").innerHTML=content;$("economy-overlay").classList.remove("hidden");}
-function closeEconomyOverlay(){if(sprintState.running||acidSprintState.running||ogSprintState.running){setStatus("De bonusronde loopt nog. De timer blijft lopen tot de minuut voorbij is.");return;}$("economy-overlay").classList.add("hidden");}
+function closeEconomyOverlay(){if(sprintState.running||acidSprintState.running||ogSprintState.running||alkaneArchitectState.running){setStatus("Maak eerst de Alkanenarchitect-ronde af.");return;}$("economy-overlay").classList.add("hidden");}
 function openSkinShop(){
  if(sprintState.running||acidSprintState.running||ogSprintState.running){setStatus("Maak eerst de bonusronde af voor je naar de winkel gaat.");return;}
  renderShop();
@@ -936,6 +1141,7 @@ async function finishOgSprint(){
 }
 
 async function handleEconomyClick(e){
+ handleAlkaneArchitectClick(e);
  const formulaChar=e.target.closest("[data-acid-char]");if(formulaChar){e.preventDefault();insertAcidCharacter(formulaChar.dataset.acidChar);return;}
  const acidStart=e.target.closest("#acid-sprint-start");if(acidStart){startAcidSprint();return;}
  const acidRetry=e.target.closest("#acid-sprint-retry");if(acidRetry){startAcidSprint();return;}

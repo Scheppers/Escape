@@ -850,6 +850,14 @@ Optie D"></textarea></label>
     async startOgSprint() { requireLogin(); return rpc('start_oxidation_sprint'); },
     async submitOgSprintAnswer(sessionId, sequenceNumber, answer) { requireLogin(); return rpc('submit_oxidation_sprint_answer', { p_session_id: sessionId, p_sequence_number: sequenceNumber, p_answer: answer }); },
     async finishOgSprint(sessionId) { requireLogin(); return rpc('finish_oxidation_sprint', { p_session_id: sessionId }); },
+    async startAlkaneArchitect() { requireLogin(); return rpc('start_alkane_architect'); },
+    async submitAlkaneArchitectAnswer(sessionId, nodeCount, edges) {
+      requireLogin();
+      const result = await rpc('submit_alkane_architect_answer', {
+        p_session_id: sessionId, p_node_count: nodeCount, p_edges: edges
+      });
+      return result;
+    },
     async buySkin(id) { await rpc('buy_skin', { p_skin_id: id }); const economy = await getEconomy(); return { ok: true, action: 'buy', economy }; },
     async equipSkin(id) { await rpc('equip_skin', { p_skin_id: id }); const economy = await getEconomy(); return { ok: true, action: 'equip', economy }; },
     refreshDashboardSoon() { setTimeout(() => { if (currentUser) refreshDashboard().catch(console.error); }, 350); },

@@ -14,9 +14,10 @@ WAT IS NIEUW?
 DEEL A — SUPABASE
 1. Maak een project aan via https://supabase.com/.
 2. Open SQL Editor en voer supabase/schema.sql volledig uit.
-3. In Authentication > Sign In / Providers: schakel openbare sign-ups uit (Allow new users to sign up = OFF). Accounts worden via de leerkrachtfunctie gemaakt.
-4. Kopieer Project URL en de publieke anon/publishable key naar config.js.
-5. De standaard Supabase-auth e-mailbevestiging is niet nodig voor de schoolaccounts: accounts worden server-side bevestigd aangemaakt. Leerlingen loggen met een lokale interne login-alias in; er is geen e-mailadres van leerlingen nodig.
+3. Voer daarna `supabase/2026_11_alkane_architect.sql` volledig uit. Deze migratie voegt de 25 alkanen, sessies en server-side structuurcontrole toe. Voer ze uit vóór leerlingen het vierde bonuslevel spelen.
+4. In Authentication > Sign In / Providers: schakel openbare sign-ups uit (Allow new users to sign up = OFF). Accounts worden via de leerkrachtfunctie gemaakt.
+5. Kopieer Project URL en de publieke anon/publishable key naar config.js.
+6. De standaard Supabase-auth e-mailbevestiging is niet nodig voor de schoolaccounts: accounts worden server-side bevestigd aangemaakt. Leerlingen loggen met een lokale interne login-alias in; er is geen e-mailadres van leerlingen nodig.
 
 DEEL B — NETLIFY
 Aanbevolen: verbind de projectmap via een GitHub-repository met Netlify, zodat Netlify de website én serverless functies samen bouwt.
