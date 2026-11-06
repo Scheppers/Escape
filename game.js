@@ -721,7 +721,7 @@ function renderAlkaneDrawing(){
  const nodes=g.nodes.map((p,i)=>`<circle cx="${p.x}" cy="${p.y}" r="9" fill="${alkaneArchitectState.selectedNode===i?"#f2b84b":"#ffffff"}" stroke="#176f96" stroke-width="3" data-alkane-node="${i}"/><circle cx="${p.x}" cy="${p.y}" r="18" fill="transparent" data-alkane-node="${i}"/>`).join("");
  svg.innerHTML=`<rect x="1" y="1" width="598" height="328" rx="14" fill="#fbfdff" stroke="#cbd8e2"/>${lines}${nodes}`;
  const count=$("alkane-count");if(count)count.textContent=`${g.nodes.length} koolstofpunten · ${g.edges.length} bindingen`;
- const instruction=$("alkane-instruction");if(instruction)instruction.textContent=alkaneArchitectState.mode==="add"?"Klik in het tekenvlak om koolstofpunten te plaatsen.":"Selecteer twee koolstofpunten om ze met een binding te verbinden.";
+ const instruction=$("alkane-instruction");if(instruction)instruction.textContent=alkaneArchitectState.mode==="add"?"Klik in het tekenvlak om koolstofpunten te plaatsen.":(alkaneArchitectState.selectedNode===null?"Klik op een startpunt en daarna op de volgende punten. Het laatste punt blijft geselecteerd.":"Startpunt geselecteerd. Klik op het volgende koolstofpunt om een binding te tekenen.");
 }
 function handleAlkaneDrawingClick(event){
  const svg=$("alkane-drawing");if(!svg||!alkaneArchitectState.running)return;
@@ -732,10 +732,11 @@ function handleAlkaneDrawingClick(event){
   else if(st.selectedNode!==idx){
    const pair=[st.selectedNode,idx].sort((a,b)=>a-b);
    if(!st.graph.edges.some(e=>e[0]===pair[0]&&e[1]===pair[1]))st.graph.edges.push(pair);
-   st.selectedNode=null;
+   st.selectedNode=idx;
   }else st.selectedNode=null;
   renderAlkaneDrawing();return;
  }
+ if(alkaneArchitectState.mode==="bond"&&!target){alkaneArchitectState.selectedNode=null;renderAlkaneDrawing();return;}
  if(alkaneArchitectState.mode!=="add"||target)return;
  const rect=svg.getBoundingClientRect(),vbX=(event.clientX-rect.left)/rect.width*600,vbY=(event.clientY-rect.top)/rect.height*330;
  if(vbX<18||vbX>582||vbY<18||vbY>312)return;
@@ -871,7 +872,7 @@ function initEconomyUI(){
  $("skin-shop-open").addEventListener("click",openSkinShop);
  $("economy-content").addEventListener("click",handleEconomyClick);
  $("economy-content").addEventListener("submit",e=>{if(e.target&&e.target.id==="sprint-answer-form")submitSprintAnswer(e);else if(e.target&&e.target.id==="acid-sprint-answer-form")submitAcidSprintAnswer(e);else if(e.target&&e.target.id==="og-sprint-answer-form")submitOgSprintAnswer(e)});
- document.addEventListener("keydown",e=>{if(e.key==="Escape"&&!$("economy-overlay").classList.contains("hidden")){if(sprintState.running||acidSprintState.running||ogSprintState.running||alkaneArchitectState.running){setStatus("De bonusronde loopt nog; sluit de opdracht pas na afloop.");return;}closeEconomyOverlay();}});
+ document.addEventListener("keydown",e=>{if(e.key==="Escape"&&!$("economy-overlay").classList.contains("hidden")){if(alkaneArchitectState.running&&alkaneArchitectState.selectedNode!==null){alkaneArchitectState.selectedNode=null;renderAlkaneDrawing();return;}if(sprintState.running||acidSprintState.running||ogSprintState.running||alkaneArchitectState.running){setStatus("De bonusronde loopt nog; sluit de opdracht pas na afloop.");return;}closeEconomyOverlay();}});
  const alkaneStyle=document.createElement("style");alkaneStyle.textContent=`
  .alkane-progress{display:flex;justify-content:space-between;gap:12px;align-items:center;font-size:.9rem;color:#29445b;font-weight:800;margin:12px 0 7px}
  .alkane-progress-track{height:7px;background:#e5edf2;border-radius:20px;overflow:hidden;margin-bottom:18px}

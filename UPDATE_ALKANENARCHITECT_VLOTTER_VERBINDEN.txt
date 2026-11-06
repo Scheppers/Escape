@@ -1,0 +1,13 @@
+UPDATE ALKANENARCHITECT – SNELLER BINDINGEN TEKENEN
+
+In deze update blijft na het tekenen van een binding het tweede koolstofpunt automatisch geselecteerd.
+Voorbeeld propaan:
+- klik op punt 1;
+- klik op punt 2: binding 1–2 wordt getekend en punt 2 blijft geselecteerd;
+- klik op punt 3: binding 2–3 wordt meteen getekend.
+
+Je kunt vertakkingen tekenen door op een ander koolstofpunt te klikken; dat wordt het nieuwe actieve punt.
+Klik op een lege plek in het tekenvlak of druk op Escape om de selectie te wissen.
+De bestaande stappen blijven behouden: eerst koolstofpunten plaatsen, daarna de knop 'Binding' kiezen.
+
+Technisch: game.js aangepast en dist/ opnieuw opgebouwd. Er zijn geen databasewijzigingen nodig.
