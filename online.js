@@ -22,6 +22,69 @@
   const isAuCard = (card) => String(card?.formula ?? '').trim().toUpperCase() === 'AU';
   const isFinalRewardAu = (card) => Boolean(card?.is_final_reward) && isAuCard(card);
   const isObsoleteAuCard = (card) => isAuCard(card) && !Boolean(card?.is_final_reward);
+
+  // Consistente elementmonstertjes: elk atoom heeft een vaste kleur/look.
+  // Ook samengestelde formules worden als een groep bollen met één gezicht getoond.
+  function chemicalMascot(formula) {
+    const normalized = String(formula || '').trim().replace(/[₀-₉]/g, ch => String('₀₁₂₃₄₅₆₇₈₉'.indexOf(ch)));
+    const tokens = [...normalized.matchAll(/([A-Z][a-z]?)(\d*)/g)];
+    if (!tokens.length || tokens.map(t => t[0]).join('') !== normalized) {
+      return `<div class="online-formula">${esc(formula || '?')}</div>`;
+    }
+    const looks = {
+      H:['#f4f7fb','#9aa9ba','#26384a','#53a8e8','tuft'],
+      He:['#f6b7d2','#c96f9b','#54233d','#fff0a8','hat'],
+      C:['#252a32','#10151c','#ffffff','#f5f5f5','beard'],
+      N:['#477ed8','#2856a5','#101d38','#d7e7ff','glasses'],
+      O:['#e45b5b','#a92e38','#421b22','#ffd6d6','cheeks'],
+      F:['#75c96b','#3b9145','#173b20','#eaffc9','leaf'],
+      Cl:['#b3d95c','#789b2b','#293711','#f4ffd0','leaf'],
+      Br:['#a96b45','#704027','#321d12','#f4d2a7','moustache'],
+      I:['#8664b5','#594080','#241638','#eadcff','hat'],
+      P:['#e6a34c','#ad6b20','#45280d','#fff0c9','tuft'],
+      S:['#f0d34f','#b49a1e','#453b08','#fff8bf','glasses'],
+      Na:['#d8a4ed','#9860b5','#382044','#fff0ff','crown'],
+      Mg:['#77c9b1','#398e77','#153d32','#d9fff3','glasses'],
+      Fe:['#9a7866','#624536','#302017','#f2d7c7','moustache'],
+      Au:['#f2c84b','#b18a1e','#493608','#fff4bb','crown'],
+      Ag:['#c8d5df','#8195a5','#243543','#ffffff','glasses'],
+      Ca:['#d9e3ef','#9aabba','#2e3d50','#ffffff','crown'],
+      Cu:['#c77c4e','#8d4b2a','#3d2114','#ffe0c8','moustache']
+    };
+    const atoms = [];
+    for (const token of tokens) {
+      const element = token[1], amount = Math.max(1, Number(token[2] || 1));
+      for (let i = 0; i < amount && atoms.length < 6; i++) atoms.push(element);
+    }
+    const n = atoms.length, radius = n === 1 ? 29 : n === 2 ? 25 : 16;
+    const layouts = {
+      1:[[60,36]], 2:[[39,36],[81,36]],
+      3:[[38,43],[82,43],[60,21]],
+      4:[[39,25],[81,25],[39,49],[81,49]],
+      5:[[35,25],[60,19],[85,25],[43,51],[77,51]],
+      6:[[35,25],[60,19],[85,25],[35,49],[60,55],[85,49]]
+    };
+    const coords = layouts[Math.min(n,6)];
+    const spheres = atoms.map((element,i) => {
+      const [color,edge] = looks[element] || ['#70b9c9','#347b8b'];
+      const [x,y] = coords[i];
+      return `<circle cx="${x}" cy="${y}" r="${radius}" fill="${color}" stroke="${edge}" stroke-width="3"/>`;
+    }).join('');
+    const first = looks[atoms[0]] || ['#70b9c9','#347b8b','#173d48','#e1fbff','tuft'];
+    const [,,eye,accent,trait] = first;
+    const accessory = {
+      beard:`<path d="M48 44q12 8 24 0l-4 13q-8 9-16 0Z" fill="${accent}" stroke="#d8d8d8" stroke-width="1.5"/>`,
+      glasses:`<g fill="none" stroke="${accent}" stroke-width="2.8"><circle cx="51" cy="35" r="8"/><circle cx="69" cy="35" r="8"/><path d="M59 35h2M43 33l-5-2M77 33l5-2"/></g>`,
+      cheeks:`<circle cx="43" cy="44" r="4" fill="${accent}"/><circle cx="77" cy="44" r="4" fill="${accent}"/>`,
+      moustache:`<path d="M60 46q-8-8-15 0q7 10 15 3q8 7 15-3q-7-8-15 0" fill="${accent}"/>`,
+      hat:`<path d="M43 15h34l-5-10H49Z" fill="${accent}" stroke="${first[1]}" stroke-width="2"/><path d="M39 17h42" stroke="${first[1]}" stroke-width="4" stroke-linecap="round"/>`,
+      crown:`<path d="M43 16l5-11 12 10 12-10 5 11Z" fill="${accent}" stroke="${first[1]}" stroke-width="2"/>`,
+      tuft:`<path d="M53 10q-8-13 2-12q3 7 7 10q5-10 11-5l-5 10" fill="${accent}" stroke="${first[1]}" stroke-width="2"/>`,
+      leaf:`<path d="M62 13q-2-16 13-15q-1 13-13 15" fill="${accent}" stroke="${first[1]}" stroke-width="2"/>`
+    }[trait] || '';
+    return `<div class="online-formula chem-mascot" role="img" aria-label="${esc(formula)}-monstertje"><svg viewBox="0 0 120 74" aria-hidden="true">${spheres}<ellipse cx="${n===1?49:60}" cy="22" rx="10" ry="5" fill="#fff" opacity=".18"/><g fill="${eye}"><ellipse cx="52" cy="35" rx="3.2" ry="4.2"/><ellipse cx="68" cy="35" rx="3.2" ry="4.2"/></g><g fill="#fff"><circle cx="53" cy="33.5" r="1.1"/><circle cx="69" cy="33.5" r="1.1"/></g><path d="M53 44q7 7 14 0" fill="none" stroke="${eye}" stroke-width="2.4" stroke-linecap="round"/>${accessory}</svg><span>${esc(formula)}</span></div>`;
+  }
+
   const msg = (text, kind = '') => { if (authStatus) { authStatus.textContent = text; authStatus.className = `online-status ${kind}`; } };
   const configured = Boolean(config.url && config.anonKey && !/VUL|YOUR_|PASTE/i.test(config.url + config.anonKey));
   const rpc = async (name, args = {}) => {
@@ -165,10 +228,10 @@
       const shop = cardCatalogCache.filter(c => c.is_shop_item && !c.is_reward_only && String(c.formula).trim().toUpperCase() !== 'AU');
       body = `<p class="online-help">Koop kaarten van enkelvoudige stoffen. Je mag meerdere exemplaren van dezelfde kaart bezitten. Samengestelde stoffen maak je in de reactiekamer.</p><div class="online-store-grid online-card-grid">${shop.map(c => {
         const quantity = ownedMap.get(c.id) || 0;
-        return `<article class="online-card"><div class="online-card-top"><span>${esc(c.card_type || c.category)}</span><span>${esc(c.rarity)}</span></div><div class="online-formula">${esc(c.formula)}</div><h4>${esc(c.name)}</h4><p>${esc(c.description)}</p>${[c.support_description,c.support_description_2].filter(Boolean).map(t=>`<small class="card-support">✨ ${esc(t)}</small>`).join('')}<div class="online-stats"><span>💪 Kracht ${Number(c.power ?? c.attack)}</span><span>📦 ${quantity} in bezit</span></div><button data-card-buy="${esc(c.id)}">Koop exemplaar · ${Number(c.price)} ${LABCOIN_ICON}</button></article>`;
+        return `<article class="online-card"><div class="online-card-top"><span>${esc(c.card_type || c.category)}</span><span>${esc(c.rarity)}</span></div>${chemicalMascot(c.formula)}<h4>${esc(c.name)}</h4><p>${esc(c.description)}</p>${[c.support_description,c.support_description_2].filter(Boolean).map(t=>`<small class="card-support">✨ ${esc(t)}</small>`).join('')}<div class="online-stats"><span>💪 Kracht ${Number(c.power ?? c.attack)}</span><span>📦 ${quantity} in bezit</span></div><button data-card-buy="${esc(c.id)}">Koop exemplaar · ${Number(c.price)} ${LABCOIN_ICON}</button></article>`;
       }).join('') || '<p class="online-help">De leerkracht heeft nog geen winkelkaarten geactiveerd.</p>'}</div>`;
     } else if (cardShopTab === 'collection') {
-      body = `<p class="online-help">Je verzameling bevat ${ownedCards.reduce((sum,c)=>sum+(ownedMap.get(c.id)||0),0)} kaart(en). Dubbele kaarten tellen als aparte exemplaren. De exclusieve tijdreisbeloning is niet te koop en niet bruikbaar in reacties, maar kan wel in een battledeck.</p><div class="online-store-grid online-card-grid">${ownedCards.map(c => `<article class="online-card owned"><div class="online-card-top"><span>${esc(c.card_type || c.category)}</span><span>${esc(c.rarity)}</span></div><div class="online-formula">${esc(c.formula)}</div><h4>${esc(c.name)}</h4><p>${esc(c.description)}</p><div class="online-stats"><span>💪 Kracht ${Number(c.power ?? c.attack)}</span><span>📦 ×${ownedMap.get(c.id)}</span></div>${[c.support_description,c.support_description_2].filter(Boolean).map(t=>`<small class="card-support">✨ ${esc(t)}</small>`).join('')}${c.is_final_reward ? '<span class="card-reward-tag final-reward-tag">🏆 Exclusieve tijdreisbeloning · niet te koop of inzetbaar in reacties · wel inzetbaar in battles</span>' : String(c.formula).trim() === 'Au' ? '<span class="card-reward-tag">Oude Au-kaart · niet langer te koop of inzetbaar in nieuwe battles</span>' : c.is_reward_only ? '<span class="card-reward-tag">🏆 Exclusieve battlekaart</span>' : ''}</article>`).join('') || '<p class="online-help">Je collectie is nog leeg. Koop eerst enkele enkelvoudige stoffen in de winkel.</p>'}</div>`;
+      body = `<p class="online-help">Je verzameling bevat ${ownedCards.reduce((sum,c)=>sum+(ownedMap.get(c.id)||0),0)} kaart(en). Dubbele kaarten tellen als aparte exemplaren. De exclusieve tijdreisbeloning is niet te koop en niet bruikbaar in reacties, maar kan wel in een battledeck.</p><div class="online-store-grid online-card-grid">${ownedCards.map(c => `<article class="online-card owned"><div class="online-card-top"><span>${esc(c.card_type || c.category)}</span><span>${esc(c.rarity)}</span></div>${chemicalMascot(c.formula)}<h4>${esc(c.name)}</h4><p>${esc(c.description)}</p><div class="online-stats"><span>💪 Kracht ${Number(c.power ?? c.attack)}</span><span>📦 ×${ownedMap.get(c.id)}</span></div>${[c.support_description,c.support_description_2].filter(Boolean).map(t=>`<small class="card-support">✨ ${esc(t)}</small>`).join('')}${c.is_final_reward ? '<span class="card-reward-tag final-reward-tag">🏆 Exclusieve tijdreisbeloning · niet te koop of inzetbaar in reacties · wel inzetbaar in battles</span>' : String(c.formula).trim() === 'Au' ? '<span class="card-reward-tag">Oude Au-kaart · niet langer te koop of inzetbaar in nieuwe battles</span>' : c.is_reward_only ? '<span class="card-reward-tag">🏆 Exclusieve battlekaart</span>' : ''}</article>`).join('') || '<p class="online-help">Je collectie is nog leeg. Koop eerst enkele enkelvoudige stoffen in de winkel.</p>'}</div>`;
     } else {
       const ownedOptions = reactionCards.map(c => `<option value="${esc(c.id)}">${esc(c.formula)} · ${esc(c.name)} (bezit: ${ownedMap.get(c.id)})</option>`).join('');
       firstCardId = reactionCards[0]?.id || '';
@@ -500,7 +563,7 @@ Optie D"></textarea></label>
           const outcome=damage===0?'Geen levenspunten verloren.':`${damage} HP schade aan ${recipient}.`;
           return `<li><strong>Ronde ${round}</strong> · Aanval: ${esc(atkCard?.formula||'')} (${Number(atk.effective_power)} kracht) · Verdediging: ${esc(defCard?.formula||'')} (${Number(def.effective_power)} kracht). <b>${esc(outcome)}</b>${notes}</li>`;
         }).join('');
-        const hand = isMyTurn ? `<div class="online-hand"><strong>${b.current_role==='attacker'?'🗡️ Jij valt aan':'🛡️ Jij verdedigt'} — kies één kaart:</strong><div class="online-hand-grid">${(ownDeck||[]).filter(d=>!usedSlots.has(Number(d.slot_number))).map(d=>{const c=cards.find(x=>x.id===d.card_id);return `<button class="online-play-card" data-play-slot="${Number(d.slot_number)}" data-battle-id="${b.battle_id}"><b>${esc(c?.formula||d.card_id)}</b><span>${esc(c?.name||'Kaart')}</span><small>💪 Kracht ${Number(c?.power)||1} · ${esc(c?.card_type||'')}</small>${[c?.support_description,c?.support_description_2].filter(Boolean).map(t=>`<em>✨ ${esc(t)}</em>`).join('')}<small>Deckslot ${Number(d.slot_number)}</small></button>`;}).join('') || '<p>Je hebt alle vier ingezette kaarten al gespeeld. Eén kaart blijft ongebruikt.</p>'}</div></div>` : `<p class="battle-waiting">${b.current_role==='attacker'?'Tegenstander kiest een aanvalskaart.':'Tegenstander kiest een verdedigingskaart.'}</p>`;
+        const hand = isMyTurn ? `<div class="online-hand"><strong>${b.current_role==='attacker'?'🗡️ Jij valt aan':'🛡️ Jij verdedigt'} — kies één kaart:</strong><div class="online-hand-grid">${(ownDeck||[]).filter(d=>!usedSlots.has(Number(d.slot_number))).map(d=>{const c=cards.find(x=>x.id===d.card_id);return `<button class="online-play-card" data-play-slot="${Number(d.slot_number)}" data-battle-id="${b.battle_id}"><div class="battle-card-mascot">${chemicalMascot(c?.formula||d.card_id)}</div><span>${esc(c?.name||'Kaart')}</span><small>💪 Kracht ${Number(c?.power)||1} · ${esc(c?.card_type||'')}</small>${[c?.support_description,c?.support_description_2].filter(Boolean).map(t=>`<em>✨ ${esc(t)}</em>`).join('')}<small>Deckslot ${Number(d.slot_number)}</small></button>`;}).join('') || '<p>Je hebt alle vier ingezette kaarten al gespeeld. Eén kaart blijft ongebruikt.</p>'}</div></div>` : `<p class="battle-waiting">${b.current_role==='attacker'?'Tegenstander kiest een aanvalskaart.':'Tegenstander kiest een verdedigingskaart.'}</p>`;
         const role = isMyTurn ? (b.current_role==='attacker'?'Jij bent de aanvaller':'Jij bent de verdediger') : (b.current_role==='attacker'?'Tegenstander is de aanvaller':'Tegenstander is de verdediger');
         sub = `<div class="battle-turn-banner ${isMyTurn?'your-turn':'waiting-turn'}"><strong>${isMyTurn?'JOUW BEURT':'BEURT TEGENSTANDER'}</strong><span>${role}</span></div><div class="online-hp"><span>🧪 Jij: ${isChallenger ? b.challenger_hp : b.opponent_hp}/${b.starting_hp} HP</span><span>⚗ ${esc(opponentName)}: ${isChallenger ? b.opponent_hp : b.challenger_hp}/${b.starting_hp} HP</span></div><p class="battle-round-indicator">Ronde ${Number(b.round_count)+1}/4 · ${b.current_role==='attacker'?'aanval':'verdediging'}</p><ol class="online-moves">${moveList || '<li>De battle is gestart. De uitdager valt aan.</li>'}</ol>${hand}`;
       }

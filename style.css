@@ -215,3 +215,26 @@
 .teacher-tab-panel{min-width:0}
 .teacher-tab-panel[hidden]{display:none!important}
 @media(max-width:560px){.teacher-management-tabs{display:grid;grid-template-columns:1fr}.teacher-management-tab{width:100%}}
+
+
+/* Chemische monstertjes op de stoffenkaarten */
+.online-card .online-formula.chem-mascot {
+  min-height: 112px;
+  padding: 5px 8px 2px;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  gap: 0;
+  background: radial-gradient(ellipse at 50% 42%, #31536a 0%, #142b3b 72%);
+  border: 1px solid #47758a;
+  border-radius: 13px;
+  color: #f4e4b8;
+  text-shadow: none;
+  font-size: .72rem;
+  letter-spacing: .08em;
+}
+.chem-mascot svg { display:block; width:min(100%,142px); height:78px; overflow:visible; filter:drop-shadow(0 4px 3px #0006); }
+.chem-mascot span { line-height:1; font-weight:900; }
+.online-play-card .battle-card-mascot { display:flex; justify-content:center; width:100%; }
+.online-play-card .chem-mascot { display:flex; flex-direction:column; align-items:center; gap:0; min-height:76px; color:#f4e4b8; font-size:.65rem; }
+.online-play-card .chem-mascot svg { width:104px; height:62px; }

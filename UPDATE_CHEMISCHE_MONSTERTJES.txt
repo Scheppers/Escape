@@ -1,0 +1,18 @@
+Chemische monstertjes op kaarten
+================================
+
+De symbolen in de kaartenwinkel, collectie en speelbare battlekaarten zijn vervangen
+door kleine inline SVG-monstertjes. De elementstijl is vastgelegd per elementsymbool,
+zodat hetzelfde element op elke kaart dezelfde kleur en hetzelfde attribuut behoudt.
+Diatomische formules zoals H2, N2 en O2 tonen twee verbonden bollen met één gezicht.
+
+Er is geen databasewijziging of SQL-migratie nodig. De wijziging zit in online.js,
+style.css en de cacheversies in index.html. De dist-map is opnieuw opgebouwd.
+
+Gecontroleerd:
+- node --check online.js
+- node --check dist/online.js
+- aanwezigheid van de monstertjes-renderer in dist/online.js
+- aanwezigheid van de bijbehorende CSS in dist/style.css
+
+De live weergave op Netlify/Supabase is niet vanuit deze omgeving getest.
