@@ -5,6 +5,10 @@ De symbolen in de kaartenwinkel, collectie en speelbare battlekaarten zijn verva
 door kleine inline SVG-monstertjes. De elementstijl is vastgelegd per elementsymbool,
 zodat hetzelfde element op elke kaart dezelfde kleur en hetzelfde attribuut behoudt.
 Diatomische formules zoals H2, N2 en O2 tonen twee verbonden bollen met één gezicht.
+De bibliotheek bevat nu alle 92 elementen van waterstof (H) tot en met uranium (U).
+De eerder ontworpen elementen behouden hun eigen uiterlijk; voor de overige elementen
+worden vaste kleuren en accessoires automatisch bepaald. Een aantal elementen kijkt
+boos of nors, zodat niet alle monstertjes dezelfde blije uitdrukking hebben.
 
 Er is geen databasewijziging of SQL-migratie nodig. De wijziging zit in online.js,
 style.css en de cacheversies in index.html. De dist-map is opnieuw opgebouwd.
@@ -12,6 +16,8 @@ style.css en de cacheversies in index.html. De dist-map is opnieuw opgebouwd.
 Gecontroleerd:
 - node --check online.js
 - node --check dist/online.js
+- vaste elementbibliotheek voor H t/m U aanwezig
+- afwisselende boze en blije gezichtsuitdrukkingen
 - aanwezigheid van de monstertjes-renderer in dist/online.js
 - aanwezigheid van de bijbehorende CSS in dist/style.css
 

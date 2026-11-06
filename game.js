@@ -190,11 +190,11 @@ const COSMETIC_SKINS=[
  {id:"master",name:"Meester der Elementen",emoji:"👑",price:60,detail:"De prestigieuze kroon voor verzamelaars."}
 ];
 let labCoins=0, ownedSkins=new Set(["starter"]), equippedSkin="starter", sprintTimer=null, sprintTransitionTimer=null;
-let sprintState={running:false,startingCoins:0,correct:0,answered:0,startedAt:0,queue:[],index:0,current:null,best:0,onlineSessionId:null};
+let sprintState={running:false,startingCoins:0,correct:0,answered:0,startedAt:0,queue:[],index:0,current:null,best:0,onlineSessionId:null,specialCardAwarded:false};
 let acidSprintTimer=null, acidSprintTransitionTimer=null;
-let acidSprintState={running:false,startingCoins:0,correct:0,answered:0,startedAt:0,queue:[],index:0,current:null,best:0,onlineSessionId:null};
+let acidSprintState={running:false,startingCoins:0,correct:0,answered:0,startedAt:0,queue:[],index:0,current:null,best:0,onlineSessionId:null,specialCardAwarded:false};
 let ogSprintTimer=null, ogSprintTransitionTimer=null;
-let ogSprintState={running:false,startingCoins:0,correct:0,answered:0,startedAt:0,expiresAt:0,queue:[],index:0,current:null,best:0,onlineSessionId:null};
+let ogSprintState={running:false,startingCoins:0,correct:0,answered:0,startedAt:0,expiresAt:0,queue:[],index:0,current:null,best:0,onlineSessionId:null,specialCardAwarded:false};
 // Leerlingen krijgen geen hints: verberg de knop in alle soorten vensters.
 const hintButton=$("hint-button");
 if(hintButton){hintButton.style.setProperty("display","none","important");hintButton.setAttribute("aria-hidden","true");hintButton.disabled=true;}
@@ -688,11 +688,11 @@ function alkaneTreeCode(graph){
  return "["+[rooted(a,b),rooted(b,a)].sort().join("|")+"]";
 }
 function shuffleAlkanes(items){const a=[...items];for(let i=a.length-1;i>0;i--){const j=Math.floor(Math.random()*(i+1));[a[i],a[j]]=[a[j],a[i]];}return a;}
-let alkaneArchitectState={running:false,queue:[],index:0,correct:0,earned:0,graph:{nodes:[],edges:[]},selectedNode:null,mode:"add",results:[]};
+let alkaneArchitectState={running:false,queue:[],index:0,correct:0,earned:0,graph:{nodes:[],edges:[]},selectedNode:null,mode:"add",results:[],specialCardAwarded:false};
 function openAlkaneArchitect(){
  if(currentLevel!=="future"){setStatus("De Alkanenarchitect is beschikbaar in level 4, het futuristische chemielabo.");return;}
  if(alkaneArchitectState.running){setStatus("Maak eerst de huidige Alkanenarchitect-ronde af.");return;}
- showEconomyOverlay(`<p class="economy-eyebrow">BONUSLEVEL · LEVEL 4</p><h2 class="economy-title" id="economy-title">🏗️ Alkanenarchitect</h2><p class="economy-lead">Krijg 10 namen van vertakte alkanen en teken telkens de koolstofketen in skeletnotatie. Je krijgt één poging per molecule. Een correcte tekening levert steeds meer LabCoins op: van 1 tot en met 10.</p><div class="sprint-rules"><strong>Maximale beloning: 55 LabCoins.</strong><br>Elke hoek en elk uiteinde stelt een koolstofatoom voor. Waterstofatomen teken je niet. Maak eerst de punten en verbind ze daarna met bindingen.</div><button type="button" class="primary full" id="alkane-architect-start">Start de architect</button><p class="muted">Er worden 10 verschillende alkanen gekozen uit een verzameling van 25.</p>`);
+ showEconomyOverlay(`<p class="economy-eyebrow">BONUSLEVEL · LEVEL 4</p><h2 class="economy-title" id="economy-title">🏗️ Alkanenarchitect</h2><p class="economy-lead">Krijg 10 namen van vertakte alkanen en teken telkens de koolstofketen in skeletnotatie. Je krijgt één poging per molecule. Een correcte tekening levert steeds meer LabCoins op: van 1 tot en met 10.</p><div class="sprint-rules"><strong>Maximale beloning: 55 LabCoins.</strong><br>Teken alle tien alkanen foutloos (één poging per molecule) en verdien de speciale palladiumkaart Pd. Elke hoek en elk uiteinde stelt een koolstofatoom voor. Waterstofatomen teken je niet. Maak eerst de punten en verbind ze daarna met bindingen.</div><button type="button" class="primary full" id="alkane-architect-start">Start de architect</button><p class="muted">Er worden 10 verschillende alkanen gekozen uit een verzameling van 25.</p>`);
 }
 async function startAlkaneArchitect(){
  let queue=shuffleAlkanes(ALKANE_ARCHITECT_POOL).slice(0,10),onlineSessionId=null;
@@ -704,7 +704,7 @@ async function startAlkaneArchitect(){
    queue=(remote.items||[]).map(name=>({name}));
   }catch(error){setStatus(error.message||"De Alkanenarchitect kon niet starten.");return;}
  }
- alkaneArchitectState={running:true,queue,index:0,correct:0,earned:0,graph:{nodes:[],edges:[]},selectedNode:null,mode:"add",results:[],onlineSessionId};
+ alkaneArchitectState={running:true,queue,index:0,correct:0,earned:0,graph:{nodes:[],edges:[]},selectedNode:null,mode:"add",results:[],onlineSessionId,specialCardAwarded:false};
  renderEconomyPanel();renderAlkaneQuestion();
 }
 function renderAlkaneQuestion(){
@@ -752,7 +752,7 @@ function undoAlkaneAction(){
 }
 async function submitAlkaneAnswer(){
  const st=alkaneArchitectState,item=st.queue[st.index];
- let correct=false,reward=0,solution=null;
+ let correct=false,reward=0,solution=null,bonusCardAwarded=false;
  if(st.onlineSessionId&&window.ChemieOnline){
   try{
    const result=await window.ChemieOnline.submitAlkaneArchitectAnswer(st.onlineSessionId,st.graph.nodes.length,st.graph.edges);
@@ -760,6 +760,7 @@ async function submitAlkaneAnswer(){
    correct=Boolean(result.correct);reward=Number(result.reward)||0;solution=result.solution||null;
    if(Number.isFinite(Number(result.coins)))labCoins=Number(result.coins);
    st.serverCompleted=Boolean(result.completed);
+   bonusCardAwarded=Boolean(result.bonus_card_awarded);
    st.serverCorrect=Number(result.correct_count)||0;
    st.serverEarned=Number(result.total_awarded)||0;
    if(result.next_name)st.queue[st.index+1]={name:result.next_name};
@@ -773,6 +774,7 @@ async function submitAlkaneAnswer(){
   else solution=target;
  }
  st.results.push({name:item.name,correct,reward});
+ if(bonusCardAwarded)st.specialCardAwarded=true;
  showEconomyOverlay(`<p class="economy-eyebrow">MOLECULE ${st.index+1} VAN 10</p><h2 class="economy-title">${correct?"✅ Correct getekend!":"❌ Niet helemaal juist"}</h2><p class="economy-lead">${correct?`Je hebt ${escapeHtml(item.name)} correct getekend en verdient ${reward} LabCoin${reward===1?"":"s"}.`:`De getekende koolstofstructuur komt niet overeen met ${escapeHtml(item.name)}. Bekijk hieronder de correcte skeletnotatie.`}</p>${correct?`<div class="alkane-reward">+${reward} LabCoins</div>`:`<div class="alkane-solution"><strong>Correcte skeletnotatie van ${escapeHtml(item.name)}</strong>${solution?alkaneSolutionSvg(solution):"<p>De oplossing kon niet worden weergegeven.</p>"}</div>`}<button type="button" class="primary full" id="alkane-next">${st.index===9?"Bekijk resultaat":"Volgende molecule"}</button>`);
 }
 function alkaneSolutionSvg(graph){
@@ -818,8 +820,8 @@ function alkaneSolutionSvg(graph){
 }
 function finishAlkaneArchitect(){
  const st=alkaneArchitectState;st.running=false;renderEconomyPanel();
- showEconomyOverlay(`<p class="economy-eyebrow">BONUSLEVEL VOLTOOID · LEVEL 4</p><h2 class="economy-title">🏆 Architect aan het werk!</h2><p class="economy-lead">Je hebt alle 10 alkanen behandeld. Je tekende er ${st.correct} correct.</p><div class="sprint-results"><div class="sprint-result"><strong>${st.correct}/10</strong><small>Correct</small></div><div class="sprint-result"><strong>+${st.earned}</strong><small>Verdiende LabCoins</small></div></div><div class="sprint-rules">Maximumscore: 55 LabCoins. Je kunt het bonuslevel opnieuw spelen met een nieuwe willekeurige selectie.</div><button type="button" class="primary full" id="alkane-architect-retry">Opnieuw spelen</button><button type="button" class="secondary full" id="economy-done">Terug naar het labo</button>`);
- setStatus(`Alkanenarchitect voltooid: ${st.correct}/10 correct, ${st.earned} LabCoins verdiend.`);
+ showEconomyOverlay(`<p class="economy-eyebrow">BONUSLEVEL VOLTOOID · LEVEL 4</p><h2 class="economy-title">🏆 Architect aan het werk!</h2><p class="economy-lead">Je hebt alle 10 alkanen behandeld. Je tekende er ${st.correct} correct.</p><div class="sprint-results"><div class="sprint-result"><strong>${st.correct}/10</strong><small>Correct</small></div><div class="sprint-result"><strong>+${st.earned}</strong><small>Verdiende LabCoins</small></div></div><div class="sprint-rules">Maximumscore: 55 LabCoins. Je kunt het bonuslevel opnieuw spelen met een nieuwe willekeurige selectie.</div>${st.specialCardAwarded?'<div class="card-reward-tag">🏅 Speciale palladiumkaart Pd verdiend!</div>':''}<button type="button" class="primary full" id="alkane-architect-retry">Opnieuw spelen</button><button type="button" class="secondary full" id="economy-done">Terug naar het labo</button>`);
+ setStatus(`Alkanenarchitect voltooid: ${st.correct}/10 correct, ${st.earned} LabCoins verdiend.${st.specialCardAwarded?' Speciale palladiumkaart Pd verdiend.':''}`);if(window.ChemieOnline)window.ChemieOnline.refreshDashboardSoon();
  if(window.ChemieOnline)window.ChemieOnline.refreshDashboardSoon();
 }
 function handleAlkaneArchitectClick(e){
@@ -928,7 +930,7 @@ function renderShop(){
 function openElementSprint(){
  if(currentLevel!=="medieval"){setStatus("De Elementensprint is beschikbaar in het eerste, middeleeuwse labo.");return;}
  if(sprintState.running||acidSprintState.running||ogSprintState.running){setStatus("Er loopt al een bonusronde.");return;}
- showEconomyOverlay(`<p class="economy-eyebrow">OPTIONELE SIDEQUEST · LEVEL 1</p><h2 class="economy-title" id="economy-title">⚡ De Elementensprint</h2><p class="economy-lead">Je krijgt <strong>60 seconden</strong>. De naam van een element verschijnt; typ het juiste elementsymbool en let goed op hoofdletters. Bijvoorbeeld: lood → <strong>Pb</strong>, niet PB of pb.</p><div class="sprint-rules"><strong>Beloningen:</strong> juiste antwoorden 1–5 leveren elk 1 coin op; antwoorden 6–10 elk 2 coins; antwoorden 11–15 elk 3 coins, enzovoort. Een gewoon antwoord in de escape-roomquiz levert geen coins op.</div><button type="button" class="primary full" id="element-sprint-start">Start de 60 seconden</button><p class="muted">De sidequest is vrijwillig en verandert niets aan je deurcodes.</p>`);
+ showEconomyOverlay(`<p class="economy-eyebrow">OPTIONELE SIDEQUEST · LEVEL 1</p><h2 class="economy-title" id="economy-title">⚡ De Elementensprint</h2><p class="economy-lead">Je krijgt <strong>60 seconden</strong> voor 40 willekeurige elementen. De naam van een element verschijnt; typ het juiste elementsymbool en let goed op hoofdletters. Bijvoorbeeld: lood → <strong>Pb</strong>, niet PB of pb.</p><div class="sprint-rules"><strong>Beloningen:</strong> juiste antwoorden 1–5 leveren elk 1 coin op; antwoorden 6–10 elk 2 coins; antwoorden 11–15 elk 3 coins, enzovoort. Bij 40 juiste antwoorden verdien je bovendien de speciale zilverkaart Ag. Foute antwoorden komen één keer terug achteraan de reeks, zodat je ze opnieuw kunt proberen.</div><button type="button" class="primary full" id="element-sprint-start">Start de 60 seconden</button><p class="muted">De sidequest is vrijwillig en verandert niets aan je deurcodes.</p>`);
 }
 async function startElementSprint(){
  if(currentLevel!=="medieval"){closeEconomyOverlay();setStatus("De Elementensprint is beschikbaar in het eerste labo.");return;}
@@ -942,7 +944,7 @@ async function startElementSprint(){
   if(Array.isArray(remote.items))questionQueue=remote.items.map(name=>ELEMENT_SPRINT_ITEMS.find(x=>x.name===name)).filter(Boolean);
   if(remote.coins!==undefined)labCoins=Number(remote.coins)||0;
  }
- sprintState={running:true,startingCoins:labCoins,correct:0,answered:0,startedAt:Date.now(),queue:questionQueue?.length?questionQueue:shuffle(ELEMENT_SPRINT_ITEMS),index:0,current:null,best:sprintState.best||0,onlineSessionId};
+ sprintState={running:true,startingCoins:labCoins,correct:0,answered:0,startedAt:Date.now(),queue:questionQueue?.length?questionQueue:shuffle(ELEMENT_SPRINT_ITEMS).slice(0,40),index:0,current:null,best:sprintState.best||0,onlineSessionId,specialCardAwarded:false};
  renderEconomyPanel();renderSprintQuestion();tickSprintTimer();sprintTimer=setInterval(tickSprintTimer,100);
 }
 function tickSprintTimer(){
@@ -953,7 +955,7 @@ function tickSprintTimer(){
 }
 function renderSprintQuestion(){
  if(!sprintState.running)return;
- const item=sprintState.queue[sprintState.index%sprintState.queue.length];sprintState.current=item;sprintState.index++;
+ if(sprintState.index>=sprintState.queue.length){finishElementSprint();return;}const item=sprintState.queue[sprintState.index];sprintState.current=item;sprintState.index++;
  showEconomyOverlay(`<p class="economy-eyebrow">ELEMENTENSPRINT · LEVEL 1</p><h2 class="economy-title" id="economy-title">Noem het elementsymbool</h2><div class="sprint-hud"><div class="sprint-timer" id="sprint-time-left">1:00</div><div class="sprint-score"><span id="sprint-correct-count">${sprintState.correct}</span> juist · <span id="sprint-answered-count">${sprintState.answered}</span> beantwoord</div></div><div class="sprint-question"><small>Welk symbool hoort bij dit element?</small><div class="sprint-element-name">${item.name}</div></div><form class="sprint-form" id="sprint-answer-form"><input class="sprint-input" id="sprint-symbol-answer" name="symbol" type="text" maxlength="3" placeholder="Elementsymbool" autocomplete="off" autocapitalize="off" spellcheck="false" aria-label="Elementsymbool" required><button type="submit" class="primary">Antwoord</button></form><p class="sprint-feedback" id="sprint-feedback" aria-live="polite">Let op hoofdletters, zoals Na, Fe en Pb.</p>`);
  tickSprintTimer();
  const input=$("sprint-symbol-answer");if(input)input.focus({preventScroll:true});
@@ -971,11 +973,12 @@ async function submitSprintAnswer(e){
   sprintState.answered=Number(verified.answered_count)||sprintState.answered;
   labCoins=Number(verified.coins)||0;
   if(verified.correct){message=`Juist! ${item.name} = ${item.symbol}. +${verified.reward} ${Number(verified.reward)===1?"coin":"coins"}.`;kind="good";}
-  else{message=`Niet juist. ${item.name} heeft het symbool ${item.symbol}. Geen coins deze keer.`;}
+  else{message=`Niet juist. ${item.name} heeft het symbool ${item.symbol}. Geen coins deze keer.`;if(verified.retry_queued)sprintState.queue.push({...item,retryCount:1});}
+  if(verified.bonus_card_awarded){sprintState.specialCardAwarded=true;message+=' Je hebt ook de speciale zilverkaart verdiend!';}
   window.ChemieOnline.refreshDashboardSoon();
  }else{
   if(typed===item.symbol){const reward=Math.floor(sprintState.correct/5)+1;sprintState.correct++;labCoins+=reward;message=`Juist! ${item.name} = ${item.symbol}. +${reward} ${reward===1?"coin":"coins"}.`;kind="good";}
-  else{message=`Niet juist. ${item.name} heeft het symbool ${item.symbol}. Geen coins deze keer.`;}
+  else{message=`Niet juist. ${item.name} heeft het symbool ${item.symbol}. Geen coins deze keer.`;if(!item.retryCount)sprintState.queue.push({...item,retryCount:1});}
  }
  const note=$("sprint-feedback");if(note){note.textContent=message;note.className=`sprint-feedback ${kind}`;}
  if(input)input.disabled=true;if(submit)submit.disabled=true;
@@ -987,11 +990,11 @@ async function finishElementSprint(){
  if(!sprintState.running)return;
  sprintState.running=false;if(sprintTimer){clearInterval(sprintTimer);sprintTimer=null;}if(sprintTransitionTimer){clearTimeout(sprintTransitionTimer);sprintTransitionTimer=null;}
  if(sprintState.onlineSessionId&&window.ChemieOnline&&window.ChemieOnline.isAuthenticated()){
-  try{const settled=await window.ChemieOnline.finishSprint(sprintState.onlineSessionId);if(settled&&settled.ok){labCoins=Number(settled.coins)||0;sprintState.correct=Number(settled.correct_count)||sprintState.correct;sprintState.answered=Number(settled.answered_count)||sprintState.answered;}else if(settled?.error){setStatus(settled.error);}}catch(err){console.error(err);}
+  try{const settled=await window.ChemieOnline.finishSprint(sprintState.onlineSessionId);if(settled&&settled.ok){labCoins=Number(settled.coins)||0;sprintState.correct=Number(settled.correct_count)||sprintState.correct;sprintState.answered=Number(settled.answered_count)||sprintState.answered;sprintState.specialCardAwarded=sprintState.specialCardAwarded||Boolean(settled.bonus_card_awarded);}else if(settled?.error){setStatus(settled.error);}}catch(err){console.error(err);}
  }
  const earned=labCoins-sprintState.startingCoins;sprintState.best=Math.max(sprintState.best,sprintState.correct);
  renderEconomyPanel();
- showEconomyOverlay(`<p class="economy-eyebrow">SIDEQUEST VOLTOOID</p><h2 class="economy-title" id="economy-title">⏱️ De minuut is voorbij!</h2><p class="economy-lead">Goed gesprint. Je beloning is toegevoegd aan je LabCoin-saldo.</p><div class="sprint-results"><div class="sprint-result"><strong>${sprintState.correct}</strong><small>Juiste antwoorden</small></div><div class="sprint-result"><strong>${sprintState.answered}</strong><small>Beantwoord</small></div><div class="sprint-result"><strong>+${earned}</strong><small>Verdiende coins</small></div></div><div class="sprint-rules">Je beste score in deze speelsessie: <strong>${sprintState.best}</strong> juiste antwoorden. Je kunt de sprint opnieuw spelen om je score te verbeteren en extra coins te verdienen.</div><button type="button" class="primary full" id="element-sprint-retry">Nog een ronde</button><button type="button" class="secondary full" id="economy-done">Terug naar het labo</button>`);
+ showEconomyOverlay(`<p class="economy-eyebrow">SIDEQUEST VOLTOOID</p><h2 class="economy-title" id="economy-title">${sprintState.index>=sprintState.queue.length?'🏁 Alle 40 kaarten afgewerkt!':'⏱️ De minuut is voorbij!'}</h2><p class="economy-lead">Goed gesprint. Je beloning is toegevoegd aan je LabCoin-saldo.</p><div class="sprint-results"><div class="sprint-result"><strong>${sprintState.correct}</strong><small>Juiste antwoorden</small></div><div class="sprint-result"><strong>${sprintState.answered}</strong><small>Beantwoord</small></div><div class="sprint-result"><strong>+${earned}</strong><small>Verdiende coins</small></div></div><div class="sprint-rules">Je beste score in deze speelsessie: <strong>${sprintState.best}</strong> juiste antwoorden. Je kunt de sprint opnieuw spelen om je score te verbeteren en extra coins te verdienen.</div>${sprintState.specialCardAwarded?'<div class="card-reward-tag">🏅 Speciale zilverkaart Ag verdiend!</div>':''}<button type="button" class="primary full" id="element-sprint-retry">Nog een ronde</button><button type="button" class="secondary full" id="economy-done">Terug naar het labo</button>`);
  setStatus(`Elementensprint klaar: ${sprintState.correct} juist, ${earned} coins verdiend.`);
  if(window.ChemieOnline)window.ChemieOnline.refreshDashboardSoon();
 }
@@ -999,7 +1002,7 @@ async function finishElementSprint(){
 function openAcidSprint(){
  if(currentLevel!=="lavoisier"){setStatus("De Zurenkennis-sprint is beschikbaar in level 2, het labo van Lavoisier.");return;}
  if(acidSprintState.running||sprintState.running||ogSprintState.running){setStatus("Er loopt al een bonusronde.");return;}
- showEconomyOverlay(`<p class="economy-eyebrow">OPTIONELE SIDEQUEST · LEVEL 2</p><h2 class="economy-title" id="economy-title">🧪 Zurenkennis-sprint</h2><p class="economy-lead">Je krijgt <strong>60 seconden</strong>. Beantwoord open vragen over de brutoformule, systematische naam, gebruiksnaam en zuurrest. De vragen kunnen in alle richtingen voorkomen.</p><div class="sprint-rules"><strong>Formules invoeren:</strong> je mag gewone cijfers gebruiken, zoals <strong>H2SO4</strong> en <strong>SO42-</strong>, of de knoppen gebruiken om indices en ladingen in te voegen. Beide schrijfwijzen worden als hetzelfde antwoord herkend.<br><strong>Beloningen:</strong> juiste antwoorden 1–5 leveren elk 1 coin op; antwoorden 6–10 elk 2 coins; antwoorden 11–15 elk 3 coins, enzovoort.</div><button type="button" class="primary full" id="acid-sprint-start">Start de 60 seconden</button><p class="muted">De vragen zijn open invulvragen. De gewone puzzelcodes veranderen niet.</p>`);
+ showEconomyOverlay(`<p class="economy-eyebrow">OPTIONELE SIDEQUEST · LEVEL 2</p><h2 class="economy-title" id="economy-title">🧪 Zurenkennis-sprint</h2><p class="economy-lead">Je krijgt <strong>60 seconden</strong>. Beantwoord open vragen over de brutoformule, systematische naam, gebruiksnaam en zuurrest. De vragen kunnen in alle richtingen voorkomen.</p><div class="sprint-rules"><strong>Formules invoeren:</strong> je mag gewone cijfers gebruiken, zoals <strong>H2SO4</strong> en <strong>SO42-</strong>, of de knoppen gebruiken om indices en ladingen in te voegen. Beide schrijfwijzen worden als hetzelfde antwoord herkend.<br><strong>Beloningen:</strong> juiste antwoorden 1–5 leveren elk 1 coin op; antwoorden 6–10 elk 2 coins; antwoorden 11–15 elk 3 coins, enzovoort. Bij minstens 14 juiste antwoorden binnen één minuut verdien je bovendien de speciale platinakaart Pt.</div><button type="button" class="primary full" id="acid-sprint-start">Start de 60 seconden</button><p class="muted">De vragen zijn open invulvragen. De gewone puzzelcodes veranderen niet.</p>`);
 }
 function createLocalAcidSprintQueue(){return createAcidSprintQueue();}
 async function startAcidSprint(){
@@ -1018,7 +1021,7 @@ async function startAcidSprint(){
  }
  const queue=questionQueue?.length?questionQueue:createLocalAcidSprintQueue();
  if(!queue.length){setStatus("Er zijn geen zuurvragen beschikbaar.");return;}
- acidSprintState={running:true,startingCoins:labCoins,correct:0,answered:0,startedAt:Date.now(),queue,index:0,current:null,best:acidSprintState.best||0,onlineSessionId};
+ acidSprintState={running:true,startingCoins:labCoins,correct:0,answered:0,startedAt:Date.now(),queue,index:0,current:null,best:acidSprintState.best||0,onlineSessionId,specialCardAwarded:false};
  renderEconomyPanel();renderAcidSprintQuestion();tickAcidSprintTimer();acidSprintTimer=setInterval(tickAcidSprintTimer,100);
 }
 function tickAcidSprintTimer(){
@@ -1076,17 +1079,17 @@ async function finishAcidSprint(){
  if(!acidSprintState.running)return;
  acidSprintState.running=false;if(acidSprintTimer){clearInterval(acidSprintTimer);acidSprintTimer=null;}if(acidSprintTransitionTimer){clearTimeout(acidSprintTransitionTimer);acidSprintTransitionTimer=null;}
  if(acidSprintState.onlineSessionId&&window.ChemieOnline&&window.ChemieOnline.isAuthenticated()){
-  try{const settled=await window.ChemieOnline.finishAcidSprint(acidSprintState.onlineSessionId);if(settled&&settled.ok){labCoins=Number(settled.coins)||0;acidSprintState.correct=Number(settled.correct_count)||acidSprintState.correct;acidSprintState.answered=Number(settled.answered_count)||acidSprintState.answered;}else if(settled?.error){setStatus(settled.error);}}catch(error){console.error("Zurenkennis-sprint afronden mislukt:",error);}
+  try{const settled=await window.ChemieOnline.finishAcidSprint(acidSprintState.onlineSessionId);if(settled&&settled.ok){labCoins=Number(settled.coins)||0;acidSprintState.correct=Number(settled.correct_count)||acidSprintState.correct;acidSprintState.answered=Number(settled.answered_count)||acidSprintState.answered;acidSprintState.specialCardAwarded=Boolean(settled.bonus_card_awarded);}else if(settled?.error){setStatus(settled.error);}}catch(error){console.error("Zurenkennis-sprint afronden mislukt:",error);}
  }
  const earned=labCoins-acidSprintState.startingCoins;acidSprintState.best=Math.max(acidSprintState.best,acidSprintState.correct);renderEconomyPanel();
- showEconomyOverlay(`<p class="economy-eyebrow">SIDEQUEST VOLTOOID · LEVEL 2</p><h2 class="economy-title" id="economy-title">⏱️ Tijd is om!</h2><p class="economy-lead">Goed gewerkt aan je zurenkennis. Je LabCoins zijn bijgewerkt.</p><div class="sprint-results"><div class="sprint-result"><strong>${acidSprintState.correct}</strong><small>Juiste antwoorden</small></div><div class="sprint-result"><strong>${acidSprintState.answered}</strong><small>Beantwoord</small></div><div class="sprint-result"><strong>+${earned}</strong><small>Verdiende coins</small></div></div><div class="sprint-rules">Je beste score in deze speelsessie: <strong>${acidSprintState.best}</strong> juiste antwoorden. Je kunt de Zurenkennis-sprint opnieuw spelen.</div><button type="button" class="primary full" id="acid-sprint-retry">Nog een ronde</button><button type="button" class="secondary full" id="economy-done">Terug naar het labo</button>`);
+ showEconomyOverlay(`<p class="economy-eyebrow">SIDEQUEST VOLTOOID · LEVEL 2</p><h2 class="economy-title" id="economy-title">⏱️ Tijd is om!</h2><p class="economy-lead">Goed gewerkt aan je zurenkennis. Je LabCoins zijn bijgewerkt.</p><div class="sprint-results"><div class="sprint-result"><strong>${acidSprintState.correct}</strong><small>Juiste antwoorden</small></div><div class="sprint-result"><strong>${acidSprintState.answered}</strong><small>Beantwoord</small></div><div class="sprint-result"><strong>+${earned}</strong><small>Verdiende coins</small></div></div><div class="sprint-rules">Je beste score in deze speelsessie: <strong>${acidSprintState.best}</strong> juiste antwoorden. Je kunt de Zurenkennis-sprint opnieuw spelen.</div>${acidSprintState.specialCardAwarded?'<div class="card-reward-tag">🏅 Speciale platinakaart Pt verdiend!</div>':''}<button type="button" class="primary full" id="acid-sprint-retry">Nog een ronde</button><button type="button" class="secondary full" id="economy-done">Terug naar het labo</button>`);
  setStatus(`Zurenkennis-sprint klaar: ${acidSprintState.correct} juist, ${earned} coins verdiend.`);if(window.ChemieOnline)window.ChemieOnline.refreshDashboardSoon();
 }
 
 function openOgSprint(){
  if(currentLevel!=="modern"){setStatus("The OG of chemistry is beschikbaar in level 3, het moderne chemielabo.");return;}
  if(sprintState.running||acidSprintState.running||ogSprintState.running){setStatus("Er loopt al een bonusronde.");return;}
- showEconomyOverlay(`<p class="economy-eyebrow">OPTIONELE BONUS · LEVEL 3</p><h2 class="economy-title" id="economy-title">⚗️ The OG of chemistry</h2><p class="economy-lead">Je krijgt <strong>60 seconden</strong>. Bepaal zo snel mogelijk het oxidatiegetal van het aangeduide element. Antwoord met Romeinse cijfers, bijvoorbeeld <strong>+II</strong>, <strong>-I</strong> of <strong>0</strong>.</p><div class="sprint-rules"><strong>Beloningen:</strong> juiste antwoorden 1–5 leveren elk 1 LabCoin op; antwoorden 6–10 elk 2 LabCoins; antwoorden 11–15 elk 3 LabCoins, enzovoort. Elk juist antwoord levert daarnaast 2 XP op.</div><button type="button" class="primary full" id="og-sprint-start">Start de 60 seconden</button><p class="muted">De vragen zijn open invulvragen. De gewone puzzelcodes veranderen niet.</p>`);
+ showEconomyOverlay(`<p class="economy-eyebrow">OPTIONELE BONUS · LEVEL 3</p><h2 class="economy-title" id="economy-title">⚗️ The OG of chemistry</h2><p class="economy-lead">Je krijgt <strong>60 seconden</strong>. Bepaal zo snel mogelijk het oxidatiegetal van het aangeduide element. Antwoord met Romeinse cijfers, bijvoorbeeld <strong>+II</strong>, <strong>-I</strong> of <strong>0</strong>.</p><div class="sprint-rules"><strong>Beloningen:</strong> juiste antwoorden 1–5 leveren elk 1 LabCoin op; antwoorden 6–10 elk 2 LabCoins; antwoorden 11–15 elk 3 LabCoins, enzovoort. Elk juist antwoord levert daarnaast 2 XP op. Bij minstens 20 juiste antwoorden binnen één minuut verdien je de speciale rhodiumkaart Rh.</div><button type="button" class="primary full" id="og-sprint-start">Start de 60 seconden</button><p class="muted">De vragen zijn open invulvragen. De gewone puzzelcodes veranderen niet.</p>`);
 }
 async function startOgSprint(){
  if(currentLevel!=="modern"){closeEconomyOverlay();setStatus("The OG of chemistry is beschikbaar in level 3.");return;}
@@ -1104,7 +1107,7 @@ async function startOgSprint(){
   }catch(error){setStatus(error.message||"De online sprint kon niet starten. Controleer de Supabase-migratie.");return;}
  }
  const startedAt=Date.now();
- ogSprintState={running:true,startingCoins:labCoins,correct:0,answered:0,startedAt,expiresAt:Number.isFinite(serverExpiresAt)?serverExpiresAt:startedAt+60000,queue:questionQueue?.length?questionQueue:Array.from({length:3},()=>shuffle(OXIDATION_ITEMS)).flat(),index:0,current:null,best:ogSprintState.best||0,onlineSessionId};
+ ogSprintState={running:true,startingCoins:labCoins,correct:0,answered:0,startedAt,expiresAt:Number.isFinite(serverExpiresAt)?serverExpiresAt:startedAt+60000,queue:questionQueue?.length?questionQueue:Array.from({length:3},()=>shuffle(OXIDATION_ITEMS)).flat(),index:0,current:null,best:ogSprintState.best||0,onlineSessionId,specialCardAwarded:false};
  renderEconomyPanel();renderOgSprintQuestion();tickOgSprintTimer();ogSprintTimer=setInterval(tickOgSprintTimer,100);
 }
 function tickOgSprintTimer(){
@@ -1155,10 +1158,10 @@ async function finishOgSprint(){
  if(!ogSprintState.running)return;
  ogSprintState.running=false;if(ogSprintTimer){clearInterval(ogSprintTimer);ogSprintTimer=null;}if(ogSprintTransitionTimer){clearTimeout(ogSprintTransitionTimer);ogSprintTransitionTimer=null;}
  if(ogSprintState.onlineSessionId&&window.ChemieOnline&&window.ChemieOnline.isAuthenticated()){
-  try{const settled=await window.ChemieOnline.finishOgSprint(ogSprintState.onlineSessionId);if(settled&&settled.ok){labCoins=Number(settled.coins)||0;ogSprintState.correct=Number(settled.correct_count)||ogSprintState.correct;ogSprintState.answered=Number(settled.answered_count)||ogSprintState.answered;}else if(settled?.error){setStatus(settled.error);}}catch(error){console.error("The OG of chemistry afronden mislukt:",error);}
+  try{const settled=await window.ChemieOnline.finishOgSprint(ogSprintState.onlineSessionId);if(settled&&settled.ok){labCoins=Number(settled.coins)||0;ogSprintState.correct=Number(settled.correct_count)||ogSprintState.correct;ogSprintState.answered=Number(settled.answered_count)||ogSprintState.answered;ogSprintState.specialCardAwarded=Boolean(settled.bonus_card_awarded);}else if(settled?.error){setStatus(settled.error);}}catch(error){console.error("The OG of chemistry afronden mislukt:",error);}
  }
  const earned=labCoins-ogSprintState.startingCoins;ogSprintState.best=Math.max(ogSprintState.best,ogSprintState.correct);renderEconomyPanel();
- showEconomyOverlay(`<p class="economy-eyebrow">BONUS VOLTOOID · LEVEL 3</p><h2 class="economy-title" id="economy-title">⏱️ Tijd is om!</h2><p class="economy-lead">Goed gewerkt aan je oxidatiegetallen. Je LabCoins zijn bijgewerkt.</p><div class="sprint-results"><div class="sprint-result"><strong>${ogSprintState.correct}</strong><small>Juiste antwoorden</small></div><div class="sprint-result"><strong>${ogSprintState.answered}</strong><small>Beantwoord</small></div><div class="sprint-result"><strong>+${earned}</strong><small>Verdiende LabCoins</small></div></div><div class="sprint-rules">Je beste score in deze speelsessie: <strong>${ogSprintState.best}</strong> juiste antwoorden. Je kunt The OG of chemistry opnieuw spelen.</div><button type="button" class="primary full" id="og-sprint-retry">Nog een ronde</button><button type="button" class="secondary full" id="economy-done">Terug naar het labo</button>`);
+ showEconomyOverlay(`<p class="economy-eyebrow">BONUS VOLTOOID · LEVEL 3</p><h2 class="economy-title" id="economy-title">⏱️ Tijd is om!</h2><p class="economy-lead">Goed gewerkt aan je oxidatiegetallen. Je LabCoins zijn bijgewerkt.</p><div class="sprint-results"><div class="sprint-result"><strong>${ogSprintState.correct}</strong><small>Juiste antwoorden</small></div><div class="sprint-result"><strong>${ogSprintState.answered}</strong><small>Beantwoord</small></div><div class="sprint-result"><strong>+${earned}</strong><small>Verdiende LabCoins</small></div></div><div class="sprint-rules">Je beste score in deze speelsessie: <strong>${ogSprintState.best}</strong> juiste antwoorden. Je kunt The OG of chemistry opnieuw spelen.</div>${ogSprintState.specialCardAwarded?'<div class="card-reward-tag">🏅 Speciale rhodiumkaart Rh verdiend!</div>':''}<button type="button" class="primary full" id="og-sprint-retry">Nog een ronde</button><button type="button" class="secondary full" id="economy-done">Terug naar het labo</button>`);
  setStatus(`The OG of chemistry klaar: ${ogSprintState.correct} juist, ${earned} LabCoins verdiend.`);if(window.ChemieOnline)window.ChemieOnline.refreshDashboardSoon();
 }
 

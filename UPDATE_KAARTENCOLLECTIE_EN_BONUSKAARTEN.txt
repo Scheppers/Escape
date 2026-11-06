@@ -1,0 +1,50 @@
+Kaartencollectie en speciale bonuskaarten
+========================================
+
+Nieuwe functies
+---------------
+- In 'Mijn collectie' staan twee voortgangstellers.
+- Enkelvoudige stoffen tellen als verschillende elementen uit H t/m U: x/92.
+  Dubbele exemplaren tellen niet dubbel. Moleculaire enkelvoudige stoffen zoals O2
+  tellen als het betreffende element.
+- Samengestelde stoffen tellen als y/z. De teller gebruikt unieke reactieproducten
+  uit actieve reacties. Als een leerkracht een reactie activeert of toevoegt, wordt
+  de noemer automatisch aangepast.
+- Zilver (Ag), platina (Pt), rhodium (Rh) en palladium (Pd) zijn speciale kaarten.
+  Ze zijn niet te koop en worden één keer per speler uitgereikt bij de juiste score.
+- Iridium (Ir) en osmium (Os) zijn ook als speciale, niet-koopbare kaarten toegevoegd.
+  Er is nog geen bonuslevel aan deze twee gekoppeld; ze zijn gereserveerd voor latere
+  opdrachten.
+
+Bonusvoorwaarden
+----------------
+- Elementensprint: 40 willekeurige elementen in 60 seconden. Een fout antwoord wordt
+  één keer achteraan opnieuw aangeboden. Bij 40 juiste antwoorden: zilver (Ag).
+- Zurenkennis-sprint: minstens 14 juiste antwoorden in 60 seconden: platina (Pt).
+- The OG of chemistry: minstens 20 juiste antwoorden in 60 seconden: rhodium (Rh).
+- Alkanenarchitect: alle 10 tekeningen correct (10/10, één poging per molecule):
+  palladium (Pd).
+
+Installatie
+-----------
+1. Voer supabase/2026_11_card_collection_progress_and_bonus_rewards.sql uit in de
+   Supabase SQL Editor, nadat de bestaande schema-, kaart- en bonuslevelmigraties
+   zijn uitgevoerd. Deze migratie is aanvullend en moet één keer worden uitgevoerd.
+2. Upload de volledige projectmap naar GitHub.
+3. Laat Netlify opnieuw deployen.
+
+Er is geen bestaande kaartbezit- of LabCoin-data verwijderd. De oude zilverkaart blijft
+bij leerlingen die ze al hadden in hun collectie staan. De kaart is voortaan niet meer
+te koop. Speciale bonuskaarten kunnen in battles worden gebruikt, maar niet in chemische
+reacties worden verbruikt. Ze worden niet willekeurig als battle-overwinningsprijs uitgedeeld.
+
+Technische opmerkingen
+----------------------
+- De server controleert de Elementensprint- en Alkanenarchitect-beloningen.
+- Voor de zuur- en oxidatiegetallensprint gebruiken de nieuwe afrond-RPC's de reeds
+  aanwezige server-side finish_acid_sprint- en finish_oxidation_sprint-functies om
+  de gevalideerde sessiescore op te halen. Voer deze migratie uit op dezelfde Supabase
+  database waarop die bestaande bonuslevels al werken.
+- De voortgangstellers zijn gebaseerd op card_catalog, user_cards en actieve
+  card_reactions; de samengestelde teller verandert dus mee met actieve reactieproducten.
+- Live Supabase- en Netlify-werking is niet vanuit deze ontwikkelomgeving getest.

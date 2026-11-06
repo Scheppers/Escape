@@ -238,3 +238,6 @@
 .online-play-card .battle-card-mascot { display:flex; justify-content:center; width:100%; }
 .online-play-card .chem-mascot { display:flex; flex-direction:column; align-items:center; gap:0; min-height:76px; color:#f4e4b8; font-size:.65rem; }
 .online-play-card .chem-mascot svg { width:104px; height:62px; }
+
+/* Voortgang van de kaartencollectie */
+.card-collection-trackers{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:10px;margin:14px 0 8px}.card-collection-tracker{padding:13px;border:1px solid #345e70;border-radius:12px;background:linear-gradient(145deg,#123449,#0b2030);display:grid;gap:8px}.card-collection-tracker>div:first-child{display:flex;align-items:center;justify-content:space-between;gap:8px;color:#c7dce4;font-size:.8rem;font-weight:800}.card-collection-tracker strong{color:#f4d27f;font-size:1.15rem;white-space:nowrap}.card-collection-tracker small{color:#a9c2ce;font-size:.68rem}.card-collection-progress{height:8px;border-radius:99px;background:#071824;overflow:hidden}.card-collection-progress i{display:block;height:100%;border-radius:99px;background:linear-gradient(90deg,#36bba5,#e7c36f)}@media(max-width:520px){.card-collection-trackers{grid-template-columns:1fr}}

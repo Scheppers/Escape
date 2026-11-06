@@ -18,6 +18,9 @@
   let teacherClassCache = [], teacherLeaderboardClassId = null, teacherCreateClassId = null;
   let cardCatalogCache = [], ownedCardCache = [], reactionCache = [], cardShopTab = 'shop';
   let teacherCardCache = [], teacherReactionCache = [];
+  const ELEMENT_SYMBOLS_92 = new Set('H He Li Be B C N O F Ne Na Mg Al Si P S Cl Ar K Ca Sc Ti V Cr Mn Fe Co Ni Cu Zn Ga Ge As Se Br Kr Rb Sr Y Zr Nb Mo Tc Ru Rh Pd Ag Cd In Sn Sb Te I Xe Cs Ba La Ce Pr Nd Pm Sm Eu Gd Tb Dy Ho Er Tm Yb Lu Hf Ta W Re Os Ir Pt Au Hg Tl Pb Bi Po At Rn Fr Ra Ac Th Pa U'.split(' '));
+  const cardFormulaElementSymbol = (formula) => { const f=String(formula||'').trim().replace(/[₀-₉]/g,ch=>String('₀₁₂₃₄₅₆₇₈₉'.indexOf(ch))); const m=f.match(/^([A-Z][a-z]?)(?:[0-9]+)?$/); return m && ELEMENT_SYMBOLS_92.has(m[1]) ? m[1] : null; };
+  const cardFormulaIsElement = (formula) => Boolean(cardFormulaElementSymbol(formula));
   const esc = (s) => String(s ?? '').replace(/[&<>"']/g, ch => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[ch]));
   const isAuCard = (card) => String(card?.formula ?? '').trim().toUpperCase() === 'AU';
   const isFinalRewardAu = (card) => Boolean(card?.is_final_reward) && isAuCard(card);
@@ -51,6 +54,22 @@
       Ca:['#d9e3ef','#9aabba','#2e3d50','#ffffff','crown'],
       Cu:['#c77c4e','#8d4b2a','#3d2114','#ffe0c8','moustache']
     };
+    // De volledige reeks elementen van waterstof tot uranium. Voor elementen
+    // zonder handgemaakt ontwerp maken we een vaste, deterministische stijl.
+    // Daardoor krijgt elk element steeds dezelfde kleur en hetzelfde attribuut.
+    const ELEMENTS_TO_URANIUM = 'H He Li Be B C N O F Ne Na Mg Al Si P S Cl Ar K Ca Sc Ti V Cr Mn Fe Co Ni Cu Zn Ga Ge As Se Br Kr Rb Sr Y Zr Nb Mo Tc Ru Rh Pd Ag Cd In Sn Sb Te I Xe Cs Ba La Ce Pr Nd Pm Sm Eu Gd Tb Dy Ho Er Tm Yb Lu Hf Ta W Re Os Ir Pt Au Hg Tl Pb Bi Po At Rn Fr Ra Ac Th Pa U'.split(' ');
+    const accessories = ['tuft','glasses','leaf','moustache','hat','cheeks','crown','beard'];
+    const grumpyElements = new Set('Li Be B Ne Al Si Ar Sc Ti V Cr Mn Co Ni Zn Ga As Kr Rb Y Nb Tc Rh Cd In Sb Xe Cs La Pr Pm Gd Tb Ho Lu Ta Re Ir Hg Tl Po At Fr Ac Pa U'.split(' '));
+    const hsl = (h, s, l) => `hsl(${h} ${s}% ${l}%)`;
+    ELEMENTS_TO_URANIUM.forEach((element, index) => {
+      if (looks[element]) return; // bestaande, herkenbare ontwerpen blijven exact behouden
+      const hue = Math.round((index * 137.508 + 18) % 360);
+      const color = hsl(hue, 52 + (index % 3) * 7, 62 + (index % 2) * 4);
+      const edge = hsl(hue, 48 + (index % 3) * 6, 36);
+      const eye = index % 3 === 0 ? '#17212b' : '#fff';
+      const accent = hsl((hue + 42) % 360, 76, 82);
+      looks[element] = [color, edge, eye, accent, accessories[index % accessories.length]];
+    });
     const atoms = [];
     for (const token of tokens) {
       const element = token[1], amount = Math.max(1, Number(token[2] || 1));
@@ -82,7 +101,10 @@
       tuft:`<path d="M53 10q-8-13 2-12q3 7 7 10q5-10 11-5l-5 10" fill="${accent}" stroke="${first[1]}" stroke-width="2"/>`,
       leaf:`<path d="M62 13q-2-16 13-15q-1 13-13 15" fill="${accent}" stroke="${first[1]}" stroke-width="2"/>`
     }[trait] || '';
-    return `<div class="online-formula chem-mascot" role="img" aria-label="${esc(formula)}-monstertje"><svg viewBox="0 0 120 74" aria-hidden="true">${spheres}<ellipse cx="${n===1?49:60}" cy="22" rx="10" ry="5" fill="#fff" opacity=".18"/><g fill="${eye}"><ellipse cx="52" cy="35" rx="3.2" ry="4.2"/><ellipse cx="68" cy="35" rx="3.2" ry="4.2"/></g><g fill="#fff"><circle cx="53" cy="33.5" r="1.1"/><circle cx="69" cy="33.5" r="1.1"/></g><path d="M53 44q7 7 14 0" fill="none" stroke="${eye}" stroke-width="2.4" stroke-linecap="round"/>${accessory}</svg><span>${esc(formula)}</span></div>`;
+    const expression = grumpyElements.has(atoms[0])
+      ? `<path d="M47 30l10 3M73 30l-10 3" stroke="${eye}" stroke-width="2.8" stroke-linecap="round"/><path d="M53 48q7-7 14 0" fill="none" stroke="${eye}" stroke-width="2.5" stroke-linecap="round"/>`
+      : `<path d="M53 44q7 7 14 0" fill="none" stroke="${eye}" stroke-width="2.4" stroke-linecap="round"/>`;
+    return `<div class="online-formula chem-mascot" role="img" aria-label="${esc(formula)}-monstertje"><svg viewBox="0 0 120 74" aria-hidden="true">${spheres}<ellipse cx="${n===1?49:60}" cy="22" rx="10" ry="5" fill="#fff" opacity=".18"/><g fill="${eye}"><ellipse cx="52" cy="35" rx="3.2" ry="4.2"/><ellipse cx="68" cy="35" rx="3.2" ry="4.2"/></g><g fill="#fff"><circle cx="53" cy="33.5" r="1.1"/><circle cx="69" cy="33.5" r="1.1"/></g>${expression}${accessory}</svg><span>${esc(formula)}</span></div>`;
   }
 
   const msg = (text, kind = '') => { if (authStatus) { authStatus.textContent = text; authStatus.className = `online-status ${kind}`; } };
@@ -203,7 +225,7 @@
   }
   async function renderCards() {
     const [{ data: catalog, error: cErr }, { data: owned, error: oErr }, { data: reactions, error: rErr }, econ] = await Promise.all([
-      supabase.from('card_catalog').select('id,name,formula,category,rarity,price,attack,shield,description,card_type,power,support_target_type,support_effect,support_description,support_target_type_2,support_effect_2,support_description_2,is_shop_item,is_reward_only,is_final_reward').order('price'),
+      supabase.from('card_catalog').select('id,name,formula,category,rarity,price,attack,shield,description,card_type,power,support_target_type,support_effect,support_description,support_target_type_2,support_effect_2,support_description_2,is_shop_item,is_reward_only,is_final_reward,is_bonus_reward,bonus_reward_code').order('price'),
       supabase.from('user_cards').select('card_id,quantity').eq('user_id', currentUser.id),
       supabase.from('card_reactions').select('id,name,reactant_a_id,reactant_a_qty,reactant_b_id,reactant_b_qty,product_a_id,product_a_qty,product_b_id,product_b_qty,equation_text,active').eq('active', true).order('name'),
       getEconomy()
@@ -217,7 +239,13 @@
     // Verberg de oude, niet-beschikbare Au-cataloguskaart. De echte tijdreisbeloning
     // blijft zichtbaar omdat die expliciet als is_final_reward gemarkeerd is.
     const ownedCards = cardCatalogCache.filter(c => (ownedMap.get(c.id) || 0) > 0 && !isObsoleteAuCard(c));
-    const reactionCards = ownedCards.filter(c => !c.is_final_reward && String(c.formula).trim().toUpperCase() !== 'AU');
+    const reactionCards = ownedCards.filter(c => !c.is_final_reward && !c.is_bonus_reward && String(c.formula).trim().toUpperCase() !== 'AU');
+    const ownedElements = new Set(cardCatalogCache.filter(c => (ownedMap.get(c.id)||0)>0 && cardFormulaIsElement(c.formula)).map(c => cardFormulaElementSymbol(c.formula)).filter(Boolean));
+    const availableCompoundIds = new Set(reactionCache.flatMap(r => [r.product_a_id, r.product_b_id].filter(Boolean)));
+    const availableCompoundCards = cardCatalogCache.filter(c => availableCompoundIds.has(c.id) && !cardFormulaIsElement(c.formula));
+    const ownedCompoundCount = availableCompoundCards.filter(c => (ownedMap.get(c.id) || 0) > 0).length;
+    const elementProgress = Math.min(100, ownedElements.size / 92 * 100);
+    const compoundProgress = availableCompoundCards.length ? Math.min(100, ownedCompoundCount / availableCompoundCards.length * 100) : 0;
     const tabs = `<div class="card-system-tabs"><button type="button" data-card-tab="shop" class="${cardShopTab==='shop'?'active':''}">🛍️ Winkel</button><button type="button" data-card-tab="collection" class="${cardShopTab==='collection'?'active':''}">📚 Mijn collectie</button><button type="button" data-card-tab="reactor" class="${cardShopTab==='reactor'?'active':''}">⚗️ Reactiekamer</button></div>`;
     let body = '';
     // Card IDs moeten ook beschikbaar zijn nadat de reactiekamer-HTML is opgebouwd.
@@ -231,7 +259,7 @@
         return `<article class="online-card"><div class="online-card-top"><span>${esc(c.card_type || c.category)}</span><span>${esc(c.rarity)}</span></div>${chemicalMascot(c.formula)}<h4>${esc(c.name)}</h4><p>${esc(c.description)}</p>${[c.support_description,c.support_description_2].filter(Boolean).map(t=>`<small class="card-support">✨ ${esc(t)}</small>`).join('')}<div class="online-stats"><span>💪 Kracht ${Number(c.power ?? c.attack)}</span><span>📦 ${quantity} in bezit</span></div><button data-card-buy="${esc(c.id)}">Koop exemplaar · ${Number(c.price)} ${LABCOIN_ICON}</button></article>`;
       }).join('') || '<p class="online-help">De leerkracht heeft nog geen winkelkaarten geactiveerd.</p>'}</div>`;
     } else if (cardShopTab === 'collection') {
-      body = `<p class="online-help">Je verzameling bevat ${ownedCards.reduce((sum,c)=>sum+(ownedMap.get(c.id)||0),0)} kaart(en). Dubbele kaarten tellen als aparte exemplaren. De exclusieve tijdreisbeloning is niet te koop en niet bruikbaar in reacties, maar kan wel in een battledeck.</p><div class="online-store-grid online-card-grid">${ownedCards.map(c => `<article class="online-card owned"><div class="online-card-top"><span>${esc(c.card_type || c.category)}</span><span>${esc(c.rarity)}</span></div>${chemicalMascot(c.formula)}<h4>${esc(c.name)}</h4><p>${esc(c.description)}</p><div class="online-stats"><span>💪 Kracht ${Number(c.power ?? c.attack)}</span><span>📦 ×${ownedMap.get(c.id)}</span></div>${[c.support_description,c.support_description_2].filter(Boolean).map(t=>`<small class="card-support">✨ ${esc(t)}</small>`).join('')}${c.is_final_reward ? '<span class="card-reward-tag final-reward-tag">🏆 Exclusieve tijdreisbeloning · niet te koop of inzetbaar in reacties · wel inzetbaar in battles</span>' : String(c.formula).trim() === 'Au' ? '<span class="card-reward-tag">Oude Au-kaart · niet langer te koop of inzetbaar in nieuwe battles</span>' : c.is_reward_only ? '<span class="card-reward-tag">🏆 Exclusieve battlekaart</span>' : ''}</article>`).join('') || '<p class="online-help">Je collectie is nog leeg. Koop eerst enkele enkelvoudige stoffen in de winkel.</p>'}</div>`;
+      body = `<div class="card-collection-trackers"><article class="card-collection-tracker"><div><span>🧪 Enkelvoudige stoffen</span><strong>${ownedElements.size}/92</strong></div><div class="card-collection-progress"><i style="width:${elementProgress}%"></i></div><small>Verschillende elementen in je collectie</small></article><article class="card-collection-tracker"><div><span>⚗️ Samengestelde stoffen</span><strong>${ownedCompoundCount}/${availableCompoundCards.length}</strong></div><div class="card-collection-progress"><i style="width:${compoundProgress}%"></i></div><small>Beschikbare reactieproducten die je bezit</small></article></div><p class="online-help">Je verzameling bevat ${ownedCards.reduce((sum,c)=>sum+(ownedMap.get(c.id)||0),0)} kaart(en). De tellers hierboven tellen alleen verschillende stoffen; dubbele exemplaren verhogen je voortgang niet. De exclusieve tijdreisbeloning is niet te koop en niet bruikbaar in reacties, maar kan wel in een battledeck.</p><div class="online-store-grid online-card-grid">${ownedCards.map(c => `<article class="online-card owned"><div class="online-card-top"><span>${esc(c.card_type || c.category)}</span><span>${esc(c.rarity)}</span></div>${chemicalMascot(c.formula)}<h4>${esc(c.name)}</h4><p>${esc(c.description)}</p><div class="online-stats"><span>💪 Kracht ${Number(c.power ?? c.attack)}</span><span>📦 ×${ownedMap.get(c.id)}</span></div>${[c.support_description,c.support_description_2].filter(Boolean).map(t=>`<small class="card-support">✨ ${esc(t)}</small>`).join('')}${c.is_final_reward ? '<span class="card-reward-tag final-reward-tag">🏆 Exclusieve tijdreisbeloning · niet te koop of inzetbaar in reacties · wel inzetbaar in battles</span>' : c.is_bonus_reward ? '<span class="card-reward-tag">🏅 Speciale bonuskaart · verdiend door een bonuslevel</span>' : String(c.formula).trim() === 'Au' ? '<span class="card-reward-tag">Oude Au-kaart · niet langer te koop of inzetbaar in nieuwe battles</span>' : c.is_reward_only ? '<span class="card-reward-tag">🏆 Exclusieve battlekaart</span>' : ''}</article>`).join('') || '<p class="online-help">Je collectie is nog leeg. Koop eerst enkele enkelvoudige stoffen in de winkel.</p>'}</div>`;
     } else {
       const ownedOptions = reactionCards.map(c => `<option value="${esc(c.id)}">${esc(c.formula)} · ${esc(c.name)} (bezit: ${ownedMap.get(c.id)})</option>`).join('');
       firstCardId = reactionCards[0]?.id || '';
@@ -605,8 +633,8 @@ Optie D"></textarea></label>
       if (list) list.textContent = `Kaartcatalogus kon niet laden: ${cardsResult.error.message || cardsResult.error.details || 'onbekende Supabase-fout'}. Controleer de kaartmigraties en de leesrechten.`;
     } else if (list) {
       list.innerHTML = teacherCardCache.filter(c => !isObsoleteAuCard(c)).map(c => {
-        const isAu = isAuCard(c), isFinalAu = isFinalRewardAu(c), fixed = c.is_final_reward || isAu;
-        const cardLabel = c.is_final_reward ? 'exclusieve eindbeloning' : c.is_shop_item ? 'winkel' : c.is_reward_only ? 'battlebeloning' : 'alleen reactieproduct';
+        const isAu = isAuCard(c), isFinalAu = isFinalRewardAu(c), fixed = c.is_final_reward || isAu || c.is_bonus_reward;
+        const cardLabel = c.is_final_reward ? 'exclusieve eindbeloning' : c.is_bonus_reward ? 'speciale bonuslevelbeloning' : c.is_shop_item ? 'winkel' : c.is_reward_only ? 'battlebeloning' : 'alleen reactieproduct';
         const editor = isFinalAu
           ? `<div class="teacher-au-strength-editor"><label for="teacher-au-power-${esc(c.id)}">Kracht (1–20)<input id="teacher-au-power-${esc(c.id)}" type="number" min="1" max="20" step="1" value="${Number(c.power) || 1}" data-au-final-power></label><button type="button" data-au-final-power-save="${esc(c.id)}">Kracht opslaan</button></div>`
           : fixed ? '<span class="card-reward-tag final-reward-tag">Vast · niet aanpassen</span>' : `<button type="button" data-teacher-card-edit="${esc(c.id)}">Bewerken</button>`;
@@ -615,7 +643,7 @@ Optie D"></textarea></label>
     }
 
     const options = teacherCardCache
-      .filter(c => !c.is_final_reward && String(c.formula || '').trim().toUpperCase() !== 'AU')
+      .filter(c => !c.is_final_reward && !c.is_bonus_reward && String(c.formula || '').trim().toUpperCase() !== 'AU')
       .map(c => `<option value="${esc(c.id)}">${esc(c.formula)} · ${esc(c.name)}</option>`).join('');
     ['teacher-reaction-a', 'teacher-reaction-b', 'teacher-reaction-pa', 'teacher-reaction-pb'].forEach(id => {
       const el = document.getElementById(id);
@@ -909,10 +937,10 @@ Optie D"></textarea></label>
     async finishSprint(sessionId) { requireLogin(); return rpc('finish_element_sprint', { p_session_id: sessionId }); },
     async startAcidSprint() { requireLogin(); return rpc('start_acid_sprint'); },
     async submitAcidSprintAnswer(sessionId, sequenceNumber, answer) { requireLogin(); return rpc('submit_acid_sprint_answer', { p_session_id: sessionId, p_sequence_number: sequenceNumber, p_answer: answer }); },
-    async finishAcidSprint(sessionId) { requireLogin(); return rpc('finish_acid_sprint', { p_session_id: sessionId }); },
+    async finishAcidSprint(sessionId) { requireLogin(); return rpc('finish_acid_sprint_with_reward', { p_session_id: sessionId }); },
     async startOgSprint() { requireLogin(); return rpc('start_oxidation_sprint'); },
     async submitOgSprintAnswer(sessionId, sequenceNumber, answer) { requireLogin(); return rpc('submit_oxidation_sprint_answer', { p_session_id: sessionId, p_sequence_number: sequenceNumber, p_answer: answer }); },
-    async finishOgSprint(sessionId) { requireLogin(); return rpc('finish_oxidation_sprint', { p_session_id: sessionId }); },
+    async finishOgSprint(sessionId) { requireLogin(); return rpc('finish_oxidation_sprint_with_reward', { p_session_id: sessionId }); },
     async startAlkaneArchitect() { requireLogin(); return rpc('start_alkane_architect'); },
     async submitAlkaneArchitectAnswer(sessionId, nodeCount, edges) {
       requireLogin();

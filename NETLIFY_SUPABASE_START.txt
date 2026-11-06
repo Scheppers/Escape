@@ -80,3 +80,19 @@ HANDIG
 - Vragen: vragen.json
 
 De bestanden zijn een voorbereid MVP-startpakket. Ik kan jouw Netlify/Supabase-accounts niet zelf publiceren of configureren; voer de stappen hierboven uit en test met een leerkracht en twee testleerlingen vóór gebruik in de klas.
+
+
+EXTRA MIGRATIE — KAARTENCOLLECTIE EN BONUSKAARTEN
+-------------------------------------------------
+Na de bestaande schema-, kaart- en bonuslevelmigraties voer je ook uit:
+`supabase/2026_11_card_collection_progress_and_bonus_rewards.sql`
+
+Deze migratie voegt de twee collectievoortgangstellers toe, maakt de zilverkaart een
+bonusbeloning, voegt de speciale kaarten Pt, Rh, Pd, Ir en Os toe en koppelt de eerste
+vier speciale kaarten aan hun bonuslevelprestaties. Ze bevat ook de Elementensprint-
+herkansing: 40 willekeurige elementen, foute antwoorden één keer achteraan opnieuw,
+en zilver bij 40 juiste antwoorden.
+
+Voer de migratie één keer uit in Supabase SQL Editor. Ze veronderstelt dat de reeds
+werkende serverfuncties voor de Zurenkennis-sprint en The OG of chemistry aanwezig
+zijn, omdat de beloningscontrole hun gecontroleerde sessiescores gebruikt.
