@@ -1,0 +1,12 @@
+UPDATE ALKANENARCHITECT — WEERGAVE CORRECTE OPLOSSING
+
+De weergave van de correcte skeletnotatie na een fout antwoord is verbeterd.
+- De langste koolstofroute wordt automatisch als hoofdketen gebruikt.
+- De hoofdketen wordt in de gebruikelijke zigzagvorm getekend.
+- Vertakkingen worden als schuine/zijwaartse bindingen geplaatst.
+- De SVG schaalt automatisch rond de volledige structuur.
+- De chemische structuurcontrole en de tekenomgeving van de leerling zijn niet gewijzigd.
+
+Installatie:
+Vervang de bestaande projectbestanden door deze volledige projectversie en push/deploy zoals gebruikelijk via GitHub en Netlify.
+Er is voor deze visuele verbetering geen nieuwe Supabase-migratie nodig.

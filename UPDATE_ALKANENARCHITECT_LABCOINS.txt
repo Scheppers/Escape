@@ -1,0 +1,19 @@
+UPDATE ALKANENARCHITECT — LABCOIN-OPBOUW
+
+De beloning telt nu op basis van het aantal eerder correct beantwoorde tekeningen:
+- 1e correcte tekening in de sessie: 1 LabCoin
+- 2e correcte tekening: 2 LabCoins
+- 3e correcte tekening: 3 LabCoins
+- ...
+- 10e correcte tekening: 10 LabCoins
+
+Een fout antwoord levert 0 LabCoins op en verhoogt de beloningsstap niet.
+Voorbeeld: fout, fout, juist, fout, juist = 1 + 2 = 3 LabCoins.
+Maximum blijft 55 LabCoins.
+
+INSTALLATIE
+1. Voer supabase/2026_11_fix_alkane_architect_coin_progression.sql uit in de Supabase SQL Editor.
+2. Vervang/push de projectbestanden naar GitHub en laat Netlify deployen.
+3. Test bij voorkeur met een leerlingaccount.
+
+De SQL-functie blijft de beloning server-side bepalen; de browser kan de coinwaarde niet zelf kiezen.

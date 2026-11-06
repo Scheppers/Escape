@@ -767,7 +767,7 @@ async function submitAlkaneAnswer(){
   }catch(error){setStatus(error.message||"De tekening kon niet gecontroleerd worden.");return;}
  }else{
   const target=alkaneTargetGraph(item),valid=alkaneTreeCode({nodes:st.graph.nodes.length,edges:st.graph.edges}),expected=alkaneTreeCode(target);
-  correct=Boolean(valid&&expected&&valid===expected);reward=correct?st.index+1:0;
+  correct=Boolean(valid&&expected&&valid===expected);reward=correct?st.correct+1:0;
   if(correct){st.correct++;st.earned+=reward;labCoins+=reward;renderEconomyPanel();}
   else solution=target;
  }
@@ -775,24 +775,45 @@ async function submitAlkaneAnswer(){
  showEconomyOverlay(`<p class="economy-eyebrow">MOLECULE ${st.index+1} VAN 10</p><h2 class="economy-title">${correct?"✅ Correct getekend!":"❌ Niet helemaal juist"}</h2><p class="economy-lead">${correct?`Je hebt ${escapeHtml(item.name)} correct getekend en verdient ${reward} LabCoin${reward===1?"":"s"}.`:`De getekende koolstofstructuur komt niet overeen met ${escapeHtml(item.name)}. Bekijk hieronder de correcte skeletnotatie.`}</p>${correct?`<div class="alkane-reward">+${reward} LabCoins</div>`:`<div class="alkane-solution"><strong>Correcte skeletnotatie van ${escapeHtml(item.name)}</strong>${solution?alkaneSolutionSvg(solution):"<p>De oplossing kon niet worden weergegeven.</p>"}</div>`}<button type="button" class="primary full" id="alkane-next">${st.index===9?"Bekijk resultaat":"Volgende molecule"}</button>`);
 }
 function alkaneSolutionSvg(graph){
- const n=graph.nodes,edges=graph.edges,coords=[];
- // Deterministische boom-layout voor het antwoordmodel: teken een eenvoudige
- // chain met vertakkingen op basis van de adjacency, onafhankelijk van de leerlingtekening.
- const adj=Array.from({length:graph.nodes},()=>[]);
- edges.forEach(([a,b])=>{adj[a].push(b);adj[b].push(a);});
- const root=adj.findIndex(a=>a.length>2);const start=root>=0?root:0;
- const parent=Array(n).fill(-1),order=[start];parent[start]=start;
- for(let i=0;i<order.length;i++)for(const v of adj[order[i]])if(parent[v]===-1){parent[v]=order[i];order.push(v);}
- // Lay out each child as a short angled segment; root at the center.
- coords[start]={x:300,y:120};
- const childCount=Array(n).fill(0);
- for(const v of order.slice(1)){
-  const p=parent[v],slot=childCount[p]++;const base=coords[p];
-  const angle=(adj[p].length===2?0:(slot-(adj[p].length-1)/2)*0.95)+(p===start?0:Math.PI/3);
-  coords[v]={x:base.x+Math.cos(angle)*70,y:base.y+Math.sin(angle)*65};
+ const n=Number(graph?.nodes)||0,edges=Array.isArray(graph?.edges)?graph.edges:[];
+ if(n<2||edges.length!==n-1)return "<p>De oplossing kon niet worden weergegeven.</p>";
+ const adj=Array.from({length:n},()=>[]);
+ for(const [a,b] of edges){adj[a].push(b);adj[b].push(a);}
+ // De langste onvertakte route is de hoofdketen van een alkaanboom.
+ const farthest=(origin)=>{
+  const parent=Array(n).fill(-1),dist=Array(n).fill(0),q=[origin];parent[origin]=origin;
+  for(let i=0;i<q.length;i++)for(const v of adj[q[i]])if(parent[v]===-1){parent[v]=q[i];dist[v]=dist[q[i]]+1;q.push(v);}
+  let best=origin;for(const v of q)if(dist[v]>dist[best])best=v;
+  return {node:best,parent};
+ };
+ const a=farthest(0).node,walk=farthest(a),chain=[];
+ let cur=walk.node;while(cur!==a){chain.push(cur);cur=walk.parent[cur];}chain.push(a);chain.reverse();
+ const coords=Array(n).fill(null),chainSet=new Set(chain),step=66,zig=38;
+ chain.forEach((v,i)=>coords[v]={x: i*step,y:(i%2)*zig});
+ // Plaats vertakkingen aan de hoofdketen met nette 60°-achtige bindingen.
+ function placeBranch(node,parent,originX,originY,angle,length,depth){
+  const x=originX+Math.cos(angle)*length,y=originY+Math.sin(angle)*length;
+  coords[node]={x,y};
+  const kids=adj[node].filter(v=>v!==parent&&!chainSet.has(v));
+  kids.forEach((child,i)=>{
+   const spread=kids.length===1?0:(i-(kids.length-1)/2)*0.92;
+   placeBranch(child,node,x,y,angle+(i%2===0?1:-1)*0.92+spread,step*0.78,depth+1);
+  });
  }
- const paths=edges.map(([a,b])=>`<line x1="${coords[a].x}" y1="${coords[a].y}" x2="${coords[b].x}" y2="${coords[b].y}" stroke="#243b53" stroke-width="4" stroke-linecap="round"/>`).join("");
- return `<svg class="alkane-solution-svg" viewBox="0 0 600 250" role="img" aria-label="Correcte skeletnotatie">${paths}</svg>`;
+ chain.forEach((v,i)=>{
+  const off=adj[v].filter(w=>!chainSet.has(w));
+  off.forEach((child,j)=>{
+   const side=off.length>1?(j===0?-1:1):(i%2===0?-1:1);
+   const angle=side*Math.PI/2 + (i%2===0?0.18:-0.18);
+   placeBranch(child,v,coords[v].x,coords[v].y,angle,step*0.78,1);
+  });
+ });
+ const xs=coords.filter(Boolean).map(p=>p.x),ys=coords.filter(Boolean).map(p=>p.y);
+ const minX=Math.min(...xs),maxX=Math.max(...xs),minY=Math.min(...ys),maxY=Math.max(...ys);
+ const pad=32,width=Math.max(180,maxX-minX+pad*2),height=Math.max(120,maxY-minY+pad*2);
+ const X=x=>+(x-minX+pad).toFixed(1),Y=y=>+(y-minY+pad).toFixed(1);
+ const paths=edges.map(([u,v])=>`<line x1="${X(coords[u].x)}" y1="${Y(coords[u].y)}" x2="${X(coords[v].x)}" y2="${Y(coords[v].y)}"/>`).join("");
+ return `<svg class="alkane-solution-svg" viewBox="0 0 ${width.toFixed(1)} ${height.toFixed(1)}" role="img" aria-label="Correcte skeletnotatie"><g fill="none" stroke="#243b53" stroke-width="3.8" stroke-linecap="round" stroke-linejoin="round">${paths}</g></svg>`;
 }
 function finishAlkaneArchitect(){
  const st=alkaneArchitectState;st.running=false;renderEconomyPanel();
