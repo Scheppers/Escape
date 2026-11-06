@@ -1,5 +1,5 @@
 <!doctype html>
-<html lang="nl"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>Een chemische tijdreis</title><link rel="stylesheet" href="style.css?v=20261106-card-collection-1"></head>
+<html lang="nl"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>Een chemische tijdreis</title><link rel="stylesheet" href="style.css?v=20261106-three-column-layout-1"></head>
 <body>
 <header class="topbar"><div><h1>Een chemische tijdreis</h1></div><div class="progress-wrap"><span id="progress-text">Level 1 van 4</span><div class="progress"><div id="progress-fill"></div></div></div></header>
 <main>
@@ -10,6 +10,14 @@
 <button class="level-tab" data-level="future"><span>Ⅳ</span><b>Leerjaar 4 · Toekomst</b><small>Futuristisch labo</small></button>
 </nav>
 <section class="game-layout">
+<aside class="side-panel left-panel" aria-label="Missie en inventaris">
+<div class="panel-heading"><span>⌘</span><h2>Missieoverzicht</h2></div>
+<div class="level-status" id="level-status">Leerjaar 1: nog geen puzzels voltooid</div>
+<div class="question-coverage" id="question-coverage"><small>Vragenkennis wordt geladen…</small></div>
+<div class="status-box"><span class="status-dot"></span><p id="status-text">Klik op een voorwerp om te beginnen.</p></div>
+<div class="inventory materials-inventory"><h3>🧺 Grondstoffeninventaris</h3><div class="inventory-items" id="inventory-items"><div class="material-item empty"><span class="material-icon">🧂</span><strong>Kaliumnitraat</strong><b>0 mol</b><small>KNO3</small></div><div class="material-item empty"><span class="material-icon">⚫</span><strong>Koolstof</strong><b>0 mol</b><small>C</small></div><div class="material-item empty"><span class="material-icon">🟡</span><strong>Zwavel</strong><b>0 mol</b><small>S</small></div></div></div>
+<div class="safe-box"><h3>🔐 De kluis</h3><p>Verdien 30 LabCoins door de kluis op te blazen met buskruit.</p><button id="blow-safe-button" class="primary full">Blaas de kluis op</button><div id="safe-feedback" class="safe-feedback hidden" role="status" aria-live="polite"></div></div>
+</aside>
 <div class="scene-wrap"><div class="scene" id="scene">
 <img src="assets/medieval_lab.svg" class="lab-art" id="lab-art" alt="Getekend historisch laboratorium">
 <button class="hotspot h1" data-object="object1"><span>✦</span><small id="label1">Kookpot</small></button>
@@ -20,16 +28,8 @@
 <button class="hotspot antagonist hidden" id="antagonist" data-object="antagonist"><span>👾</span><small>De Schaduw!</small></button>
 <div class="scene-caption" id="scene-caption">Onderzoek de voorwerpen. Let op: de Schaduw kan elk moment verschijnen.</div>
 </div></div>
-<aside class="side-panel">
-<div class="panel-heading"><span>⌘</span><h2>Missieoverzicht</h2></div>
-<div class="level-status" id="level-status">Leerjaar 1: nog geen puzzels voltooid</div>
-<div class="question-coverage" id="question-coverage"><small>Vragenkennis wordt geladen…</small></div>
-
-<div class="status-box"><span class="status-dot"></span><p id="status-text">Klik op een voorwerp om te beginnen.</p></div>
-<div class="inventory materials-inventory"><h3>🧺 Grondstoffeninventaris</h3><div class="inventory-items" id="inventory-items"><div class="material-item empty"><span class="material-icon">🧂</span><strong>Kaliumnitraat</strong><b>0 mol</b><small>KNO3</small></div><div class="material-item empty"><span class="material-icon">⚫</span><strong>Koolstof</strong><b>0 mol</b><small>C</small></div><div class="material-item empty"><span class="material-icon">🟡</span><strong>Zwavel</strong><b>0 mol</b><small>S</small></div></div></div>
-<div class="safe-box"><h3>🔐 De kluis</h3><p>Verdien 30 LabCoins door de kluis op te blazen met buskruit.</p><button id="blow-safe-button" class="primary full">Blaas de kluis op</button><div id="safe-feedback" class="safe-feedback hidden" role="status" aria-live="polite"></div></div>
-
-</aside></section>
+<aside class="bonus-sidebar" id="bonus-sidebar" aria-label="Bonusspellen en skins"></aside>
+</section>
 <div id="logbook" hidden aria-hidden="true"></div>
 <footer>Educatief spel · De kluisreactie is uitsluitend een virtuele spelhandeling. Verzamel of meng deze stoffen nooit in het echt.</footer>
 </main>
@@ -95,7 +95,7 @@
 
 <div class="modal-backdrop hidden" id="modal-backdrop" role="dialog" aria-modal="true" aria-labelledby="modal-title"><section class="question-modal"><button class="close-button" id="close-modal" aria-label="Sluiten">×</button><p class="eyebrow" id="modal-category">CHEMIEPUZZEL</p><h2 id="modal-title">Vraag</h2><p id="question-text" class="question-text"></p><form id="answer-form"><div id="answer-area"></div><div class="modal-actions"><button type="button" class="secondary hidden" id="hint-button" tabindex="-1" aria-hidden="true">Hint</button><button type="submit" class="primary" id="check-button">Controleer antwoord</button></div></form><div class="feedback hidden" id="feedback" role="status"></div></section></div>
 <div class="win-screen hidden" id="win-screen"><div class="win-card"><div class="win-icon">⌛</div><p class="eyebrow">TIJDSLOT GEOPEND</p><h2>De tijdlijn is hersteld!</h2><p>Je hebt de vier laboratoria onderzocht, de codes verzameld en de kluis geopend.</p><button class="primary" id="play-again">Speel opnieuw</button></div></div>
-<script src="game.js?v=20261106-card-collection-1"></script>
+<script src="game.js?v=20261106-three-column-layout-1"></script>
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 <script src="config.js"></script>
-<script src="online.js?v=20261106-card-collection-1"></script></body></html>
+<script src="online.js?v=20261106-three-column-layout-1"></script></body></html>

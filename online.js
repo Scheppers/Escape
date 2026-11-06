@@ -951,7 +951,7 @@ Optie D"></textarea></label>
       });
       return result;
     },
-    async buySkin(id) { await rpc('buy_skin', { p_skin_id: id }); const economy = await getEconomy(); return { ok: true, action: 'buy', economy }; },
+    async buySkin(id) { const purchase = await rpc('buy_skin', { p_skin_id: id }); const economy = await getEconomy(); return { ok: true, action: 'buy', economy, bonusCardAwarded: Boolean(purchase?.bonus_card_awarded) }; },
     async equipSkin(id) { await rpc('equip_skin', { p_skin_id: id }); const economy = await getEconomy(); return { ok: true, action: 'equip', economy }; },
     refreshDashboardSoon() { setTimeout(() => { if (currentUser) refreshDashboard().catch(console.error); }, 350); },
     getClient: () => supabase

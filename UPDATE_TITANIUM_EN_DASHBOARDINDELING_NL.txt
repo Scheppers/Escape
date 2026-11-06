@@ -1,0 +1,17 @@
+UPDATE: TITANIUMKAART EN NIEUWE DASHBOARDINDELING
+
+Wat is aangepast?
+- Titanium (Ti) is een speciale kaart die spelers verdienen zodra ze alle skins uit de skinwinkel bezitten.
+- De controle gebeurt server-side bij het kopen van de laatste ontbrekende skin.
+- Spelers die vóór deze update al alle skins bezaten, krijgen de kaart bij het uitvoeren van de migratie.
+- Titanium kan niet gekocht worden en niet als grondstof in chemische reacties gebruikt worden.
+- De hoofdinterface heeft nu drie kolommen: links missieoverzicht, grondstoffeninventaris en kluis; centraal het laboratorium/puzzelveld; rechts de bonusspellen.
+- Huidige skin en de knop naar de skinwinkel staan in een apart blok onder de bonusspellen.
+- Op tablet en mobiel stapelen de onderdelen onder elkaar, met het laboratorium bovenaan.
+
+Installatie:
+1. Voer supabase/2026_11_titanium_all_skins_reward.sql één keer uit in Supabase SQL Editor.
+2. Upload de volledige projectmap naar GitHub.
+3. Laat Netlify opnieuw deployen.
+
+De migratie vereist dat de eerdere kaartencollectie- en bonuskaartmigraties al zijn uitgevoerd.
