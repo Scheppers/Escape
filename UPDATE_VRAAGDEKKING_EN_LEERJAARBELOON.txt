@@ -1,0 +1,23 @@
+UPDATE: VRAAGDEKKING EN SPECIALE LEERJAARKAARTEN
+
+Nieuwe functie:
+- Per puzzel wordt getoond hoeveel actieve vragen de leerling minstens één keer juist heeft beantwoord (x/y).
+- De teller combineert alle moeilijkheidsgraden.
+- De teller wordt server-side opgebouwd uit correct beantwoorde vragen; foutieve antwoorden tellen niet mee.
+- Gearchiveerde vragen verdwijnen uit de noemer. Nieuwe actieve vragen vergroten de noemer automatisch.
+- Na aanmelden en na elk juist online antwoord wordt de voortgang ververst.
+
+Speciale kaarten bij volledige dekking van alle actieve vragen in een leerjaar:
+- Middeleeuws alchemistenlabo: Iridium (Ir)
+- Labo tijdens de Franse Revolutie: Osmium (Os)
+- Modern chemielabo: Ruthenium (Ru)
+- Futuristisch chemielabo: Rhenium (Re)
+
+De kaart wordt automatisch en maximaal één keer aan de collectie toegevoegd. Deze kaarten zijn niet te koop en niet inzetbaar in chemische reacties, maar wel bruikbaar in battles.
+
+INSTALLATIE
+1. Voer supabase/2026_11_question_coverage_and_year_rewards.sql uit in de Supabase SQL Editor.
+2. Push de volledige projectmap naar GitHub.
+3. Laat Netlify opnieuw deployen.
+
+Geen bestaande vragen of spelersvoortgang worden verwijderd. De dekking wordt berekend uit correct_question_ids in bestaande puzzelpogingen. Als de database een ouder schema heeft waarin die kolom niet wordt bijgehouden, kan de dekking pas vanaf de update worden opgebouwd.

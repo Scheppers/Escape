@@ -816,6 +816,7 @@ Optie D"></textarea></label>
       window.ChemieGameBridge?.applyMaterials?.(materials);
     } catch (materialError) { console.warn('Grondstoffeninventaris kon niet worden geladen.', materialError); }
     try { const puzzleProgress = await rpc('get_my_puzzle_progress'); window.ChemieGameBridge?.applyOnlinePuzzleProgress?.(puzzleProgress); } catch (progressError) { console.warn('Puzzelvoortgang kon niet worden geladen.', progressError); }
+    try { const questionCoverage = await rpc('get_my_question_coverage'); window.ChemieGameBridge?.applyOnlineQuestionCoverage?.(questionCoverage); } catch (coverageError) { console.warn('Vraagdekking kon niet worden geladen.', coverageError); }
     try { const levelUnlocks = await rpc('get_my_level_unlocks'); window.ChemieGameBridge?.applyOnlineLevelUnlocks?.(levelUnlocks); } catch (unlockError) { console.warn('Tijdpoortvoortgang kon niet worden geladen.', unlockError); }
     try { const completion = await rpc('get_my_game_completion'); window.ChemieGameBridge?.applyOnlineGameCompletion?.(completion); } catch (completionError) { console.warn('Voltooide hoofdmissie kon niet worden geladen.', completionError); }
     window.ChemieGameBridge?.onOnlineLogin?.();
@@ -921,6 +922,7 @@ Optie D"></textarea></label>
         ? await rpc('submit_puzzle_attempt_short_answer', { p_attempt_id: attemptId, p_question_id: questionId, p_answer: String(answer ?? '') })
         : await rpc('submit_puzzle_attempt_answer', { p_attempt_id: attemptId, p_question_id: questionId, p_answer: Number(answer) });
       if (result?.completed && result?.coins_awarded) result.economy = await getEconomy();
+      if (result?.correct) { try { result.question_coverage = await rpc('get_my_question_coverage'); } catch (coverageError) { console.warn('Vraagdekking kon niet worden bijgewerkt.', coverageError); } }
       return result;
     },
     async getMaterials() { requireLogin(); return rpc('get_my_materials'); },

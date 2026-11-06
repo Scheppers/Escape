@@ -10,7 +10,7 @@ const QUESTIONS_PER_LEVEL=12, QUESTIONS_PER_PUZZLE=3, PENALTY=60;
 const DIFFICULTIES={basis:"Basis",gemiddeld:"Gemiddeld",moeilijk:"Moeilijk"};
 let teacherMode=false, gameCompleted=false;
 let codeEntered=Object.fromEntries(Object.keys(LEVELS).map(k=>[k,false]));
-let questions=[], pendingOnlineQuestionBank=null, objectProgress={}, puzzleSolved={}, puzzleCompletions={}, currentLevel="medieval", progress={}, levelSolved={}, levelQuestions={}, lockouts={}, inventory={kno3:0,carbon:0,sulfur:0}, activeQuestion=null, activeObject=null, activeKind="question", activeAttemptId=null, activeAttemptQuestions=[], activeAttemptCorrectIds=[], activeAttemptIndex=0, activeAttemptRequired=QUESTIONS_PER_PUZZLE, activeDifficulty="basis", activeRunLevel=null, activeRunObject=null, activeRunToken=0, shadowVisible=false, shadowTimer=null, appearanceTimer=null, shadowEncounterId=null, localShadowMaterial=null, codes={}, unlocked=Object.fromEntries(Object.keys(LEVELS).map((k,i)=>[k,i===0]));
+let questions=[], pendingOnlineQuestionBank=null, questionCoverage=[], objectProgress={}, puzzleSolved={}, puzzleCompletions={}, currentLevel="medieval", progress={}, levelSolved={}, levelQuestions={}, lockouts={}, inventory={kno3:0,carbon:0,sulfur:0}, activeQuestion=null, activeObject=null, activeKind="question", activeAttemptId=null, activeAttemptQuestions=[], activeAttemptCorrectIds=[], activeAttemptIndex=0, activeAttemptRequired=QUESTIONS_PER_PUZZLE, activeDifficulty="basis", activeRunLevel=null, activeRunObject=null, activeRunToken=0, shadowVisible=false, shadowTimer=null, appearanceTimer=null, shadowEncounterId=null, localShadowMaterial=null, codes={}, unlocked=Object.fromEntries(Object.keys(LEVELS).map((k,i)=>[k,i===0]));
 const $=id=>document.getElementById(id);
 const sortedLevelCode=levelId=>[...(LEVELS[levelId]?.code||[])].map(Number).sort((a,b)=>a-b).join("");
 const LABCOIN_ICON='<svg class="labcoin-coin-icon" viewBox="0 0 32 32" aria-hidden="true" focusable="false"><circle cx="16" cy="16" r="13.4" fill="#f5c85c" stroke="#9a681c" stroke-width="1.5"/><circle cx="16" cy="16" r="10.2" fill="none" stroke="#fff0a3" stroke-width="1.4"/><path d="M16 9.6l1.9 4.1 4.5.5-3.3 3 1 4.4-4.1-2.2-4.1 2.2 1-4.4-3.3-3 4.5-.5z" fill="#936015"/></svg>';
@@ -218,7 +218,14 @@ function renderLevel(){
  const inProgress=Object.values(objectProgress[currentLevel]||{}).reduce((a,b)=>a+Number(b||0),0);
  $("level-status").textContent=`${l.name}: ${solvedCount} van 4 puzzels voor het eerst voltooid · ${inProgress} vragen juist in de huidige poging`;
  $("scene-caption").textContent=levelSolved[currentLevel]?"Alle vier puzzels zijn minstens één keer opgelost. Je kunt ze opnieuw oefenen en LabCoins verdienen.":"Kies per puzzel je moeilijkheid. Let op: de Schaduw kan elk moment verschijnen.";
- renderInventory();renderEconomyPanel();
+ renderQuestionCoverage();renderInventory();renderEconomyPanel();
+}
+function renderQuestionCoverage(){
+ const el=$("question-coverage");if(!el)return;
+ const rows=questionCoverage.filter(r=>r.level_id===currentLevel);
+ if(!rows.length){el.innerHTML="<small>Vragenkennis: meld je online aan om je verzamelde juiste antwoorden bij te houden.</small>";return;}
+ const byObject=new Map(rows.map(r=>[r.object_id,r]));
+ el.innerHTML=`<strong>📚 Alle vragen leren</strong><div class="question-coverage-grid">${["object1","object2","object3","object4"].map((obj,i)=>{const r=byObject.get(obj)||{};const done=Number(r.answered_count)||0,total=Number(r.total_count)||0,complete=Boolean(r.complete);const pct=total?Math.min(100,done/total*100):0;return `<div class="question-coverage-item ${complete?"complete":""}"><span>${LEVELS[currentLevel].labels[i]}</span><b>${done}/${total}</b><i><em style="width:${pct}%"></em></i><small>${complete?"✓ Alle vragen juist beantwoord":total?"Nog te ontdekken":"Geen actieve vragen"}</small></div>`;}).join("")}</div><small>Elke vraag telt mee zodra je ze minstens één keer juist hebt beantwoord, ongeacht de gekozen moeilijkheid.</small>`;
 }
 function updateProgress(){const n=Object.values(levelSolved).filter(Boolean).length;$("progress-text").textContent=`${n} van ${LEVEL_TOTAL} levels voltooid`;$("progress-fill").style.width=`${n/LEVEL_TOTAL*100}%`;}
 function localAttemptStorageKey(level,obj){return `chemie-escape-attempt:${level}:${obj}`;}
@@ -381,6 +388,7 @@ async function submitAnswer(e){
   if(online){
    if(!activeAttemptId)throw new Error("Deze online puzzelpoging is niet gekoppeld. Open de puzzel opnieuw om je reeks te hervatten.");
    verified=await window.ChemieOnline.submitPuzzleAnswer(activeAttemptId,String(q.id),submittedAnswer,q.type);
+   if(verified?.question_coverage)window.ChemieGameBridge?.applyOnlineQuestionCoverage?.(verified.question_coverage);
    if(!verified||!verified.ok)throw new Error(verified?.error||"De online controle lukte niet.");
   }else{
    const localCorrect=q.type==="numeric"
@@ -1224,6 +1232,11 @@ window.ChemieGameBridge={
    unlocked=teacherMode?Object.fromEntries(LEVEL_ORDER.map(l=>[l,true])):Object.fromEntries(LEVEL_ORDER.map((l,i)=>[l,i===0]));
    currentLevel="medieval";
    renderLevel();updateProgress();
+ },
+ applyOnlineQuestionCoverage(result){
+   questionCoverage=Array.isArray(result?.coverage)?result.coverage:[];
+   renderQuestionCoverage();
+   (Array.isArray(result?.awarded_cards)?result.awarded_cards:[]).forEach(card=>log(`🏅 Verzamelbeloning verdiend: ${card.name||card.card_id}! Je hebt alle actieve vragen van ${LEVELS[card.level_id]?.name||card.level_id} minstens één keer juist beantwoord.`));
  },
  applyOnlineLevelUnlocks(rows){
    unlocked=teacherMode?Object.fromEntries(LEVEL_ORDER.map(l=>[l,true])):Object.fromEntries(LEVEL_ORDER.map(l=>[l,false]));
