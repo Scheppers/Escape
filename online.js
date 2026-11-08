@@ -99,7 +99,7 @@
       const accent = hsl((hue + 42) % 360, 76, 82);
       looks[element] = [color, edge, eye, accent, accessories[index % accessories.length]];
     });
-    const n = atoms.length, radius = n === 1 ? 29 : n === 2 ? 25 : normalized === 'Ca(OH)2' ? 13 : 16;
+    const n = atoms.length, radius = n > 6 ? 8.5 : n === 1 ? 29 : n === 2 ? 25 : normalized === 'Ca(OH)2' ? 13 : 16;
     const layouts = {
       1:[[60,36]], 2:[[39,36],[81,36]],
       3:[[38,43],[82,43],[60,21]],
@@ -107,7 +107,8 @@
       5:[[35,25],[60,19],[85,25],[43,51],[77,51]],
       6:[[35,25],[60,19],[85,25],[35,49],[60,55],[85,49]]
     };
-    const coords = normalized === 'Ca(OH)2' ? [[60,39],[30,21],[10,8],[90,21],[110,8]] : layouts[Math.min(n,6)];
+    const denseLayout = Array.from({length:n}, (_,i) => [[15,45,75,105][i % 4], [17,37,57][Math.floor(i / 4)]]);
+    const coords = normalized === 'Ca(OH)2' ? [[60,39],[30,21],[10,8],[90,21],[110,8]] : n > 6 ? denseLayout : layouts[n];
     const bonds = normalized === 'Ca(OH)2' ? '<g stroke="#52616d" stroke-width="3" stroke-linecap="round"><path d="M50 33L40 27M20 15L16 12M70 33L80 27M100 15L104 12"/></g>' : '';
     const spheres = atoms.map((element,i) => {
       const [color,edge] = looks[element] || ['#70b9c9','#347b8b'];
