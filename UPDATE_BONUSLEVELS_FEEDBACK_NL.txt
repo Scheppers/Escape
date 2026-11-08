@@ -1,0 +1,22 @@
+UPDATE — BESTAANDE BONUSLEVELS EN FEEDBACK
+
+In deze update zijn de volgende wijzigingen opgenomen:
+
+- De Elementensprint toont bij de speciale beloning alleen nog de korte Ag-tekst.
+- Na afloop van de Elementensprint verschijnt bij fout beantwoorde symbolen een overzicht met opgave, leerlingantwoord en correct antwoord.
+- Zurenkennis heeft de verkorte introductie en de aangepaste speciale Pt-beloning.
+- Na afloop van Zurenkennis verschijnt bij fouten een overzicht met opgave, leerlingantwoord en correct antwoord.
+- The OG of chemistry toont alleen nog de korte speciale Rh-beloning.
+- Na afloop van The OG of chemistry verschijnt bij fouten een overzicht met opgave, leerlingantwoord en correct antwoord.
+- De algemene melding over open invulvragen en puzzelcodes is uit deze bonusintro's verwijderd.
+- De introductie en speciale beloning van Alkanenarchitect zijn herschikt en ingekort.
+- Een actief bonusspel kan met het kruisje worden afgesloten. Bij online sprints wordt de sessie netjes afgerond zodat reeds verdiende LabCoins behouden blijven. Er verschijnt bij voortijdig afsluiten geen eindfeedbackvenster.
+- De JavaScript-cacheversie is verhoogd zodat browsers de bijgewerkte game.js ophalen.
+
+Technisch:
+- Geen bestaande Supabase-tabellen of gegevens aangepast.
+- Geen SQL-migratie nodig voor deze update.
+- De bronbestanden staan in de hoofdmap; de gepubliceerde build staat in dist/.
+
+Let op:
+Deze update bevat de aanpassingen aan de reeds bestaande bonuslevels. De drie nieuw besproken bonusspellen (Reactiebalancer, Stoffenindeler en Lewisstructuren) zijn nog niet toegevoegd; daarvoor zijn nieuwe leerkrachtenbeheer-schermen, Supabase-tabellen en afzonderlijke migraties nodig.
