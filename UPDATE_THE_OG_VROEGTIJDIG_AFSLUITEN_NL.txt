@@ -1,0 +1,33 @@
+HERSTEL: THE OG OF CHEMISTRY OPNIEUW KUNNEN STARTEN NA HET KRUISJE
+
+Waarom is deze SQL-update nodig?
+De bestaande Supabase-functie finish_oxidation_sprint weigerde een sprint af te sluiten
+voordat de 60 seconden voorbij waren. Daardoor bleef de online sessie actief en kon
+start_oxidation_sprint een nieuwe ronde blokkeren.
+
+Wat doet de update?
+- Staat toe dat The OG of chemistry ook vóór het einde van de minuut wordt afgesloten.
+- Markeert de sessie als beëindigd.
+- Behoudt coins en XP die al per juist antwoord zijn toegekend.
+- Verwijdert of wijzigt geen bestaande leerlinggegevens.
+- Kent bij het afsluiten geen extra coins of XP toe.
+
+STAPPEN
+1. Maak voor de zekerheid eerst een back-up van je Supabase-database.
+2. Open je Supabase-project.
+3. Ga naar SQL Editor en kies New query.
+4. Open het bestand:
+   supabase/2026_11_fix_early_og_sprint_exit.sql
+5. Kopieer de volledige inhoud naar de SQL Editor.
+6. Klik op Run.
+7. Test daarna in The OG of chemistry:
+   a. Start het bonuslevel.
+   b. Sluit het meteen met het kruisje.
+   c. Open het bonuslevel opnieuw.
+   d. Klik op 'Start de 60 seconden'.
+
+Verwacht resultaat:
+De tweede start moet nu werken. De coins die vóór het afsluiten verdiend zijn,
+blijven behouden. Bij vroegtijdig afsluiten verschijnt geen eindresultaatscherm.
+
+Deze update is alleen voor The OG of chemistry. Andere bonuslevels worden niet gewijzigd.
