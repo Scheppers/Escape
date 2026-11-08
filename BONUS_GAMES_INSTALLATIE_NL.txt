@@ -1,0 +1,20 @@
+INSTALLATIE – DRIE NIEUWE BONUSLEVELS
+
+1. Maak eerst een back-up van je huidige website en Supabase-project.
+2. Open Supabase → SQL Editor.
+3. Voer het volledige bestand supabase/2026_11_bonus_games.sql uit.
+   Dit bestand voegt alleen nieuwe tabellen, policies en RPC-functies toe.
+   Bestaande leerlingprofielen, LabCoins, vragen, kaarten en spelresultaten worden niet verwijderd of overschreven.
+4. Publiceer daarna de volledige inhoud van deze ZIP via Netlify (de map dist is de publicatiemap).
+5. Log in als leerkracht. Open Leerkrachtbeheer → Bonusspellen.
+6. Voeg per spel vragen toe en activeer ze. Voor Lewisstructuren vul je één JSON-model of een JSON-array met meerdere goedgekeurde modellen in; elk model gebruikt de velden atoms, bonds en lonePairs. Gebruik bijvoorbeeld:
+   {"atoms":[{"element":"O"},{"element":"H"},{"element":"H"}],"bonds":[{"a":0,"b":1,"order":1},{"a":0,"b":2,"order":1}],"lonePairs":[{"atom":0,"count":2}]}
+   De vergelijking houdt rekening met atoomsoorten, bindingen, bindingsorde en vrije elektronenparen; de tekenposities en volgorde waarin atomen worden geplaatst zijn niet van belang. Je kunt meerdere toegelaten modellen als JSON-array opslaan (maximaal 14 atomen per model).
+
+SPELREGELS
+- Reactiebalancer: vijf willekeurige actieve reacties; één poging per reactie; 1 t/m 5 LabCoins per juiste reactie (maximaal 15).
+- Stoffenindeler: twee sprints van 60 seconden. De classificatiesprint geeft per blok van 10 juiste antwoorden 1, 2, 3… coins. De benoemingssprint geeft per blok van 5 juiste antwoorden 1, 2, 3… coins. Elk item verschijnt eerst eenmaal voordat de cyclus herhaalt.
+- Lewisstructuren: vijf willekeurige actieve structuren; 3, 6, 9, 12 en 15 coins voor een correcte structuur (maximaal 45).
+
+BELANGRIJK
+Beloningen worden via beveiligde Supabase-functies toegekend. De leerkracht kan de nieuwe inhoud beheren. Test na installatie met één testleerling en controleer het LabCoin-saldo.

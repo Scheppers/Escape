@@ -387,7 +387,7 @@ Optie D"></textarea></label>
   }
 
   function applyTeacherTab(name = 'classes') {
-    const allowed = new Set(['classes', 'questions', 'cards']);
+    const allowed = new Set(['classes', 'questions', 'cards', 'bonus']);
     teacherActiveTab = allowed.has(name) ? name : 'classes';
     view?.querySelectorAll('[data-teacher-tab]').forEach(button => {
       const active = button.dataset.teacherTab === teacherActiveTab;

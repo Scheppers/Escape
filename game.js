@@ -928,7 +928,7 @@ function applyEquippedSkin(){
 }
 function showEconomyOverlay(content){const closeButton=$("economy-close");if(closeButton)closeButton.disabled=false;$("economy-content").innerHTML=content;$("economy-overlay").classList.remove("hidden");}
 async function closeEconomyOverlay(){
- const active=sprintState.running||acidSprintState.running||ogSprintState.running||alkaneArchitectState.running;
+ const active=sprintState.running||acidSprintState.running||ogSprintState.running||alkaneArchitectState.running||window.BonusGames?.isRunning?.();
  if(active){
   const closeButton=$("economy-close");if(closeButton)closeButton.disabled=true;
   try{
@@ -936,6 +936,7 @@ async function closeEconomyOverlay(){
    if(acidSprintState.running){acidSprintState.running=false;if(acidSprintTimer)clearInterval(acidSprintTimer);if(acidSprintTransitionTimer)clearTimeout(acidSprintTransitionTimer);if(acidSprintState.onlineSessionId&&window.ChemieOnline?.isAuthenticated()){const r=await window.ChemieOnline.finishAcidSprint(acidSprintState.onlineSessionId);if(r?.ok){labCoins=Number(r.coins)||labCoins;acidSprintState.specialCardAwarded=Boolean(r.bonus_card_awarded);}}}
    if(ogSprintState.running){ogSprintState.running=false;if(ogSprintTimer)clearInterval(ogSprintTimer);if(ogSprintTransitionTimer)clearTimeout(ogSprintTransitionTimer);if(ogSprintState.onlineSessionId&&window.ChemieOnline?.isAuthenticated()){const r=await window.ChemieOnline.finishOgSprint(ogSprintState.onlineSessionId);if(r?.ok){labCoins=Number(r.coins)||labCoins;ogSprintState.specialCardAwarded=Boolean(r.bonus_card_awarded);}}}
    if(alkaneArchitectState.running){alkaneArchitectState.running=false;alkaneArchitectState.selectedNode=null;}
+   if(window.BonusGames?.isRunning?.())await window.BonusGames.finish();
    renderEconomyPanel();if(window.ChemieOnline)window.ChemieOnline.refreshDashboardSoon();
    setStatus("Bonusspel afgesloten. Je reeds verdiende LabCoins zijn behouden.");
   }catch(error){console.error("Bonusspel afsluiten mislukt:",error);setStatus("Het bonusspel is afgesloten. Controleer je online LabCoin-saldo.");}
