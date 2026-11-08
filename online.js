@@ -30,8 +30,35 @@
   // Ook samengestelde formules worden als een groep bollen met één gezicht getoond.
   function chemicalMascot(formula) {
     const normalized = String(formula || '').trim().replace(/[₀-₉]/g, ch => String('₀₁₂₃₄₅₆₇₈₉'.indexOf(ch)));
-    const tokens = [...normalized.matchAll(/([A-Z][a-z]?)(\d*)/g)];
-    if (!tokens.length || tokens.map(t => t[0]).join('') !== normalized) {
+    // Recursieve formuleparser: ondersteunt ook haakjesgroepen zoals Ca(OH)2.
+    function expandFormula(source) {
+      let index = 0;
+      function parseGroup(inGroup = false) {
+        const result = [];
+        while (index < source.length) {
+          if (source[index] === ')') { if (!inGroup) throw new Error('Onverwacht haakje'); index++; return result; }
+          if (source[index] === '(') {
+            index++;
+            const nested = parseGroup(true);
+            let digits = ''; while (index < source.length && /[0-9]/.test(source[index])) digits += source[index++];
+            const count = Math.max(1, Number(digits || 1));
+            for (let n = 0; n < count; n++) result.push(...nested);
+            continue;
+          }
+          const match = source.slice(index).match(/^([A-Z][a-z]?)([0-9]*)/);
+          if (!match) throw new Error('Ongeldige formule');
+          index += match[0].length;
+          const count = Math.max(1, Number(match[2] || 1));
+          for (let n = 0; n < count; n++) result.push(match[1]);
+        }
+        if (inGroup) throw new Error('Haakje niet gesloten');
+        return result;
+      }
+      return parseGroup(false);
+    }
+    let atoms;
+    try { atoms = expandFormula(normalized); } catch (_) { atoms = []; }
+    if (!atoms.length || atoms.length > 12) {
       return `<div class="online-formula">${esc(formula || '?')}</div>`;
     }
     const looks = {
@@ -72,12 +99,7 @@
       const accent = hsl((hue + 42) % 360, 76, 82);
       looks[element] = [color, edge, eye, accent, accessories[index % accessories.length]];
     });
-    const atoms = [];
-    for (const token of tokens) {
-      const element = token[1], amount = Math.max(1, Number(token[2] || 1));
-      for (let i = 0; i < amount && atoms.length < 6; i++) atoms.push(element);
-    }
-    const n = atoms.length, radius = n === 1 ? 29 : n === 2 ? 25 : 16;
+    const n = atoms.length, radius = n === 1 ? 29 : n === 2 ? 25 : normalized === 'Ca(OH)2' ? 13 : 16;
     const layouts = {
       1:[[60,36]], 2:[[39,36],[81,36]],
       3:[[38,43],[82,43],[60,21]],
@@ -85,11 +107,13 @@
       5:[[35,25],[60,19],[85,25],[43,51],[77,51]],
       6:[[35,25],[60,19],[85,25],[35,49],[60,55],[85,49]]
     };
-    const coords = layouts[Math.min(n,6)];
+    const coords = normalized === 'Ca(OH)2' ? [[60,39],[30,21],[10,8],[90,21],[110,8]] : layouts[Math.min(n,6)];
+    const bonds = normalized === 'Ca(OH)2' ? '<g stroke="#52616d" stroke-width="3" stroke-linecap="round"><path d="M50 33L40 27M20 15L16 12M70 33L80 27M100 15L104 12"/></g>' : '';
     const spheres = atoms.map((element,i) => {
       const [color,edge] = looks[element] || ['#70b9c9','#347b8b'];
       const [x,y] = coords[i];
-      return `<circle cx="${x}" cy="${y}" r="${radius}" fill="${color}" stroke="${edge}" stroke-width="3"/>`;
+      const atomRadius = normalized === 'Ca(OH)2' ? (element === 'Ca' ? 13 : element === 'O' ? 11 : 8) : radius;
+      return `<circle cx="${x}" cy="${y}" r="${atomRadius}" fill="${color}" stroke="${edge}" stroke-width="3"/>`;
     }).join('');
     const first = looks[atoms[0]] || ['#70b9c9','#347b8b','#173d48','#e1fbff','tuft'];
     const [,,eye,accent,trait] = first;
@@ -107,7 +131,8 @@
     const expression = grumpyElements.has(atoms[0])
       ? `<path d="M47 30l10 3M73 30l-10 3" stroke="${eye}" stroke-width="2.8" stroke-linecap="round"/><path d="M53 48q7-7 14 0" fill="none" stroke="${eye}" stroke-width="2.5" stroke-linecap="round"/>`
       : `<path d="M53 44q7 7 14 0" fill="none" stroke="${eye}" stroke-width="2.4" stroke-linecap="round"/>`;
-    return `<div class="online-formula chem-mascot" role="img" aria-label="${esc(formula)}-monstertje"><svg viewBox="0 0 120 74" aria-hidden="true">${spheres}<ellipse cx="${n===1?49:60}" cy="22" rx="10" ry="5" fill="#fff" opacity=".18"/><g fill="${eye}"><ellipse cx="52" cy="35" rx="3.2" ry="4.2"/><ellipse cx="68" cy="35" rx="3.2" ry="4.2"/></g><g fill="#fff"><circle cx="53" cy="33.5" r="1.1"/><circle cx="69" cy="33.5" r="1.1"/></g>${expression}${accessory}</svg><span>${esc(formula)}</span></div>`;
+    const faceScale = '';
+    return `<div class="online-formula chem-mascot" role="img" aria-label="${esc(formula)}-monstertje"><svg viewBox="0 0 120 74" aria-hidden="true">${bonds}${spheres}<ellipse cx="${n===1?49:60}" cy="22" rx="10" ry="5" fill="#fff" opacity=".18"/><g${faceScale} fill="${eye}"><ellipse cx="52" cy="35" rx="3.2" ry="4.2"/><ellipse cx="68" cy="35" rx="3.2" ry="4.2"/></g><g${faceScale} fill="#fff"><circle cx="53" cy="33.5" r="1.1"/><circle cx="69" cy="33.5" r="1.1"/></g>${expression}${accessory}</svg><span>${esc(formula)}</span></div>`;
   }
 
   const msg = (text, kind = '') => { if (authStatus) { authStatus.textContent = text; authStatus.className = `online-status ${kind}`; } };
@@ -636,11 +661,11 @@ Optie D"></textarea></label>
       if (list) list.textContent = `Kaartcatalogus kon niet laden: ${cardsResult.error.message || cardsResult.error.details || 'onbekende Supabase-fout'}. Controleer de kaartmigraties en de leesrechten.`;
     } else if (list) {
       list.innerHTML = teacherCardCache.filter(c => !isObsoleteAuCard(c)).map(c => {
-        const isAu = isAuCard(c), isFinalAu = isFinalRewardAu(c), specialEditable = ['holmium','tungsten','bismuth'].includes(c.id), fixed = c.is_final_reward || isAu || (c.is_bonus_reward && !specialEditable);
-        const cardLabel = c.is_final_reward ? 'exclusieve eindbeloning' : specialEditable ? (c.id === 'bismuth' ? 'speciale kluisbeloning · aanpasbaar' : 'speciale inlogbeloning · aanpasbaar') : c.is_bonus_reward ? 'speciale bonuslevelbeloning' : c.is_shop_item ? 'winkel' : c.is_reward_only ? 'battlebeloning' : 'alleen reactieproduct';
-        const editor = isFinalAu
-          ? `<div class="teacher-au-strength-editor"><label for="teacher-au-power-${esc(c.id)}">Kracht (1–20)<input id="teacher-au-power-${esc(c.id)}" type="number" min="1" max="20" step="1" value="${Number(c.power) || 1}" data-au-final-power></label><button type="button" data-au-final-power-save="${esc(c.id)}">Kracht opslaan</button></div>`
-          : fixed ? '<span class="card-reward-tag final-reward-tag">Vast · niet aanpassen</span>' : `<button type="button" data-teacher-card-edit="${esc(c.id)}">Bewerken</button>`;
+        const isAu = isAuCard(c), isFinalAu = isFinalRewardAu(c);
+        const specialEditable = ['holmium','tungsten','bismuth','iridium','osmium','palladium','platinum','rhodium','ruthenium','rhenium','titanium','silver'].includes(c.id) || isFinalAu;
+        const fixed = (c.is_final_reward && !isFinalAu) || (isAu && !isFinalAu) || (c.is_bonus_reward && !specialEditable);
+        const cardLabel = isFinalAu ? 'exclusieve goudkaart · volledig aanpasbaar' : specialEditable ? (c.id === 'bismuth' ? 'speciale kluisbeloning · aanpasbaar' : ['iridium','osmium','rhenium','ruthenium'].includes(c.id) ? 'speciale leerjaarbeloning · aanpasbaar' : 'speciale verzamel-/bonusbeloning · aanpasbaar') : c.is_final_reward ? 'exclusieve eindbeloning' : c.is_bonus_reward ? 'speciale bonuslevelbeloning' : c.is_shop_item ? 'winkel' : c.is_reward_only ? 'battlebeloning' : 'alleen reactieproduct';
+        const editor = fixed ? '<span class="card-reward-tag final-reward-tag">Vast · niet aanpassen</span>' : `<button type="button" data-teacher-card-edit="${esc(c.id)}">Bewerken</button>`;
         return `<article class="teacher-card-row"><div class="teacher-card-row-main"><div class="teacher-card-preview">${chemicalMascot(c.formula)}</div><div class="teacher-card-row-copy"><strong>${esc(c.formula)} · ${esc(c.name)}</strong><small>${esc(c.card_type || 'type niet ingesteld')} · kracht ${Number(c.power) || 1} · ${Number(c.price) || 0} coins · ${cardLabel}</small>${[c.support_description, c.support_description_2].filter(Boolean).map(t => `<small>✨ ${esc(t)}</small>`).join('')}</div></div>${editor}</article>`;
       }).join('') || '<p>Er zijn nog geen kaarten in de catalogus.</p>';
     }
@@ -688,7 +713,7 @@ Optie D"></textarea></label>
     const fieldIds={card_type:'type',support_target_type:'target',support_effect:'effect',support_description:'support-description',support_target_type_2:'target-2',support_effect_2:'effect-2',support_description_2:'support-description-2'};
     Object.entries(values).forEach(([key,value])=>{const el=document.getElementById('teacher-card-'+(fieldIds[key]||key));if(el)el.value=value??'';});
     document.getElementById('teacher-card-shop').checked=Boolean(c.is_shop_item);document.getElementById('teacher-card-reward').checked=Boolean(c.is_reward_only);
-    const special=['holmium','tungsten','bismuth'].includes(c.id);document.getElementById('teacher-card-shop').disabled=special;document.getElementById('teacher-card-reward').disabled=special;
+    const special=['holmium','tungsten','bismuth','iridium','osmium','palladium','platinum','rhodium','ruthenium','rhenium','titanium','silver'].includes(c.id) || isFinalRewardAu(c);document.getElementById('teacher-card-shop').disabled=special;document.getElementById('teacher-card-reward').disabled=special;
     const idEl=document.getElementById('teacher-card-id');if(idEl)idEl.readOnly=true;
     document.getElementById('teacher-card-form').scrollIntoView({behavior:'smooth',block:'center'});
   }
@@ -855,7 +880,6 @@ Optie D"></textarea></label>
     const viewButton = e.target.closest('[data-online-view]'); if (viewButton) { setView(viewButton.dataset.onlineView); return; }
     const qEdit = e.target.closest('[data-q-edit]'); if (qEdit) { editTeacherQuestion(qEdit.dataset.qEdit); return; }
     const cardEdit = e.target.closest('[data-teacher-card-edit]'); if (cardEdit) { editTeacherCard(cardEdit.dataset.teacherCardEdit); return; }
-    const auPowerSave = e.target.closest('[data-au-final-power-save]'); if (auPowerSave) { await action(async()=>{ const row=auPowerSave.closest('.teacher-card-row'); const input=row?.querySelector('[data-au-final-power]'); const power=Number(input?.value); if(!Number.isInteger(power)||power<1||power>20) throw new Error('De kracht van Au moet een geheel getal tussen 1 en 20 zijn.'); await rpc('teacher_set_final_reward_power',{p_power:power}); msg(`De kracht van de exclusieve Au-kaart is ingesteld op ${power}.`,'good'); }); return; }
     const reactionEdit = e.target.closest('[data-teacher-reaction-edit]'); if (reactionEdit) { editTeacherReaction(reactionEdit.dataset.teacherReactionEdit); return; }
     const reactionArchive = e.target.closest('[data-teacher-reaction-archive]'); if (reactionArchive) { await action(async()=>{ await rpc('teacher_archive_reaction',{p_reaction_id:reactionArchive.dataset.teacherReactionArchive}); await renderTeacherCardManager(); }); return; }
     const cardTab = e.target.closest('[data-card-tab]'); if (cardTab) { cardShopTab=cardTab.dataset.cardTab; await renderCardsPanel(await getEconomy()); return; }

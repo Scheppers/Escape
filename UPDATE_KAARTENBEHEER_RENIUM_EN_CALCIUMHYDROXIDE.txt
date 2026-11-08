@@ -1,0 +1,18 @@
+UPDATE: speciale kaarten volledig bewerkbaar + calciumhydroxide-monstertje
+
+Wat is aangepast?
+- De exclusieve goudkaart (Au) kan nu via het gewone kaartformulier volledig worden aangepast: kracht, beschrijving en beide speciale battlevaardigheden.
+- De speciale kaarten Iridium, Osmium, Palladium, Platina, Rhodium, Ruthenium, Renium, Titanium, Zilver, Holmium, Wolfraam en Bismut kunnen via hetzelfde formulier worden aangepast.
+- De exclusieve kaarten blijven exclusief: winkel- en beloningscheckboxen blijven vergrendeld en de kaart blijft niet te koop.
+- De kaartnaam Rhenium is in het Nederlands gewijzigd naar Renium. Het vaste database-ID 'rhenium' en elementsymbool Re blijven ongewijzigd zodat bestaande beloningen en voortgang blijven werken.
+- De monstertjesparser ondersteunt nu haakjesgroepen in chemische formules. Ca(OH)2 wordt uitgeklapt als Ca + O + H + O + H en krijgt een specifieke weergave waarin elk OH-groepje aan calcium is verbonden.
+
+Installatie:
+1. Voer supabase/2026_11_teacher_edit_all_special_cards_and_formula_groups.sql uit in de Supabase SQL Editor.
+2. Upload de volledige projectmap naar GitHub.
+3. Laat Netlify opnieuw deployen.
+
+Let op:
+- Voer de migratie één keer uit, na de eerdere kaart- en leerkrachtmigraties.
+- Een kaart die op dat moment in een lopende battle zit, kan om veiligheidsredenen pas worden aangepast nadat die battle is afgelopen.
+- De live Supabase- en Netlify-omgeving is niet vanuit deze build getest.
