@@ -712,7 +712,7 @@ let alkaneArchitectState={running:false,queue:[],index:0,correct:0,earned:0,grap
 function openAlkaneArchitect(){
  if(currentLevel!=="future"){setStatus("De Alkanenarchitect is beschikbaar in level 4, het futuristische chemielabo.");return;}
  if(alkaneArchitectState.running){setStatus("Maak eerst de huidige Alkanenarchitect-ronde af.");return;}
- showEconomyOverlay(`<p class="economy-eyebrow">BONUSLEVEL · LEVEL 4</p><h2 class="economy-title" id="economy-title">🏗️ Alkanenarchitect</h2><p class="economy-lead">Krijg 10 namen van vertakte alkanen en teken telkens de koolstofketen in skeletnotatie. Teken eerst de koolstofatomen en verbind deze daarna met bindingen. Je krijgt één poging per molecule.</p><div class="sprint-rules"><strong>Speciale beloning:</strong> teken alle tien alkanen foutloos en verdien de speciale palladiumkaart Pd.<br>Elke hoek en elk uiteinde stelt een koolstofatoom voor. Waterstofatomen teken je niet.</div><button type="button" class="primary full" id="alkane-architect-start">Start de architect</button><p class="muted">Er worden 10 verschillende alkanen gekozen uit een verzameling van 25.</p>`);
+ showEconomyOverlay(`<p class="economy-eyebrow">BONUSLEVEL · LEVEL 4</p><h2 class="economy-title" id="economy-title">🏗️ Alkanenarchitect</h2><p class="economy-lead">Krijg 10 namen van vertakte alkanen en teken telkens de koolstofketen in skeletnotatie. Teken eerst de koolstofatomen en verbind deze daarna met bindingen. Je krijgt één poging per molecule.</p><div class="sprint-rules"><strong>Speciale beloning:</strong> teken alle tien alkanen foutloos en verdien de speciale palladiumkaart Pd.<br>Elke hoek en elk uiteinde stelt een koolstofatoom voor. Waterstofatomen teken je niet.</div><button type="button" class="primary full" id="alkane-architect-start">Start de architect</button>`);
 }
 async function startAlkaneArchitect(){
  let queue=shuffleAlkanes(ALKANE_ARCHITECT_POOL).slice(0,10),onlineSessionId=null;
@@ -1174,7 +1174,7 @@ async function submitOgSprintAnswer(e){
    ogSprintState.answered=Number(verified.answered_count)||ogSprintState.answered+1;
    labCoins=Number(verified.coins)||0;
    if(verified.correct){message=`Juist! ${verified.expected_answer}. +${verified.reward} ${Number(verified.reward)===1?"LabCoin":"LabCoins"}.`;kind="good";}
-   else{message=`Niet helemaal. Het juiste oxidatiegetal is ${verified.expected_answer}. Geen LabCoins deze keer.`;ogSprintState.wrongAnswers.push({prompt:`Welk oxidatiegetal heeft ${item.element} in ${formula}?`,typed,expected:verified.expected_answer});}
+   else{message=`Niet helemaal. Het juiste oxidatiegetal is ${verified.expected_answer}. Geen LabCoins deze keer.`;ogSprintState.wrongAnswers.push({prompt:`Welk oxidatiegetal heeft ${item.element} in ${formatOxidationFormula(item.formula)}?`,typed,expected:verified.expected_answer});}
    window.ChemieOnline.refreshDashboardSoon();
   }catch(error){
    if(submit)submit.disabled=false;if(input){input.disabled=false;input.focus();}
@@ -1184,7 +1184,7 @@ async function submitOgSprintAnswer(e){
   ogSprintState.answered++;
   const correct=normaliseOxidationAnswer(typed)===normaliseOxidationAnswer(item.answer);
   if(correct){const reward=Math.floor(ogSprintState.correct/5)+1;ogSprintState.correct++;labCoins+=reward;message=`Juist! ${item.answer}. +${reward} ${reward===1?"LabCoin":"LabCoins"}.`;kind="good";}
-  else{message=`Niet helemaal. Het juiste oxidatiegetal is ${item.answer}. Geen LabCoins deze keer.`;ogSprintState.wrongAnswers.push({prompt:`Welk oxidatiegetal heeft ${item.element} in ${formula}?`,typed,expected:item.answer});}
+  else{message=`Niet helemaal. Het juiste oxidatiegetal is ${item.answer}. Geen LabCoins deze keer.`;ogSprintState.wrongAnswers.push({prompt:`Welk oxidatiegetal heeft ${item.element} in ${formatOxidationFormula(item.formula)}?`,typed,expected:item.answer});}
  }
  const note=$("og-sprint-feedback");if(note){note.textContent=message;note.className=`sprint-feedback ${kind}`;}
  const correctEl=$("og-sprint-correct-count"),answeredEl=$("og-sprint-answered-count");if(correctEl)correctEl.textContent=String(ogSprintState.correct);if(answeredEl)answeredEl.textContent=String(ogSprintState.answered);
