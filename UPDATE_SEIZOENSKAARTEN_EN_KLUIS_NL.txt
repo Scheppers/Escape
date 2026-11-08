@@ -1,0 +1,28 @@
+UPDATE: SEIZOENSKAARTEN, INLOGREEKS EN VARIABELE KLUIS
+
+Wat is toegevoegd?
+- Holmium (Ho): exclusieve kaart bij de eerste login in december. Het monstertje draagt een rode kerstmuts.
+- Wolfraam (W): exclusieve kaart na drie opeenvolgende kalenderdagen inloggen. Een gemiste dag reset de reeks.
+- De inlogreeks wordt in het online overzicht getoond.
+- Holmium en Wolfraam blijven exclusieve kaarten, maar kunnen in het leerkrachtenaccount worden aangepast: kracht, type en twee battle-ondersteuningen.
+- Beide battle-ondersteuningen worden door het battle-systeem toegepast.
+- De puzzelbanner over moeilijkheid en de Schaduw is verwijderd.
+- De puzzelknoppen/labels zijn naar binnen geschoven en labels mogen op mobiel afbreken zodat ze binnen het laboratoriumbeeld blijven.
+- De kluis toont nu: "Blaas de kluis op met buskruit en verdien een beloning."
+- Na het openen krijgt een speler willekeurig één van drie beloningen:
+  1. 30 LabCoins;
+  2. één bismutfragment; na drie fragmenten krijgt de speler de speciale Bismutkaart (Bi);
+  3. een grondstoffenpakket met 1 mol kaliumnitraat, 1 mol koolstof en 1 mol zwavel.
+- Bismut is niet te koop en wordt niet als reactiegrondstof gebruikt.
+
+Installatie
+1. Voer supabase/2026_11_seasonal_cards_and_random_safe_rewards.sql één keer uit in de Supabase SQL Editor.
+2. Upload de volledige projectmap naar GitHub.
+3. Laat Netlify opnieuw deployen.
+
+Belangrijk
+- De migratie moet NA de bestaande schema-, battle-, bonuskaart-, collectie-, leerjaarbeloning- en titanium-migraties worden uitgevoerd.
+- Inlogdagen worden bepaald volgens de kalender in Europe/Brussels.
+- Een speler krijgt Holmium maximaal één keer en Wolfraam maximaal één keer.
+- Bij een reeds verdiende Bismutkaart wordt de fragmentuitkomst niet opnieuw uitgedeeld; de betreffende kluisuitkomst wordt dan een grondstoffenpakket.
+- De live werking moet na installatie in Supabase/Netlify worden getest; een lokale codecontrole vervangt die test niet.

@@ -256,3 +256,14 @@
 .left-panel .inventory,.left-panel .safe-box{margin-top:12px;padding-top:12px;}
 @media(max-width:1050px){.game-layout{grid-template-columns:minmax(0,1fr) minmax(245px,.8fr);grid-template-areas:"scene scene" "left right";}.bonus-sidebar{align-self:start;}}
 @media(max-width:700px){.game-layout{grid-template-columns:minmax(0,1fr);grid-template-areas:"scene" "left" "right";}.left-panel{display:block;}.bonus-sidebar{display:grid;grid-template-columns:1fr;}.labcoins-panel,.skin-panel{width:100%;}}
+
+/* Mobielvriendelijke puzzelhotspots: labels blijven binnen de achtergrond. */
+.scene-caption{display:none!important}
+.hotspot{max-width:30%;}
+.hotspot small{white-space:normal;max-width:clamp(76px,18vw,118px);text-align:center;line-height:1.15;overflow-wrap:anywhere}
+.h1{left:35%;top:48%}
+.h2{left:24%;top:69%}
+.h3{right:25%;top:37%}
+.h4{left:67%;top:67%}
+.door-hotspot{right:8%;bottom:19%}
+@media(max-width:700px){.hotspot{max-width:34%}.hotspot small{max-width:clamp(72px,25vw,108px);font-size:.62rem;padding:4px 5px}.h1{left:36%}.h2{left:25%}.h3{right:25%}.h4{left:67%}.door-hotspot{right:9%}}

@@ -217,7 +217,7 @@ function renderLevel(){
  const solvedCount=Object.values(puzzleSolved[currentLevel]||{}).filter(Boolean).length;
  const inProgress=Object.values(objectProgress[currentLevel]||{}).reduce((a,b)=>a+Number(b||0),0);
  $("level-status").textContent=`${l.name}: ${solvedCount} van 4 puzzels voor het eerst voltooid · ${inProgress} vragen juist in de huidige poging`;
- $("scene-caption").textContent=levelSolved[currentLevel]?"Alle vier puzzels zijn minstens één keer opgelost. Je kunt ze opnieuw oefenen en LabCoins verdienen.":"Kies per puzzel je moeilijkheid. Let op: de Schaduw kan elk moment verschijnen.";
+ const sceneCaption=$("scene-caption");if(sceneCaption)sceneCaption.textContent=levelSolved[currentLevel]?"Alle vier puzzels zijn minstens één keer opgelost. Je kunt ze opnieuw oefenen en LabCoins verdienen.":"";
  renderQuestionCoverage();renderInventory();renderEconomyPanel();
 }
 function renderQuestionCoverage(){
@@ -556,14 +556,26 @@ async function blowSafe(){
      if(result.economy&&window.ChemieGameBridge)window.ChemieGameBridge.applyOnlineEconomy(result.economy);
      else if(Number.isFinite(Number(result.coins)))labCoins=Number(result.coins);
      renderEconomyPanel();
-     showSafeFeedback(`<strong>De virtuele reactie is uitgevoerd!</strong><p>De kluis is open. Je ontvangt <b>30 LabCoins</b>.</p><small>De inventaris is bijgewerkt.</small>`,'success');
-     log('De kluis werd geopend met de virtuele reactie. +30 LabCoins.');setStatus('De kluis is open! Je hebt 30 LabCoins verdiend.');
+     const rewardText=result.reward_type==='bismuth_fragment'
+       ? `Je vindt een <b>bismutfragment</b> (${Number(result.fragment_count)||1}/3).${result.bismuth_card_awarded?' Je hebt nu drie fragmenten verzameld en ontvangt de speciale bismutkaart (Bi)!':''}`
+       : result.reward_type==='materials'
+         ? 'Je vindt een <b>grondstoffenpakket</b>: 1 mol kaliumnitraat, 1 mol koolstof en 1 mol zwavel.'
+         : 'Je ontvangt <b>30 LabCoins</b>.';
+     showSafeFeedback(`<strong>De virtuele reactie is uitgevoerd!</strong><p>De kluis is open. ${rewardText}</p><small>De inventaris is bijgewerkt.</small>`,'success');
+     log(`De kluis werd geopend. ${result.reward_type==='bismuth_fragment'?'Bismutfragment gevonden.':result.reward_type==='materials'?'Grondstoffenpakket gevonden.':'+30 LabCoins.'}`);
+     setStatus(`De kluis is open! ${result.reward_type==='bismuth_fragment'?'Je vond een bismutfragment.':result.reward_type==='materials'?'Je vond een grondstoffenpakket.':'Je hebt 30 LabCoins verdiend.'}`);
      window.ChemieOnline.refreshDashboardSoon();
    }else{
      if(inventory.kno3<2||inventory.carbon<3||inventory.sulfur<1){showInsufficientMaterials();return;}
-     inventory.kno3-=2;inventory.carbon-=3;inventory.sulfur-=1;saveLocalMaterials();renderInventory();labCoins+=30;renderEconomyPanel();
-     showSafeFeedback(`<strong>De virtuele reactie is uitgevoerd!</strong><p>De kluis is open. Je ontvangt <b>30 LabCoins</b>.</p><small>De inventaris is bijgewerkt.</small>`,'success');
-     log('De kluis werd geopend met de virtuele reactie. +30 LabCoins.');setStatus('De kluis is open! Je hebt 30 LabCoins verdiend.');
+     inventory.kno3-=2;inventory.carbon-=3;inventory.sulfur-=1;
+     const rewardRoll=Math.floor(Math.random()*3);
+     let rewardType='coins',rewardText='Je ontvangt <b>30 LabCoins</b>.',rewardLog='+30 LabCoins.';
+     if(rewardRoll===1){rewardType='bismuth_fragment';const fragments=Number(localStorage.getItem('chemie-escape-bismuth-fragments')||0)+1;localStorage.setItem('chemie-escape-bismuth-fragments',String(fragments));rewardText=`Je vindt een <b>bismutfragment</b> (${Math.min(fragments,3)}/3).${fragments>=3?' Je hebt drie fragmenten verzameld en verdient de speciale bismutkaart (Bi)!':''}`;rewardLog='Bismutfragment gevonden.';if(fragments>=3){localStorage.setItem('chemie-escape-local-bonus-cards',JSON.stringify([...new Set([...(JSON.parse(localStorage.getItem('chemie-escape-local-bonus-cards')||'[]')),'bismuth'])]));localStorage.setItem('chemie-escape-bismuth-fragments','0');}}
+     else if(rewardRoll===2){rewardType='materials';inventory.kno3+=1;inventory.carbon+=1;inventory.sulfur+=1;rewardText='Je vindt een <b>grondstoffenpakket</b>: 1 mol kaliumnitraat, 1 mol koolstof en 1 mol zwavel.';rewardLog='Grondstoffenpakket gevonden.';}
+     if(rewardType==='coins')labCoins+=30;
+     saveLocalMaterials();renderInventory();renderEconomyPanel();
+     showSafeFeedback(`<strong>De virtuele reactie is uitgevoerd!</strong><p>De kluis is open. ${rewardText}</p><small>De inventaris is bijgewerkt.</small>`,'success');
+     log(`De kluis werd geopend. ${rewardLog}`);setStatus(`De kluis is open! ${rewardType==='coins'?'Je hebt 30 LabCoins verdiend.':rewardType==='materials'?'Je vond een grondstoffenpakket.':'Je vond een bismutfragment.'}`);
    }
  }catch(error){console.error(error);showSafeFeedback(`<strong>De reactie kon niet worden uitgevoerd.</strong><p>${String(error.message||'Controleer je verbinding en probeer opnieuw.').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]))}</p>`,'error');setStatus(error.message||'De kluis kon niet worden geopend.');}
  finally{if(button)button.disabled=false;}
