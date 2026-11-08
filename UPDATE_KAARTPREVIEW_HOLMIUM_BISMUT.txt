@@ -1,0 +1,16 @@
+UPDATE: kaartpreview Holmium en Bismut in leerkrachtenaccount
+
+Wat is aangepast:
+- In Leerkrachtenaccount > Kaartenbeheer toont elke kaart nu een kleine preview van het chemische monstertje.
+- Holmium (Ho) en Bismut (Bi) zijn daardoor meteen herkenbaar in de kaartcatalogus.
+- Bismut kan nu ook via het gewone leerkrachtenformulier worden aangepast: kracht, beschrijving en beide battle-ondersteuningen.
+- Holmium blijft op dezelfde manier aanpasbaar.
+- Hun ontgrendelvoorwaarden blijven ongewijzigd. Ze worden niet te koop gezet en blijven uitgesloten van de reactiekamer.
+- Holmium en Bismut behoren tot de 92 elementen; als een leerling ze bezit, tellen ze mee in de voortgangsteller Enkelvoudige stoffen.
+
+Installatie:
+1. Voer supabase/2026_11_teacher_bismuth_card_editable.sql uit in de Supabase SQL Editor.
+2. Upload de volledige projectmap naar GitHub.
+3. Laat Netlify opnieuw deployen.
+
+De migratie is bedoeld voor de database waarop de seizoenskaartenmigratie al is uitgevoerd.

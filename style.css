@@ -142,6 +142,13 @@
 .teacher-card-layout{display:grid;grid-template-columns:minmax(0,.9fr) minmax(0,1.1fr);gap:14px;margin:14px 0}
 .teacher-card-list{display:grid;gap:8px;max-height:520px;overflow:auto}
 .teacher-card-row{display:flex;align-items:center;justify-content:space-between;gap:10px;padding:10px;border:1px solid #35566a;border-radius:9px;background:#102537}
+.teacher-card-row-main{display:flex;align-items:center;gap:10px;min-width:0;flex:1}
+.teacher-card-row-copy{display:grid;gap:4px;min-width:0}
+.teacher-card-preview{display:flex;align-items:center;justify-content:center;flex:0 0 92px;min-height:74px;padding:3px;border-radius:9px;background:linear-gradient(145deg,#19384b,#0b1b29);border:1px solid #426276}
+.teacher-card-preview .chem-mascot{display:flex;flex-direction:column;align-items:center;justify-content:center;gap:0;color:#f4e4b8;font-size:.65rem;font-weight:800}
+.teacher-card-preview .chem-mascot svg{display:block;width:84px;height:54px;overflow:visible;filter:drop-shadow(0 3px 2px #0006)}
+.teacher-card-preview .chem-mascot span{line-height:1}
+
 .teacher-card-row>div:first-child{display:grid;gap:4px;min-width:0}
 .teacher-card-row strong{color:#f1d69a}
 .teacher-card-row small{color:#b9cfda;font-size:.74rem;overflow-wrap:anywhere}
@@ -154,7 +161,7 @@
 .teacher-reaction-layout{margin-top:18px}
 .teacher-card-manager .teacher-question-form .span-all{grid-column:1/-1}
 @media(max-width:850px){.teacher-card-layout{grid-template-columns:1fr}.battle-deck-builder{grid-template-columns:repeat(2,minmax(0,1fr))}}
-@media(max-width:560px){.reaction-builder{grid-template-columns:1fr}.reaction-preview,#reaction-run{grid-column:auto}.battle-deck-builder{grid-template-columns:1fr 1fr}.battle-turn-banner{align-items:flex-start;flex-direction:column}.teacher-card-row{align-items:flex-start;flex-direction:column}.teacher-card-row button{width:100%}}
+@media(max-width:560px){.reaction-builder{grid-template-columns:1fr}.reaction-preview,#reaction-run{grid-column:auto}.battle-deck-builder{grid-template-columns:1fr 1fr}.battle-turn-banner{align-items:flex-start;flex-direction:column}.teacher-card-row{align-items:flex-start;flex-direction:column}.teacher-card-row-main{width:100%;align-items:center}.teacher-card-preview{flex-basis:82px;min-height:68px}.teacher-card-row button{width:100%}}
 
 #battle-invite-form{display:grid;grid-template-columns:minmax(0,1fr);align-items:stretch}
 #battle-invite-form>label{display:grid;gap:7px}

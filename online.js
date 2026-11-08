@@ -636,12 +636,12 @@ Optie D"></textarea></label>
       if (list) list.textContent = `Kaartcatalogus kon niet laden: ${cardsResult.error.message || cardsResult.error.details || 'onbekende Supabase-fout'}. Controleer de kaartmigraties en de leesrechten.`;
     } else if (list) {
       list.innerHTML = teacherCardCache.filter(c => !isObsoleteAuCard(c)).map(c => {
-        const isAu = isAuCard(c), isFinalAu = isFinalRewardAu(c), seasonalEditable = ['holmium','tungsten'].includes(c.id), fixed = c.is_final_reward || isAu || (c.is_bonus_reward && !seasonalEditable);
-        const cardLabel = c.is_final_reward ? 'exclusieve eindbeloning' : seasonalEditable ? 'speciale inlogbeloning · aanpasbaar' : c.is_bonus_reward ? 'speciale bonuslevelbeloning' : c.is_shop_item ? 'winkel' : c.is_reward_only ? 'battlebeloning' : 'alleen reactieproduct';
+        const isAu = isAuCard(c), isFinalAu = isFinalRewardAu(c), specialEditable = ['holmium','tungsten','bismuth'].includes(c.id), fixed = c.is_final_reward || isAu || (c.is_bonus_reward && !specialEditable);
+        const cardLabel = c.is_final_reward ? 'exclusieve eindbeloning' : specialEditable ? (c.id === 'bismuth' ? 'speciale kluisbeloning · aanpasbaar' : 'speciale inlogbeloning · aanpasbaar') : c.is_bonus_reward ? 'speciale bonuslevelbeloning' : c.is_shop_item ? 'winkel' : c.is_reward_only ? 'battlebeloning' : 'alleen reactieproduct';
         const editor = isFinalAu
           ? `<div class="teacher-au-strength-editor"><label for="teacher-au-power-${esc(c.id)}">Kracht (1–20)<input id="teacher-au-power-${esc(c.id)}" type="number" min="1" max="20" step="1" value="${Number(c.power) || 1}" data-au-final-power></label><button type="button" data-au-final-power-save="${esc(c.id)}">Kracht opslaan</button></div>`
           : fixed ? '<span class="card-reward-tag final-reward-tag">Vast · niet aanpassen</span>' : `<button type="button" data-teacher-card-edit="${esc(c.id)}">Bewerken</button>`;
-        return `<article class="teacher-card-row"><div><strong>${esc(c.formula)} · ${esc(c.name)}</strong><small>${esc(c.card_type || 'type niet ingesteld')} · kracht ${Number(c.power) || 1} · ${Number(c.price) || 0} coins · ${cardLabel}</small>${[c.support_description, c.support_description_2].filter(Boolean).map(t => `<small>✨ ${esc(t)}</small>`).join('')}</div>${editor}</article>`;
+        return `<article class="teacher-card-row"><div class="teacher-card-row-main"><div class="teacher-card-preview">${chemicalMascot(c.formula)}</div><div class="teacher-card-row-copy"><strong>${esc(c.formula)} · ${esc(c.name)}</strong><small>${esc(c.card_type || 'type niet ingesteld')} · kracht ${Number(c.power) || 1} · ${Number(c.price) || 0} coins · ${cardLabel}</small>${[c.support_description, c.support_description_2].filter(Boolean).map(t => `<small>✨ ${esc(t)}</small>`).join('')}</div></div>${editor}</article>`;
       }).join('') || '<p>Er zijn nog geen kaarten in de catalogus.</p>';
     }
 
@@ -688,7 +688,7 @@ Optie D"></textarea></label>
     const fieldIds={card_type:'type',support_target_type:'target',support_effect:'effect',support_description:'support-description',support_target_type_2:'target-2',support_effect_2:'effect-2',support_description_2:'support-description-2'};
     Object.entries(values).forEach(([key,value])=>{const el=document.getElementById('teacher-card-'+(fieldIds[key]||key));if(el)el.value=value??'';});
     document.getElementById('teacher-card-shop').checked=Boolean(c.is_shop_item);document.getElementById('teacher-card-reward').checked=Boolean(c.is_reward_only);
-    const seasonal=['holmium','tungsten'].includes(c.id);document.getElementById('teacher-card-shop').disabled=seasonal;document.getElementById('teacher-card-reward').disabled=seasonal;
+    const special=['holmium','tungsten','bismuth'].includes(c.id);document.getElementById('teacher-card-shop').disabled=special;document.getElementById('teacher-card-reward').disabled=special;
     const idEl=document.getElementById('teacher-card-id');if(idEl)idEl.readOnly=true;
     document.getElementById('teacher-card-form').scrollIntoView({behavior:'smooth',block:'center'});
   }
