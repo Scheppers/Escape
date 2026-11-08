@@ -1,0 +1,12 @@
+UPDATE: VROEGTIJDIG AFSLUITEN VAN DE ELEMENTENSPRINT
+
+1. Maak eerst een back-up van je Supabase-database.
+2. Open Supabase Dashboard -> SQL Editor.
+3. Open en voer uit: supabase/2026_11_fix_early_bonus_sprint_exit.sql
+4. Publiceer daarna de websitebestanden uit deze ZIP.
+
+Deze migratie laat finish_element_sprint een sessie ook vóór het einde van de minuut afsluiten.
+Coins en XP die al per juist antwoord zijn toegekend, blijven behouden. De sessie wordt afgesloten,
+zodat de leerling onmiddellijk opnieuw kan starten.
+
+De SQL-migratie wijzigt geen bestaande kaart-, reactie-, leerling- of spelvoortgangsgegevens.
