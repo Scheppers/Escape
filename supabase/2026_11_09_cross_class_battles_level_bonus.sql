@@ -51,8 +51,8 @@ begin
  end loop;
  select starting_hp into v_hp from public.battle_settings where singleton=true;
  v_hp:=coalesce(v_hp,20);
- insert into public.battles(challenger_id,opponent_id,status,current_turn,starting_hp,challenger_hp,opponent_hp,turn_role,round_count,turn_count)
- values(v_uid,v_opponent,'pending',v_uid,v_hp,v_hp,v_hp,'attacker',0,0) returning id into v_battle;
+ insert into public.battles(challenger_id,opponent_id,status,current_turn,starting_hp,challenger_hp,opponent_hp,challenger_start_hp,opponent_start_hp,turn_role,round_count,turn_count)
+ values(v_uid,v_opponent,'pending',v_uid,v_hp,v_hp,v_hp,v_hp,v_hp,'attacker',0,0) returning id into v_battle;
  insert into public.battle_decks(battle_id,user_id,slot_number,card_id)
  select v_battle,v_uid,ord::integer,card_id from unnest(p_deck_card_ids) with ordinality as t(card_id,ord);
  return jsonb_build_object('ok',true,'battle_id',v_battle,'opponent_id',v_opponent);

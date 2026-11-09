@@ -861,13 +861,13 @@ function initEconomyUI(){
  panel.innerHTML=`
   <div class="labcoins-heading"><div><p class="economy-eyebrow">EXTRA UITDAGINGEN</p><h3>🎯 Bonusspellen</h3></div><div class="coin-count"><span id="labcoin-balance">0</span><small>LabCoins</small></div></div>
   <p class="labcoins-copy">Speel de bonusspellen om LabCoins en speciale kaarten te verdienen.</p>
-  <button type="button" class="primary full economy-action" id="element-sprint-open">Elementensprint</button>
-  <button type="button" class="primary full economy-action bonus-game-launch" id="reactiebalancer-open">Reactiebalancer</button>
-  <button type="button" class="primary full economy-action" id="acid-sprint-open">Zurenkenner</button>
-  <button type="button" class="primary full economy-action bonus-game-launch" id="stoffenindeler-open">Anorganische stoffen</button>
-  <button type="button" class="primary full economy-action" id="og-sprint-open">The OG of chemistry</button>
-  <button type="button" class="primary full economy-action bonus-game-launch" id="lewisstructuren-open">Lewisstructuren</button>
-  <button type="button" class="primary full economy-action" id="alkane-architect-open">Alkanenarchitect</button>`;
+  <button type="button" class="primary full economy-action" id="element-sprint-open">⚡ Elementensprint</button>
+  <button type="button" class="primary full economy-action bonus-game-launch" id="reactiebalancer-open">⚖️ Reactiebalancer</button>
+  <button type="button" class="primary full economy-action" id="acid-sprint-open">🧪 Zurenkenner</button>
+  <button type="button" class="primary full economy-action bonus-game-launch" id="stoffenindeler-open">🧩 Anorganische stoffen</button>
+  <button type="button" class="primary full economy-action" id="og-sprint-open">⚗️ The OG of chemistry</button>
+  <button type="button" class="primary full economy-action bonus-game-launch" id="lewisstructuren-open">⚛️ Lewisstructuren</button>
+  <button type="button" class="primary full economy-action" id="alkane-architect-open">🏗️ Alkanenarchitect</button>`;
  const skinPanel=document.createElement("section");
  skinPanel.id="skin-panel";skinPanel.className="skin-panel";
  skinPanel.innerHTML=`<p class="economy-eyebrow">PERSONALISATIE</p><h3>🎭 Jouw chemicus</h3>
@@ -931,7 +931,7 @@ function renderEconomyPanel(){
   const btn=$(id);if(!btn)return;
   const available=currentLevel===level;
   btn.disabled=!available||anySprintRunning||Boolean(window.BonusGames?.isRunning?.());
-  btn.textContent=available?label:`Beschikbaar in level ${n}`;
+  btn.textContent=available?`${({"Elementensprint":"⚡","Reactiebalancer":"⚖️","Zurenkenner":"🧪","Anorganische stoffen":"🧩","The OG of chemistry":"⚗️","Lewisstructuren":"⚛️","Alkanenarchitect":"🏗️"})[label]} ${label}`:`Beschikbaar in level ${n}`;
   btn.title=available?`Start ${label}`:`Beschikbaar in level ${n}`;
  });
  applyEquippedSkin();
