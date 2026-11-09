@@ -862,8 +862,11 @@ function initEconomyUI(){
   <div class="labcoins-heading"><div><p class="economy-eyebrow">EXTRA UITDAGINGEN</p><h3>🎯 Bonusspellen</h3></div><div class="coin-count"><span id="labcoin-balance">0</span><small>LabCoins</small></div></div>
   <p class="labcoins-copy">Speel de bonusspellen om LabCoins en speciale kaarten te verdienen.</p>
   <button type="button" class="primary full economy-action" id="element-sprint-open">⚡ Elementensprint · 60 sec</button>
+  <button type="button" class="primary full economy-action bonus-game-launch" id="reactiebalancer-open">⚖️ Reactiebalancer · 5 reacties</button>
   <button type="button" class="primary full economy-action" id="acid-sprint-open">🧪 Zurenkennis · 60 sec</button>
+  <button type="button" class="primary full economy-action bonus-game-launch" id="stoffenindeler-open">🧩 Stoffenindeler · kies je sprint</button>
   <button type="button" class="primary full economy-action" id="og-sprint-open">⚗️ The OG of chemistry · 60 sec</button>
+  <button type="button" class="primary full economy-action bonus-game-launch" id="lewisstructuren-open">⚛️ Lewisstructuren · 5 structuren</button>
   <button type="button" class="primary full economy-action" id="alkane-architect-open">🏗️ Alkanenarchitect · level 4</button>`;
  const skinPanel=document.createElement("section");
  skinPanel.id="skin-panel";skinPanel.className="skin-panel";
@@ -918,6 +921,8 @@ function renderEconomyPanel(){
  const quest=$("element-sprint-open");if(quest){quest.disabled=currentLevel!=="medieval"||anySprintRunning;quest.textContent=currentLevel==="medieval"?"⚡ Elementensprint · 60 sec":"⚡ Beschikbaar in level 1";quest.title=currentLevel==="medieval"?"Start de optionele quiz over elementsymbolen":"Keer terug naar het middeleeuwse labo voor de sidequest";}
  const acidQuest=$("acid-sprint-open");if(acidQuest){acidQuest.disabled=currentLevel!=="lavoisier"||anySprintRunning;acidQuest.textContent=currentLevel==="lavoisier"?"🧪 Zurenkennis · 60 sec":"🧪 Beschikbaar in level 2";acidQuest.title=currentLevel==="lavoisier"?"Start de open vragenronde over zuren en zuurrestnamen":"Keer terug naar het labo van Lavoisier voor deze sidequest";}
  const ogQuest=$("og-sprint-open");if(ogQuest){ogQuest.disabled=currentLevel!=="modern"||anySprintRunning;ogQuest.textContent=currentLevel==="modern"?"⚗️ The OG of chemistry · 60 sec":"⚗️ Beschikbaar in level 3";ogQuest.title=currentLevel==="modern"?"Oefen oxidatiegetallen in één minuut":"Keer terug naar het moderne chemielabo voor deze sidequest";}
+ const extraBonus=[['reactiebalancer-open','medieval',1,'⚖️ Reactiebalancer · 5 reacties'],['stoffenindeler-open','lavoisier',2,'🧩 Stoffenindeler · kies je sprint'],['lewisstructuren-open','modern',3,'⚛️ Lewisstructuren · 5 structuren']];
+ extraBonus.forEach(([id,level,n,label])=>{const btn=$(id);if(!btn)return;const available=currentLevel===level;btn.disabled=!available||anySprintRunning||Boolean(window.BonusGames?.isRunning?.());btn.textContent=available?label:`${label.split(' · ')[0]} · Beschikbaar in level ${n}`;btn.title=available?'Start dit bonusspel':`Beschikbaar in level ${n}`;});
  const alkaneQuest=$("alkane-architect-open");if(alkaneQuest){alkaneQuest.disabled=currentLevel!=="future"||anySprintRunning||alkaneArchitectState.running;alkaneQuest.textContent=currentLevel==="future"?"🏗️ Alkanenarchitect · level 4":"🏗️ Beschikbaar in level 4";alkaneQuest.title=currentLevel==="future"?"Teken tien vertakte alkanen in skeletnotatie":"Keer terug naar het futuristische chemielabo voor deze sidequest";}
  applyEquippedSkin();
 }

@@ -97,7 +97,7 @@ begin
  if coalesce(array_length(v_ids,1),0) < (case when v_timed then 1 else 5 end) then raise exception 'Er zijn nog onvoldoende actieve vragen voor dit bonusspel.'; end if;
  if not v_timed then v_ids:=v_ids[1:5]; end if;
  insert into public.bonus_game_sessions(user_id,game_type,item_ids,expires_at) values(v_uid,p_game_type,v_ids,case when v_timed then now()+interval '60 seconds' else null end) returning * into v_session;
- select jsonb_agg(jsonb_build_object('id',i.id,'prompt',i.prompt,'answer',case when p_game_type='lewis' then '' else i.answer end,'accepted_answers',case when p_game_type='naming' then i.accepted_answers else '[]'::jsonb end,'category',i.category,'difficulty',i.difficulty,'model',case when p_game_type='lewis' then '{}'::jsonb else i.model end,'explanation',i.explanation) order by x.ord)
+ select jsonb_agg(jsonb_build_object('id',i.id,'prompt',i.prompt,'answer','','accepted_answers',case when p_game_type='naming' then i.accepted_answers else '[]'::jsonb end,'category',i.category,'difficulty',i.difficulty,'model',case when p_game_type='lewis' then '{}'::jsonb else i.model end,'explanation',i.explanation) order by x.ord)
  into v_items from unnest(v_ids) with ordinality x(id,ord) join public.bonus_game_items i on i.id=x.id;
  return jsonb_build_object('session_id',v_session.id,'game_type',p_game_type,'items',coalesce(v_items,'[]'::jsonb),'expires_at',v_session.expires_at);
 end $$;
@@ -116,7 +116,7 @@ begin
  if v_s.game_type='lewis' then
    v_ok:=public.bonus_graph_matches(coalesce(p_structure,'{}'::jsonb),v_item.model) or exists(select 1 from jsonb_array_elements(v_item.accepted_models) as accepted(model) where public.bonus_graph_matches(p_structure,accepted.model));
  else
-   v_ok:=lower(regexp_replace(trim(coalesce(p_answer,'')),'\s+',' ','g'))=lower(regexp_replace(trim(v_item.answer),'\s+',' ','g'))
+   v_ok:=lower(regexp_replace(regexp_replace(trim(coalesce(p_answer,'')),'[→⇒=]|->','→','g'),'\s+',' ','g'))=lower(regexp_replace(regexp_replace(trim(v_item.answer),'[→⇒=]|->','→','g'),'\s+',' ','g'))
      or (v_s.game_type='naming' and exists(select 1 from jsonb_array_elements_text(v_item.accepted_answers) as accepted(value) where lower(trim(accepted.value))=lower(trim(coalesce(p_answer,'')))))
      or (v_s.game_type='classification' and lower(trim(coalesce(p_answer,'')))=lower(trim(v_item.category)));
  end if;

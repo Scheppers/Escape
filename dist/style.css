@@ -274,3 +274,12 @@
 .h4{left:67%;top:67%}
 .door-hotspot{right:8%;bottom:19%}
 @media(max-width:700px){.hotspot{max-width:34%}.hotspot small{max-width:clamp(72px,25vw,108px);font-size:.62rem;padding:4px 5px}.h1{left:36%}.h2{left:25%}.h3{right:25%}.h4{left:67%}.door-hotspot{right:9%}}
+
+/* Altijd duidelijk zichtbare knoppen voor de nieuwe bonusspellen */
+.labcoins-panel .bonus-game-launch{display:block!important;visibility:visible!important;opacity:1!important;width:100%;min-height:42px;margin-top:9px!important;padding:10px 12px!important;border:1px solid #f8d98f!important;border-radius:9px!important;background:#f5c86d!important;color:#42300c!important;font-weight:800!important;text-align:left;cursor:pointer}
+.labcoins-panel .bonus-game-launch:hover{filter:brightness(1.06)}
+.labcoins-panel .bonus-game-launch:focus-visible{outline:3px solid #fff;outline-offset:3px}
+
+/* Bonusspellen per level en leerkrachtentekenvenster */
+.labcoins-panel button:disabled{opacity:.48!important;cursor:not-allowed!important;filter:grayscale(.5)}
+.bonus-teacher-tabs{display:flex;gap:8px;flex-wrap:wrap;margin:16px 0}.bonus-teacher-tabs button,.bonus-draw-toolbar button{border:1px solid #a9c7d3;background:#e9f4f7;color:#1d485e;border-radius:8px;padding:9px 12px;cursor:pointer;font-weight:700}.bonus-teacher-tabs button.active{background:#176f96;color:white}.bonus-draw-toolbar{display:flex;gap:8px;flex-wrap:wrap;align-items:end;margin:10px 0}.bonus-draw-toolbar label{display:grid;gap:3px}.bonus-draw-toolbar select{padding:7px}#teacher-lewis-board{display:block;width:100%;max-width:700px;min-height:220px;border:2px solid #b4cdd5;border-radius:12px;touch-action:manipulation;cursor:crosshair}#bti-lewis-editor[hidden],#bti-type-label[hidden],#bti-difficulty-label[hidden],#bti-answer-label[hidden],#bti-category-label[hidden],#bti-accepted-label[hidden]{display:none!important}.reaction-coeff-form{display:grid;gap:12px}.reaction-equation{display:flex;gap:7px;align-items:center;justify-content:center;flex-wrap:wrap;background:#edf5f7;border-radius:12px;padding:14px}.reaction-term{display:inline-flex;gap:5px;align-items:center}.reaction-term input{width:55px;padding:8px;border:1px solid #a4bcc9;border-radius:7px;font:inherit}.reaction-term span{font-size:1.1rem;font-weight:800}

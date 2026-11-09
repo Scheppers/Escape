@@ -1,0 +1,26 @@
+UPDATE BONUSPELLEN - 9 NOVEMBER 2026
+
+Leerlingen:
+- Level 1: Elementensprint en Reactiebalancer.
+- Level 2: Zurenkennis en Stoffenindeler (één knop; kies classificatie of benoemen).
+- Level 3: The OG of chemistry en Lewisstructuren.
+- Level 4: Alkanenarchitect.
+- In andere levels zijn de knoppen grijs, niet aanklikbaar en voorzien van 'Beschikbaar in level ...'.
+- Reactiebalancer toont invoervelden voor coëfficiënten vóór elke formule. Scheid reactietermen met spaties rond '+'.
+
+Leerkracht > Bonusspellen:
+- Drie tabbladen: Reactiebalancer, Stoffenindeler en Lewisstructuren.
+- Reactiebalancer: geef een reactievergelijking als vraag en de correcte vergelijking als antwoord. Kies de moeilijkheidsgraad.
+- Stoffenindeler: geef de formule, stofklasse en één of twee aanvaarde namen. Bij een nieuwe invoer worden automatisch een classificatievraag en een benoemingsvraag opgeslagen.
+- Lewisstructuren: teken atomen, bindingen en vrije elektronenparen. De tekening wordt opgeslagen als een model dat ongevoelig is voor de tekenvolgorde van de atomen.
+- Bestaande vragen kunnen worden bewerkt, geactiveerd, gedeactiveerd en verwijderd. Een bestaande classificatie- of benoemingsvraag aanpassen wijzigt alleen die specifieke rij.
+
+INSTALLATIE
+1. Publiceer alle bestanden uit deze ZIP, ook de bestanden in dist/ als je die gebruikt.
+2. Voer de bijgewerkte supabase/2026_11_bonus_games.sql uit in Supabase SQL Editor om de reactievergelijkingscontrole bij te werken. Dit script bevat ook tabellen en beveiligingsfuncties; maak eerst een back-up als je een bestaande database bijwerkt.
+3. Test met een leerlingaccount in elk level en met een leerkrachtaccount in de Bonusspellen-tab.
+
+OPMERKINGEN
+- De levelvergrendeling gebeurt in de interface. Een server-side controle van het actuele level vereist een betrouwbare levelregistratie in Supabase.
+- De reactiebalancer accepteert dezelfde formules en coëfficiënten als de ingevoerde antwoordvergelijking; hij controleert geen chemische equivalentie van alternatieve coëfficiënten.
+- Voor de Reactiebalancer en Lewisstructuren zijn minimaal vijf actieve vragen nodig.
