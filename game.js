@@ -931,7 +931,8 @@ function renderEconomyPanel(){
   const btn=$(id);if(!btn)return;
   const available=currentLevel===level;
   btn.disabled=!available||anySprintRunning||Boolean(window.BonusGames?.isRunning?.());
-  btn.textContent=available?`${({"Elementensprint":"⚡","Reactiebalancer":"⚖️","Zurenkenner":"🧪","Anorganische stoffen":"🧩","The OG of chemistry":"⚗️","Lewisstructuren":"⚛️","Alkanenarchitect":"🏗️"})[label]} ${label}`:`Beschikbaar in level ${n}`;
+  const icon=({"Elementensprint":"⚡","Reactiebalancer":"⚖️","Zurenkenner":"🧪","Anorganische stoffen":"🧩","The OG of chemistry":"⚗️","Lewisstructuren":"⚛️","Alkanenarchitect":"🏗️"})[label]||"🎯";
+  btn.textContent=available?`${icon} ${label}`:`${icon} Beschikbaar in level ${n}`;
   btn.title=available?`Start ${label}`:`Beschikbaar in level ${n}`;
  });
  applyEquippedSkin();
