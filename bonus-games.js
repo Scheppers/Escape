@@ -45,7 +45,36 @@
  $('economy-content')?.addEventListener('click',e=>{if(e.target.closest('#bonus-next')){state.index++;if(state.index>=5){finish().then(renderDone);}else{state.graph={atoms:[],bonds:[],lonePairs:[]};renderQuestion();}}if(e.target.closest('#bonus-retry'))start(state.kind);if(e.target.closest('[data-lewis-tool]')){state.tool=e.target.closest('[data-lewis-tool]').dataset.lewisTool;state.selected=null;}if(e.target.closest('#lewis-submit'))submit('',canonical());if(e.target.closest('#lewis-undo')){state.graph.atoms.pop();state.graph.bonds=state.graph.bonds.filter(b=>state.graph.atoms.some(a=>a.id===b.a)&&state.graph.atoms.some(a=>a.id===b.b));state.graph.lonePairs=state.graph.lonePairs.filter(p=>state.graph.atoms.some(a=>a.id===p.atom));renderLewis(state.items[state.index]);}});
  $('economy-content')?.addEventListener('click',e=>{if(e.target.closest('#lewis-board'))onBoard(e);});
  const btns=[['reactiebalancer-open','reaction'],['stoffen-classificatie-open','classification'],['stoffen-benoemen-open','naming'],['lewisstructuren-open','lewis']];
- function injectButtons(){const panel=$('labcoins-panel');if(!panel||$('reactiebalancer-open'))return;const anchor=$('alkane-architect-open');if(!anchor)return;const wrap=document.createElement('div');wrap.innerHTML='<button type="button" class="primary full economy-action" id="reactiebalancer-open">⚖️ Reactiebalancer · 5 reacties</button><button type="button" class="primary full economy-action" id="stoffen-classificatie-open">🧩 Stoffenindeler · classificatiesprint</button><button type="button" class="primary full economy-action" id="stoffen-benoemen-open">✍️ Stoffenindeler · benoemingssprint</button><button type="button" class="primary full economy-action" id="lewisstructuren-open">⚛️ Lewisstructuren · 5 structuren</button>';const buttons=[...wrap.children];let cursor=anchor;buttons.forEach(button=>{cursor.after(button);cursor=button;});btns.forEach(([id,kind])=>$(id)?.addEventListener('click',()=>start(kind)));}
+ function injectButtons(){
+  const panel=$('labcoins-panel');
+  if(!panel)return;
+  const labels={
+   'reactiebalancer-open':'⚖️ Reactiebalancer · 5 reacties',
+   'stoffen-classificatie-open':'🧩 Stoffenindeler · classificatiesprint',
+   'stoffen-benoemen-open':'✍️ Stoffenindeler · benoemingssprint',
+   'lewisstructuren-open':'⚛️ Lewisstructuren · 5 structuren'
+  };
+  let cursor=$('alkane-architect-open');
+  if(cursor&&!panel.contains(cursor))cursor=null;
+  btns.forEach(([id,kind])=>{
+   let button=$(id);
+   if(!button){
+    button=document.createElement('button');
+    button.type='button';
+    button.className='primary full economy-action bonus-game-launch';
+    button.id=id;
+    button.textContent=labels[id];
+    if(cursor&&cursor.parentElement){cursor.after(button);}else{panel.append(button);}
+   }
+   if(button.parentElement!==panel)panel.append(button);
+   cursor=button;
+   if(!button.dataset.bonusBound){
+    button.dataset.bonusBound='true';
+    button.addEventListener('click',()=>start(kind));
+   }
+  });
+ }
+
  const obs=new MutationObserver(injectButtons);obs.observe(document.body,{childList:true,subtree:true});injectButtons();
  // Teacher management tab is added to the existing teacher workspace. CRUD remains protected by RLS.
  function injectTeacherTab(){const nav=document.querySelector('.teacher-management-tabs');if(!nav||nav.querySelector('[data-teacher-tab="bonus"]'))return;const b=document.createElement('button');b.type='button';b.className='teacher-management-tab';b.dataset.teacherTab='bonus';b.textContent='🎯 Bonusspellen';nav.append(b);const shell=document.querySelector('.teacher-management-shell');const section=document.createElement('section');section.id='teacher-panel-bonus';section.className='teacher-tab-panel';section.dataset.teacherPanel='bonus';section.hidden=true;section.innerHTML=`<div class="online-view-heading"><div><h3>🎯 Bonusspellen beheren</h3><p>Beheer de vragenbanken van Reactiebalancer, Stoffenindeler en Lewisstructuren. Voor Lewismodellen gebruik je gestructureerde JSON.</p></div></div><form id="bonus-teacher-form" class="teacher-question-form"><input type="hidden" id="bti-id"><label>Speltype<select id="bti-type"><option value="reaction">Reactiebalancer</option><option value="classification">Classificatiesprint</option><option value="naming">Benoemingssprint</option><option value="lewis">Lewisstructuren</option></select></label><label>Moeilijkheid<select id="bti-difficulty"><option>basis</option><option>gemiddeld</option><option>moeilijk</option></select></label><label class="span-all">Vraag / formule<textarea id="bti-prompt" required maxlength="1000"></textarea></label><label>Correct antwoord / vergelijking<input id="bti-answer"></label><label>Stoffenklasse<input id="bti-category" placeholder="oxide, hydroxide, zuur of zout"></label><label class="span-all">Aanvaarde namen (alleen benoemingssprint, één per regel)<textarea id="bti-accepted" rows="3"></textarea></label><label class="span-all">Goedgekeurde Lewisstructuur (JSON)<textarea id="bti-model" rows="5" placeholder='{"atoms":[{"element":"O"}],"bonds":[],"lonePairs":[]}'></textarea></label><label class="span-all">Uitleg / feedback<textarea id="bti-explanation" rows="2"></textarea></label><label><input id="bti-active" type="checkbox" checked> Actief voor leerlingen</label><div class="span-all"><button class="online-primary" type="submit">Vraag opslaan</button><button class="online-secondary" type="button" id="bti-reset">Nieuwe vraag</button></div><p id="bti-status" class="teacher-question-status span-all"></p></form><div id="bonus-teacher-list" class="teacher-question-grid"></div>`;shell.append(section);nav.addEventListener('click',e=>{const t=e.target.closest('[data-teacher-tab]');if(!t)return;nav.querySelectorAll('[data-teacher-tab]').forEach(x=>{const on=x===t;x.classList.toggle('active',on);x.setAttribute('aria-selected',String(on));});shell.querySelectorAll('[data-teacher-panel]').forEach(p=>p.hidden=p.dataset.teacherPanel!==t.dataset.teacherTab);if(t.dataset.teacherTab==='bonus')loadTeacherItems();});

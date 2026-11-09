@@ -274,3 +274,8 @@
 .h4{left:67%;top:67%}
 .door-hotspot{right:8%;bottom:19%}
 @media(max-width:700px){.hotspot{max-width:34%}.hotspot small{max-width:clamp(72px,25vw,108px);font-size:.62rem;padding:4px 5px}.h1{left:36%}.h2{left:25%}.h3{right:25%}.h4{left:67%}.door-hotspot{right:9%}}
+
+/* Altijd duidelijk zichtbare knoppen voor de nieuwe bonusspellen */
+.labcoins-panel .bonus-game-launch{display:block!important;visibility:visible!important;opacity:1!important;width:100%;min-height:42px;margin-top:9px!important;padding:10px 12px!important;border:1px solid #f8d98f!important;border-radius:9px!important;background:#f5c86d!important;color:#42300c!important;font-weight:800!important;text-align:left;cursor:pointer}
+.labcoins-panel .bonus-game-launch:hover{filter:brightness(1.06)}
+.labcoins-panel .bonus-game-launch:focus-visible{outline:3px solid #fff;outline-offset:3px}
