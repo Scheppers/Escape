@@ -1,37 +1,37 @@
 <!doctype html>
-<html lang="nl"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>Chemie Escape Room 3.0</title><link rel="stylesheet" href="style.css"></head>
+<html lang="nl"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>Een chemische tijdreis</title><link rel="stylesheet" href="style.css?v=20261108-card-previews-2"></head>
 <body>
-<header class="topbar"><div><p class="eyebrow">EEN CHEMISCHE TIJDREIS</p><h1>De Geheimen van het Alchemistenlabo</h1></div><div class="progress-wrap"><span id="progress-text">Level 1 van 3</span><div class="progress"><div id="progress-fill"></div></div></div></header>
+<header class="topbar"><div><h1>Een chemische tijdreis</h1></div><div class="progress-wrap"><span id="progress-text">Level 1 van 4</span><div class="progress"><div id="progress-fill"></div></div></div></header>
 <main>
-<section class="story"><div class="story-mark">✦</div><div><h2>De Schaduw van de Tijd</h2><p>Een mysterieuze figuur doorkruist de laboratoria door de eeuwen heen. Los de vragen op, vind de verborgen opdrachten en verzamel de drie codes om het tijdslot te openen.</p></div></section>
-<nav class="level-tabs" aria-label="Kies level">
-<button class="level-tab active" data-level="medieval"><span>Ⅰ</span><b>Middeleeuwen</b><small>Alchemie</small></button>
-<button class="level-tab" data-level="lavoisier"><span>Ⅱ</span><b>Franse Revolutie</b><small>Lavoisier</small></button>
-<button class="level-tab" data-level="modern"><span>Ⅲ</span><b>Modern labo</b><small>Chemie vandaag</small></button>
+<nav class="level-tabs" aria-label="Kies leerjaar/level">
+<button class="level-tab active" data-level="medieval"><span>Ⅰ</span><b>Leerjaar 1 · Middeleeuwen</b><small>Alchemie</small></button>
+<button class="level-tab" data-level="lavoisier"><span>Ⅱ</span><b>Leerjaar 2 · Franse Revolutie</b><small>Lavoisier</small></button>
+<button class="level-tab" data-level="modern"><span>Ⅲ</span><b>Leerjaar 3 · Modern labo</b><small>Chemie vandaag</small></button>
+<button class="level-tab" data-level="future"><span>Ⅳ</span><b>Leerjaar 4 · Toekomst</b><small>Futuristisch labo</small></button>
 </nav>
 <section class="game-layout">
+<aside class="side-panel left-panel" aria-label="Missie en inventaris">
+<div class="panel-heading"><span>⌘</span><h2>Missieoverzicht</h2></div>
+<div class="level-status" id="level-status">Leerjaar 1: nog geen puzzels voltooid</div>
+<div class="question-coverage" id="question-coverage"><small>Vragenkennis wordt geladen…</small></div>
+<div class="status-box"><span class="status-dot"></span><p id="status-text">Klik op een voorwerp om te beginnen.</p></div>
+<div class="inventory materials-inventory"><h3>🧺 Grondstoffeninventaris</h3><div class="inventory-items" id="inventory-items"><div class="material-item empty"><span class="material-icon">🧂</span><strong>Kaliumnitraat</strong><b>0 mol</b><small>KNO3</small></div><div class="material-item empty"><span class="material-icon">⚫</span><strong>Koolstof</strong><b>0 mol</b><small>C</small></div><div class="material-item empty"><span class="material-icon">🟡</span><strong>Zwavel</strong><b>0 mol</b><small>S</small></div></div></div>
+<div class="safe-box"><h3>🔐 De kluis</h3><p>Blaas de kluis op met buskruit en verdien een beloning.</p><button id="blow-safe-button" class="primary full">Blaas de kluis op</button><div id="safe-feedback" class="safe-feedback hidden" role="status" aria-live="polite"></div></div>
+</aside>
 <div class="scene-wrap"><div class="scene" id="scene">
 <img src="assets/medieval_lab.svg" class="lab-art" id="lab-art" alt="Getekend historisch laboratorium">
 <button class="hotspot h1" data-object="object1"><span>✦</span><small id="label1">Kookpot</small></button>
 <button class="hotspot h2" data-object="object2"><span>✦</span><small id="label2">Oud boek</small></button>
 <button class="hotspot h3" data-object="object3"><span>✦</span><small id="label3">Glazen potten</small></button>
 <button class="hotspot h4" data-object="object4"><span>✦</span><small id="label4">Werktafel</small></button>
-<button class="hotspot door-hotspot" data-object="door"><span>🚪</span><small>Uitgang / tijdslot</small></button>
-<button class="hotspot hidden-hotspot" data-object="hidden"><span>?</span><small>Verborgen opdracht</small></button>
+<button class="hotspot door-hotspot hidden" data-object="door" aria-hidden="true" tabindex="-1"><span>🚪</span><small>Uitgang / tijdslot</small></button>
 <button class="hotspot antagonist hidden" id="antagonist" data-object="antagonist"><span>👾</span><small>De Schaduw!</small></button>
-<div class="scene-caption" id="scene-caption">Onderzoek de voorwerpen. Een verborgen opdracht wacht ergens in het labo.</div>
-</div></div>
-<aside class="side-panel">
-<div class="panel-heading"><span>⌘</span><h2>Missieoverzicht</h2></div>
-<div class="level-status" id="level-status">Level 1: 0/3 vragen voltooid</div>
 
-<div class="status-box"><span class="status-dot"></span><p id="status-text">Klik op een voorwerp om te beginnen.</p></div>
-<div class="inventory"><h3>Inventaris</h3><div class="inventory-items" id="inventory-items"><div class="inv-item empty">🧪<small>Leeg</small></div><div class="inv-item empty">📜<small>Leeg</small></div><div class="inv-item empty">🗝️<small>Leeg</small></div></div><p class="muted" id="inventory-note">Vind verborgen voorwerpen in elk tijdperk.</p></div>
-<div class="antagonist-box"><h3>⚔️ De Schaduw</h3><div class="shadow-duel" aria-hidden="true"><span class="hero">🧪</span><span class="duel-spark">✨</span><span class="villain">👾</span></div><p id="antagonist-status">Nog niet gezien…</p><div class="shadow-meter"><div id="shadow-meter-fill"></div></div><button id="ward-button" class="secondary" disabled>Verdrijf de Schaduw</button></div>
-<button id="reset-button" class="secondary full">Spel opnieuw starten</button>
-</aside></section>
-<section class="bottom-grid"><article class="info-card"><h3>Hoe speel je?</h3><ol><li>Los per level vier puzzels op, elk met drie vragen. Elke puzzel levert één cijfer op.</li><li>Voer de viercijferige code zelf in bij de volgende tijdpoort.</li><li>Let op: de Schaduw verschijnt en verdwijnt onverwacht.</li><li>Verzamel de drie symbolische ingrediënten om de Schaduw te verdrijven.</li></ol></article><article class="info-card"><h3>Tijdreislogboek</h3><div id="logbook" class="logbook">Je avontuur begint in het middeleeuwse alchemistenlabo.</div></article></section>
-<footer>Educatief prototype · De ingrediënten zijn abstracte spelobjecten; het spel bevat geen echt recept of bereidingsinstructies.</footer>
+</div></div>
+<aside class="bonus-sidebar" id="bonus-sidebar" aria-label="Bonusspellen en skins"></aside>
+</section>
+<div id="logbook" hidden aria-hidden="true"></div>
+<footer>Educatief spel · De kluisreactie is uitsluitend een virtuele spelhandeling. Verzamel of meng deze stoffen nooit in het echt.</footer>
 </main>
 
 <section class="online-section" id="online-root" aria-labelledby="online-title">
@@ -84,8 +84,8 @@
       <button data-online-view="leaderboard">XP-ranking</button>
       <button data-online-view="cards">Kaartenwinkel</button>
       <button data-online-view="skins">Skins</button>
-      <button data-online-view="battles">Battles</button>
-      <button data-online-view="teacher" id="online-teacher-nav" class="hidden">Klasbeheer</button>
+      <button data-online-view="battles" aria-label="Battles">Battles <span id="battle-action-count" class="battle-nav-badge hidden" aria-hidden="true" aria-live="polite">0</span></button>
+      <button data-online-view="teacher" id="online-teacher-nav" class="hidden">Leerkrachtbeheer</button>
     </nav>
     <div id="online-view" class="online-view"></div>
   </section>
@@ -94,8 +94,8 @@
 </section>
 
 <div class="modal-backdrop hidden" id="modal-backdrop" role="dialog" aria-modal="true" aria-labelledby="modal-title"><section class="question-modal"><button class="close-button" id="close-modal" aria-label="Sluiten">×</button><p class="eyebrow" id="modal-category">CHEMIEPUZZEL</p><h2 id="modal-title">Vraag</h2><p id="question-text" class="question-text"></p><form id="answer-form"><div id="answer-area"></div><div class="modal-actions"><button type="button" class="secondary hidden" id="hint-button" tabindex="-1" aria-hidden="true">Hint</button><button type="submit" class="primary" id="check-button">Controleer antwoord</button></div></form><div class="feedback hidden" id="feedback" role="status"></div></section></div>
-<div class="win-screen hidden" id="win-screen"><div class="win-card"><div class="win-icon">⌛</div><p class="eyebrow">TIJDSLOT GEOPEND</p><h2>De tijdlijn is hersteld!</h2><p>Je hebt de drie laboratoria onderzocht, de codes verzameld en de Schaduw verdreven.</p><button class="primary" id="play-again">Speel opnieuw</button></div></div>
-<script src="game.js"></script>
+<div class="win-screen hidden" id="win-screen"><div class="win-card"><div class="win-icon">⌛</div><p class="eyebrow">TIJDSLOT GEOPEND</p><h2>De tijdlijn is hersteld!</h2><p>Je hebt de vier laboratoria onderzocht, de codes verzameld en de kluis geopend.</p><button class="primary" id="play-again">Speel opnieuw</button></div></div>
+<script src="game.js?v=20261108-bonus-games-1"></script>
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 <script src="config.js"></script>
-<script src="online.js"></script></body></html>
+<script src="online.js?v=20261108-bonus-games-1"></script><script src="bonus-games.js?v=20261108-bonus-games-1"></script></body></html>

@@ -864,7 +864,11 @@ function initEconomyUI(){
   <button type="button" class="primary full economy-action" id="element-sprint-open">⚡ Elementensprint · 60 sec</button>
   <button type="button" class="primary full economy-action" id="acid-sprint-open">🧪 Zurenkennis · 60 sec</button>
   <button type="button" class="primary full economy-action" id="og-sprint-open">⚗️ The OG of chemistry · 60 sec</button>
-  <button type="button" class="primary full economy-action" id="alkane-architect-open">🏗️ Alkanenarchitect · level 4</button>`;
+  <button type="button" class="primary full economy-action" id="alkane-architect-open">🏗️ Alkanenarchitect · level 4</button>
+  <button type="button" class="primary full economy-action bonus-game-launch" id="reactiebalancer-open">⚖️ Reactiebalancer · 5 reacties</button>
+  <button type="button" class="primary full economy-action bonus-game-launch" id="stoffen-classificatie-open">🧩 Stoffenindeler · classificatiesprint</button>
+  <button type="button" class="primary full economy-action bonus-game-launch" id="stoffen-benoemen-open">✍️ Stoffenindeler · benoemingssprint</button>
+  <button type="button" class="primary full economy-action bonus-game-launch" id="lewisstructuren-open">⚛️ Lewisstructuren · 5 structuren</button>`;
  const skinPanel=document.createElement("section");
  skinPanel.id="skin-panel";skinPanel.className="skin-panel";
  skinPanel.innerHTML=`<p class="economy-eyebrow">PERSONALISATIE</p><h3>🎭 Jouw chemicus</h3>
