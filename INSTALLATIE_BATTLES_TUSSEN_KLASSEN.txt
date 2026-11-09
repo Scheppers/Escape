@@ -1,0 +1,20 @@
+CHEMIE ESCAPE ROOM — BATTLES TUSSEN KLASSEN
+
+1. Maak eerst een back-up van je Supabase-database.
+2. Publiceer de websitebestanden uit deze ZIP (met name online.js en index.html).
+3. Open Supabase > SQL Editor > New query.
+4. Open supabase/2026_11_09_cross_class_battles_level_bonus.sql, plak de inhoud en klik Run.
+   Voer de oudere grote installatiescripts NIET opnieuw uit: sommige daarvan sluiten actieve battles af.
+5. Test met twee leerlingaccounts uit verschillende klassen.
+   Laat een leerling een andere leerling via gebruikersnaam uitdagen en de andere aanvaarden.
+   Controleer het HP-voordeel bij verschillen van 2, 3, 5 en 6 levels.
+
+REGELS
+- Geen openbare spelerslijst; uitdagen via gebruikersnaam.
+- Klasse en level blokkeren uitdagingen niet.
+- Verschil 0–2: 0 extra HP; 3–5: 1 extra HP; 6+: 2 extra HP voor de laagste.
+- Voordeel wordt bepaald bij aanvaarden en blijft vast voor de battle.
+- Klassementen per klas blijven behouden.
+- Bestaande battles krijgen geen retroactieve handicap.
+
+LET OP: SQL-migratie moet succesvol zijn uitgevoerd voordat je cross-class battles test.
