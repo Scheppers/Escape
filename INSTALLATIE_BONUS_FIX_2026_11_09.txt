@@ -1,0 +1,15 @@
+CHEMIE ESCAPE ROOM – BONUS-SPELLEN CORRECTIES
+
+1. Publiceer de bijgewerkte websitebestanden (gebruik de root of de dist-map, afhankelijk van je hosting).
+2. Open Supabase > SQL Editor en voer ALLEEN supabase/2026_11_09_fix_bonus_rewards.sql uit op je bestaande database.
+3. Voer NIET opnieuw schema.sql of de volledige 2026_11_bonus_games.sql uit op je bestaande database.
+4. Herlaad de website en test met een leerlingaccount.
+
+OPGELOST:
+- Stoffenindeler: browser en database hanteren dezelfde vraagvolgorde, ook na een volledige ronde.
+- Stoffenindeler: alleen fout beantwoorde opgaven staan in de eindfeedback.
+- Reactiebalancer: de 1e/2e/3e/4e/5e juiste reactie levert 1/2/3/4/5 LabCoins.
+- Lewisstructuren: de 1e/2e/3e/4e/5e juiste structuur levert 3/6/9/12/15 LabCoins.
+- Lewisstructuren: de opdracht staat duidelijk in een opvallend kader.
+
+Let op: de SQL-migratie wijzigt de beloning voor NIEUWE inzendingen, niet eerder verdiende LabCoins.

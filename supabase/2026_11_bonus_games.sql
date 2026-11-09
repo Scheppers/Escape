@@ -121,8 +121,8 @@ begin
      or (v_s.game_type='classification' and lower(trim(coalesce(p_answer,'')))=lower(trim(v_item.category)));
  end if;
  if v_ok then
-   if v_s.game_type='reaction' then v_reward:=p_sequence;
-   elsif v_s.game_type='lewis' then v_reward:=3*p_sequence;
+   if v_s.game_type='reaction' then v_reward:=least(v_s.correct_count+1,5);
+   elsif v_s.game_type='lewis' then v_reward:=3*least(v_s.correct_count+1,5);
    elsif v_s.game_type='classification' then v_reward:=((v_s.correct_count)/10)+1;
    elsif v_s.game_type='naming' then v_reward:=((v_s.correct_count)/5)+1; end if;
  end if;

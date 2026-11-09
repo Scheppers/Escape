@@ -292,3 +292,8 @@
 .bonus-lewis-forms button {border:1px solid #b2c6d1;border-radius:8px;padding:7px 10px;cursor:pointer;background:#fff;color:#23465b}
 .bonus-lewis-forms button.active {background:#d5edf6;border-color:#377d99;font-weight:800}
 #teacher-lewis-board {touch-action:manipulation}
+
+/* Duidelijke opgave in het leerlingentekenvenster voor Lewisstructuren */
+.bonus-lewis-task{display:flex;flex-direction:column;gap:4px;margin:12px 0 10px;padding:12px 16px;border:2px solid #3b7d99;border-radius:12px;background:#e9f5fb;color:#18394f}
+.bonus-lewis-task span{font-size:.72rem;font-weight:800;letter-spacing:.07em}
+.bonus-lewis-task strong{font-size:clamp(1.25rem,3vw,1.65rem);line-height:1.4;overflow-wrap:anywhere}
