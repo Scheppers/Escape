@@ -596,6 +596,24 @@ Optie D"></textarea></label>
     const optionMarkup = options ? `<option value="">Kies een kaart…</option>${options}` : '<option value="">Geen kaarten in collectie</option>';
     return Array.from({length:5}, (_,i) => `<label class="deck-slot-label">Kaart ${i+1}<select name="deck_card_ids" class="deck-slot-select" data-deck-prefix="${esc(prefix)}" required>${optionMarkup}</select></label>`).join('');
   }
+  // Dezelfde kaartopbouw als in de collectie; geen afzonderlijke battle-illustraties.
+  let battleCatalogCache = [];
+  function battleFullCard(card) {
+    if (!card) return '<p class="online-help">Kaartgegevens zijn niet beschikbaar.</p>';
+    const support = [card.support_description, card.support_description_2].filter(Boolean);
+    return `<article class="online-card owned battle-full-card"><div class="online-card-top"><span>${esc(card.card_type||'Stof')}</span><span>${esc(card.rarity||'')}</span></div>${specialAllotropeArt(card)}<h4>${esc(card.formula||'')} · ${esc(card.name||'Kaart')}</h4><p>${esc(card.description||'')}</p><div class="online-stats"><span>💪 Kracht ${Number(card.power)||1}</span></div>${support.map(t=>`<small class="card-support">✨ ${esc(t)}</small>`).join('')}${support.length?'':'<small class="card-support">Geen bijzondere ondersteuning</small>'}</article>`;
+  }
+  function battleCardPreview(cardId, cards, title='Kaart bekijken') {
+    const card = cards.find(c=>String(c.id)===String(cardId));
+    return `<div class="battle-card-detail"><strong>${esc(title)}</strong>${battleFullCard(card)}</div>`;
+  }
+  function updateDeckPreviews(form, cards) {
+    if (!form) return;
+    const selected = [...form.querySelectorAll('.deck-slot-select')];
+    const previews = form.querySelector('.battle-deck-previews');
+    if (!previews) return;
+    previews.innerHTML = selected.map((el,i)=>el.value ? battleCardPreview(el.value,cards,`Kaart ${i+1}`) : '').join('') || '<p class="online-help">Kies een kaart om haar eigenschappen te bekijken.</p>';
+  }
   function suggestDeck(cards, ownedRows) {
     const quantity = new Map(ownedRows.map(row => [row.card_id, Number(row.quantity) || 0]));
     const result = [];
@@ -631,11 +649,11 @@ Optie D"></textarea></label>
   }
   async function renderBattles() {
     const [battles, { data: owned, error: oErr }, { data: catalog, error: cErr }] = await Promise.all([
-      getMyBattles(), supabase.from('user_cards').select('card_id,quantity').eq('user_id', currentUser.id), supabase.from('card_catalog').select('id,name,formula,card_type,power,support_description,support_effect,support_description_2,support_effect_2,is_reward_only,is_final_reward')
+      getMyBattles(), supabase.from('user_cards').select('card_id,quantity').eq('user_id', currentUser.id), supabase.from('card_catalog').select('id,name,formula,card_type,rarity,description,power,support_description,support_effect,support_description_2,support_effect_2,is_reward_only,is_final_reward')
     ]);
     if (oErr) throw oErr; if (cErr) throw cErr;
     updateBattleActionBadge(battles);
-    const cards = catalog || []; ownedCardCache = owned || [];
+    const cards = catalog || []; battleCatalogCache = cards; ownedCardCache = owned || [];
     const battleMarkup = await Promise.all(battles.map(async b => {
       const isChallenger = b.challenger_id === currentUser.id;
       const opponentName = isChallenger ? b.opponent_username : b.challenger_username;
@@ -643,7 +661,7 @@ Optie D"></textarea></label>
       const needsAction = (b.status === 'pending' && b.opponent_id === currentUser.id) || (b.status === 'active' && isMyTurn);
       let sub = '';
       if (b.status === 'pending' && b.opponent_id === currentUser.id) {
-        sub = `<p>${esc(b.challenger_username)} daagt je uit. Kies vijf kaarten voor jouw deck voordat je aanvaardt.</p><form class="battle-accept-form" data-battle-accept-form="${b.battle_id}"><div class="battle-deck-builder">${deckSelectMarkup(cards,ownedCardCache,`accept-${b.battle_id}`)}</div><div class="online-actions"><button type="button" data-battle-response="accept" data-id="${b.battle_id}">Aanvaarden met dit deck</button><button type="button" class="danger" data-battle-response="decline" data-id="${b.battle_id}">Weigeren</button></div></form>`;
+        sub = `<p>${esc(b.challenger_username)} daagt je uit. Kies vijf kaarten voor jouw deck voordat je aanvaardt.</p><form class="battle-accept-form" data-battle-accept-form="${b.battle_id}"><div class="battle-deck-builder">${deckSelectMarkup(cards,ownedCardCache,`accept-${b.battle_id}`)}<div class="battle-deck-previews" aria-live="polite"></div></div><div class="online-actions"><button type="button" data-battle-response="accept" data-id="${b.battle_id}">Aanvaarden met dit deck</button><button type="button" class="danger" data-battle-response="decline" data-id="${b.battle_id}">Weigeren</button></div></form>`;
       } else if (b.status === 'pending') sub = '<p>Uitdaging verstuurd. Je deck is vastgelegd; wachten op de keuze van je tegenstander.</p>';
       else if (b.status === 'declined') sub = '<p>Uitdaging geweigerd.</p>';
       else if (b.status === 'completed') { const rewardCard=cards.find(c=>c.id===b.reward_card_id); sub = `<p>${b.winner_id ? (b.winner_id === currentUser.id ? '🏆 Jij hebt gewonnen!' : 'De tegenstander heeft gewonnen.') : '🤝 Gelijkspel'}</p>${rewardCard && b.winner_id===currentUser.id ? `<p class="battle-reward">🎁 Je ontvangt ${esc(rewardCard.formula)} · ${esc(rewardCard.name)} — een exclusieve kaart die niet in de winkel te koop is.</p>` : ''}<div class="online-hp"><span>Jij: ${isChallenger ? b.challenger_hp : b.opponent_hp}/${isChallenger ? (b.challenger_start_hp ?? b.starting_hp) : (b.opponent_start_hp ?? b.starting_hp)} HP</span><span>${esc(opponentName)}: ${isChallenger ? b.opponent_hp : b.challenger_hp}/${isChallenger ? (b.opponent_start_hp ?? b.starting_hp) : (b.challenger_start_hp ?? b.starting_hp)} HP</span></div>`; }
@@ -658,28 +676,30 @@ Optie D"></textarea></label>
         const moveList = [...rounds.entries()].sort((a,b)=>a[0]-b[0]).map(([round,arr])=>{
           const atk=arr.find(m=>m.role==='attacker'),def=arr.find(m=>m.role==='defender');
           const atkCard=cards.find(c=>c.id===atk?.card_id),defCard=cards.find(c=>c.id===def?.card_id);
-          if (!def) return `<li><strong>Ronde ${round}</strong> · Aanval ingezet: ${esc(atkCard?.formula||'kaart')} — wachten op verdediging.</li>`;
+          if (!def) return `<li><strong>Ronde ${round}</strong> · Aanval ingezet: ${esc(atkCard?.formula||'kaart')} — wachten op verdediging.<div class="battle-round-cards">${battleCardPreview(atk?.card_id,cards,'Aanvalskaart')}</div></li>`;
           const damage=Number(def.damage)||0; const recipient=def.damage_to_user_id===currentUser.id?'jij':def.damage_to_user_id?'tegenstander':'niemand';
           const notes=def.support_note ? `<small class="battle-support-note">✨ ${esc(def.support_note)}</small>` : '';
           const outcome=damage===0?'Geen levenspunten verloren.':`${damage} HP schade aan ${recipient}.`;
-          return `<li><strong>Ronde ${round}</strong> · Aanval: ${esc(atkCard?.formula||'')} (${Number(atk.effective_power)} kracht) · Verdediging: ${esc(defCard?.formula||'')} (${Number(def.effective_power)} kracht). <b>${esc(outcome)}</b>${notes}</li>`;
+          return `<li><strong>Ronde ${round}</strong> · Aanval: ${esc(atkCard?.formula||'')} (${Number(atk.effective_power)} kracht) · Verdediging: ${esc(defCard?.formula||'')} (${Number(def.effective_power)} kracht). <b>${esc(outcome)}</b>${notes}<div class="battle-round-cards">${battleCardPreview(atk?.card_id,cards,'Aanval')}${battleCardPreview(def?.card_id,cards,'Verdediging')}</div></li>`;
         }).join('');
-        const hand = isMyTurn ? `<div class="online-hand"><strong>${b.current_role==='attacker'?'🗡️ Jij valt aan':'🛡️ Jij verdedigt'} — kies één kaart:</strong><div class="online-hand-grid">${(ownDeck||[]).filter(d=>!usedSlots.has(Number(d.slot_number))).map(d=>{const c=cards.find(x=>x.id===d.card_id);return `<button class="online-play-card" data-play-slot="${Number(d.slot_number)}" data-battle-id="${b.battle_id}"><div class="battle-card-mascot">${specialAllotropeArt(c || {formula:d.card_id})}</div><span>${esc(c?.name||'Kaart')}</span><small>💪 Kracht ${Number(c?.power)||1} · ${esc(c?.card_type||'')}</small>${[c?.support_description,c?.support_description_2].filter(Boolean).map(t=>`<em>✨ ${esc(t)}</em>`).join('')}<small>Deckslot ${Number(d.slot_number)}</small></button>`;}).join('') || '<p>Je hebt alle vier ingezette kaarten al gespeeld. Eén kaart blijft ongebruikt.</p>'}</div></div>` : `<p class="battle-waiting">${b.current_role==='attacker'?'Tegenstander kiest een aanvalskaart.':'Tegenstander kiest een verdedigingskaart.'}</p>`;
+        const hand = isMyTurn ? `<div class="online-hand"><strong>${b.current_role==='attacker'?'🗡️ Jij valt aan':'🛡️ Jij verdedigt'} — kies één kaart:</strong><div class="online-hand-grid">${(ownDeck||[]).filter(d=>!usedSlots.has(Number(d.slot_number))).map(d=>{const c=cards.find(x=>x.id===d.card_id);return `<button class="online-play-card" data-play-slot="${Number(d.slot_number)}" data-battle-id="${b.battle_id}">${battleFullCard(c)}<span>Speel ${esc(c?.name||'kaart')} · slot ${Number(d.slot_number)}</span></button>`;}).join('') || '<p>Je hebt alle vier ingezette kaarten al gespeeld. Eén kaart blijft ongebruikt.</p>'}</div></div>` : `<p class="battle-waiting">${b.current_role==='attacker'?'Tegenstander kiest een aanvalskaart.':'Tegenstander kiest een verdedigingskaart.'}</p>`;
         const role = isMyTurn ? (b.current_role==='attacker'?'Jij bent de aanvaller':'Jij bent de verdediger') : (b.current_role==='attacker'?'Tegenstander is de aanvaller':'Tegenstander is de verdediger');
         sub = `<div class="battle-turn-banner ${isMyTurn?'your-turn':'waiting-turn'}"><strong>${isMyTurn?'JOUW BEURT':'BEURT TEGENSTANDER'}</strong><span>${role}</span></div><div class="online-hp"><span>🧪 Jij: ${isChallenger ? b.challenger_hp : b.opponent_hp}/${isChallenger ? (b.challenger_start_hp ?? b.starting_hp) : (b.opponent_start_hp ?? b.starting_hp)} HP</span><span>⚗ ${esc(opponentName)}: ${isChallenger ? b.opponent_hp : b.challenger_hp}/${isChallenger ? (b.opponent_start_hp ?? b.starting_hp) : (b.challenger_start_hp ?? b.starting_hp)} HP</span></div><p class="battle-round-indicator">Ronde ${Number(b.round_count)+1}/4 · ${b.current_role==='attacker'?'aanval':'verdediging'}</p><ol class="online-moves">${moveList || '<li>De battle is gestart. De uitdager valt aan.</li>'}</ol>${hand}`;
       }
       return `<article class="online-battle-card ${needsAction ? 'battle-action-needed' : ''}"><div class="online-view-heading"><div><h4>⚔️ Jij vs. ${esc(opponentName)}</h4><small>${esc(b.status)} · ${new Date(b.updated_at).toLocaleString('nl-BE')}</small></div><div class="battle-status-tags"><span class="online-pill">${b.status === 'active' ? `${isChallenger ? b.challenger_hp : b.opponent_hp} HP` : esc(b.status)}</span>${needsAction ? '<span class="battle-needs-action">ACTIE VEREIST</span>' : ''}</div></div>${sub}</article>`;
     }));
     const deckOptions = deckSelectMarkup(cards,ownedCardCache,'challenge');
-    view.innerHTML = `<div class="online-view-heading"><div><h3>⚔️ Stoffenstrijd</h3><p>Stel een battledeck van vijf verschillende kaarten samen en daag een leerling uit. Elke kaartsoort mag maar één keer voorkomen, ook als je meerdere exemplaren bezit. Een battle duurt maximaal vier rondes: per speler blijft dus één kaart ongebruikt. De Au-eindkaart mag wel mee in je deck.</p></div><button class="online-small-btn" data-online-refresh>Vernieuwen</button></div><form id="battle-invite-form" class="online-invite-form"><label for="battle-opponent">Gebruikersnaam tegenstander</label><input id="battle-opponent" name="username" minlength="3" maxlength="20" pattern="[a-z0-9_-]{3,20}" placeholder="bv. chemicus_123" required><strong>Kies jouw vijf kaarten</strong><div class="battle-deck-builder">${deckOptions}</div><button>Verstuur uitdaging</button></form><div class="online-battles-list">${battleMarkup.join('') || '<p class="online-help">Nog geen uitdagingen of battles. Daag een klasgenoot uit!</p>'}</div>`;
+    view.innerHTML = `<div class="online-view-heading"><div><h3>⚔️ Stoffenstrijd</h3><p>Stel een battledeck van vijf verschillende kaarten samen en daag een leerling uit. Elke kaartsoort mag maar één keer voorkomen, ook als je meerdere exemplaren bezit. Een battle duurt maximaal vier rondes: per speler blijft dus één kaart ongebruikt. De Au-eindkaart mag wel mee in je deck.</p></div><button class="online-small-btn" data-online-refresh>Vernieuwen</button></div><form id="battle-invite-form" class="online-invite-form"><label for="battle-opponent">Gebruikersnaam tegenstander</label><input id="battle-opponent" name="username" minlength="3" maxlength="20" pattern="[a-z0-9_-]{3,20}" placeholder="bv. chemicus_123" required><strong>Kies jouw vijf kaarten</strong><div class="battle-deck-builder">${deckOptions}<div class="battle-deck-previews" aria-live="polite"></div></div><button>Verstuur uitdaging</button></form><div class="online-battles-list">${battleMarkup.join('') || '<p class="online-help">Nog geen uitdagingen of battles. Daag een klasgenoot uit!</p>'}</div>`;
     const suggestions = suggestDeck(cards,ownedCardCache);
     const inviteForm = document.querySelector('#battle-invite-form');
     inviteForm?.querySelectorAll('.deck-slot-select').forEach((select,i)=>{if(suggestions[i])select.value=suggestions[i];});
     syncDeckSelectOptions(inviteForm);
+    updateDeckPreviews(inviteForm,cards);
     document.querySelectorAll('.battle-accept-form').forEach(form=>{
       const picks=suggestDeck(cards,ownedCardCache);
       form.querySelectorAll('.deck-slot-select').forEach((select,i)=>{if(picks[i])select.value=picks[i];});
       syncDeckSelectOptions(form);
+      updateDeckPreviews(form,cards);
     });
   }
 
@@ -983,7 +1003,7 @@ Optie D"></textarea></label>
       if (e.target.id === 'teacher-battle-settings-form') { e.preventDefault(); action(async()=>{const hp=Number(document.getElementById('teacher-battle-hp').value); await rpc('teacher_set_battle_settings',{p_starting_hp:hp}); msg('Startlevenskracht bijgewerkt.','good');}); return; }
     });
     view?.addEventListener('change', e => {
-      if (e.target.matches('.deck-slot-select')) syncDeckSelectOptions(e.target.closest('form'));
+      if (e.target.matches('.deck-slot-select')) { const form=e.target.closest('form'); syncDeckSelectOptions(form); updateDeckPreviews(form,battleCatalogCache); }
       if (e.target.id === 'teacher-create-class') teacherCreateClassId = e.target.value;
       if (e.target.id === 'teacher-ranking-class') { teacherLeaderboardClassId = e.target.value; renderLeaderboard().catch(err => { console.error(err); msg(err.message || 'Ranking laden is mislukt.', 'bad'); }); }
       if (e.target.id === 'teacher-question-level') renderTeacherQuestions(e.target.value).catch(err => { console.error(err); msg(err.message || 'Vragenset laden is mislukt.', 'bad'); });
