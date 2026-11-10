@@ -714,7 +714,9 @@ let alkaneArchitectState={running:false,queue:[],index:0,correct:0,earned:0,grap
 function openAlkaneArchitect(){
  if(currentLevel!=="future"){setStatus("De Alkanenarchitect is beschikbaar in level 4, het futuristische chemielabo.");return;}
  if(alkaneArchitectState.running){setStatus("Maak eerst de huidige Alkanenarchitect-ronde af.");return;}
- showEconomyOverlay(`<p class="economy-eyebrow">BONUSLEVEL · LEVEL 4</p><h2 class="economy-title" id="economy-title">🏗️ Alkanenarchitect</h2><p class="economy-lead">Krijg 10 namen van vertakte alkanen en teken telkens de koolstofketen in skeletnotatie. Teken eerst de koolstofatomen en verbind deze daarna met bindingen. Je krijgt één poging per molecule.</p><div class="sprint-rules"><strong>Speciale beloning:</strong> teken alle tien alkanen foutloos en verdien de speciale palladiumkaart Pd.<br>Elke hoek en elk uiteinde stelt een koolstofatoom voor. Waterstofatomen teken je niet.</div><button type="button" class="primary full" id="alkane-architect-start">Start de architect</button><button type="button" class="secondary full" data-mono-start="alkane">Oefen extra alkanen van je leerkracht</button>`);
+ // Alkanenarchitect gebruikt uitsluitend de door de leerkracht getekende vragenbank.
+ if(window.MonoGames?.startAlkanes){window.MonoGames.startAlkanes();return;}
+ showEconomyOverlay('<h2>Alkanenarchitect</h2><p>De vragenbankmodule is nog niet geladen. Vernieuw de pagina.</p>');
 }
 async function startAlkaneArchitect(){
  let queue=shuffleAlkanes(ALKANE_ARCHITECT_POOL).slice(0,10),onlineSessionId=null;
@@ -740,7 +742,7 @@ function renderAlkaneDrawing(){
  const svg=$("alkane-drawing");if(!svg)return;
  const g=alkaneArchitectState.graph;
  const lines=g.edges.map(([a,b])=>{const p=g.nodes[a],q=g.nodes[b];return `<line x1="${p.x}" y1="${p.y}" x2="${q.x}" y2="${q.y}" stroke="#243b53" stroke-width="4" stroke-linecap="round"/>`;}).join("");
- const nodes=g.nodes.map((p,i)=>`<circle cx="${p.x}" cy="${p.y}" r="9" fill="${alkaneArchitectState.selectedNode===i?"#f2b84b":"#ffffff"}" stroke="#176f96" stroke-width="3" data-alkane-node="${i}"/><circle cx="${p.x}" cy="${p.y}" r="18" fill="transparent" data-alkane-node="${i}"/>`).join("");
+ const nodes=g.nodes.map((p,i)=>`<circle cx="${p.x}" cy="${p.y}" r="${alkaneArchitectState.selectedNode===i?4:1.3}" fill="${alkaneArchitectState.selectedNode===i?"#f2b84b":"#243b53"}" stroke="none" data-alkane-node="${i}"/><circle cx="${p.x}" cy="${p.y}" r="18" fill="transparent" data-alkane-node="${i}"/>`).join("");
  svg.innerHTML=`<rect x="1" y="1" width="598" height="328" rx="14" fill="#fbfdff" stroke="#cbd8e2"/>${lines}${nodes}`;
  const count=$("alkane-count");if(count)count.textContent=`${g.nodes.length} koolstofpunten · ${g.edges.length} bindingen`;
  const instruction=$("alkane-instruction");if(instruction)instruction.textContent=alkaneArchitectState.mode==="add"?"Klik in het tekenvlak om koolstofpunten te plaatsen.":(alkaneArchitectState.selectedNode===null?"Klik op een startpunt en daarna op de volgende punten. Het laatste punt blijft geselecteerd.":"Startpunt geselecteerd. Klik op het volgende koolstofpunt om een binding te tekenen.");

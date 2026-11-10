@@ -1,0 +1,16 @@
+ALKANENARCHITECT V7
+
+1. Maak een Supabase-back-up.
+2. Voer supabase/2026_11_10_alkanenarchitect_tien_eigen_palladium.sql uit
+   in Supabase SQL Editor. De eerdere monofunctionele migratie moet bestaan.
+3. Publiceer alle websitebestanden (inclusief dist/ bij dist-deployment).
+4. Ververs met Ctrl+F5.
+5. Voeg minstens 10 ACTIEVE eigen alkanen toe via Leerkrachtenbeheer > Bonusspellen > Alkanenarchitect.
+6. Test met een leerlingaccount.
+
+Een ronde bevat 10 willekeurige eigen opgaven. Voor elk juist antwoord
+loopt de beloning op van 1 tot 10 LabCoins (maximaal 55). Bij 10/10
+ontvangt de leerling eenmaal de speciale palladiumkaart, indien die nog
+niet in bezit is. De oude automatisch gegenereerde set wordt niet gebruikt.
+
+LET OP: SQL niet live getest tegen je Supabase-database.

@@ -1,0 +1,18 @@
+CHEMIE ESCAPE ROOM – ALKANENARCHITECT MET EIGEN VRAGENBANK
+
+- Alkanenarchitect opent nu meteen de oefenronde met uitsluitend de actieve
+  alkanen die de leerkracht zelf heeft getekend.
+- De oorspronkelijke automatisch gegenereerde set van 25 wordt niet meer
+  aangeboden aan leerlingen. De oude code blijft aanwezig voor compatibiliteit.
+- Minimaal 5 actieve eigen alkaanopgaven zijn nodig om te starten.
+- De ronde bevat 5 opgaven, met maximaal 15 LabCoins (oplopende beloning).
+- De oorspronkelijke palladiumbeloning voor de automatische ronde van 10
+  opgaven is NIET gekoppeld aan de nieuwe eigen vragenbank. Hiervoor zou
+  een afzonderlijke beveiligde Supabase-uitbreiding nodig zijn.
+- C-punten zijn vrijwel onzichtbaar; het geselecteerde punt blijft zichtbaar
+  en de transparante klikzones blijven behouden.
+- Geen nieuwe SQL nodig als de eerdere monofunctionele migratie uitgevoerd is.
+- Publiceer de volledige website (of volledige dist-map) en ververs met Ctrl+F5.
+
+LET OP: de JavaScript-syntaxis is gecontroleerd; de browser en Supabase zijn
+niet live getest. Maak een back-up voor het publiceren.

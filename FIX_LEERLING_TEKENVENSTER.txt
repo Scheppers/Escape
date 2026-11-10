@@ -1,0 +1,15 @@
+FIX: TEKENVENSTER LEERLING + ATOOMSYMBOLEN
+
+Oorzaak: zowel het leerkrachtenscherm als het leerlingenscherm gebruikten
+hetzelfde element-id mono-editor. De browser koos het verborgen
+leerkrachtenvenster en plaatste de leerlingentekening daar.
+
+Oplossing: de tekenmodule zoekt nu het tekenvlak en de gereedschappen
+alleen binnen het actieve scherm. Heteroatomen worden zonder omringende
+cirkel als symbool weergegeven. C blijft een onbenoemd punt.
+
+Publiceer de volledige ZIP (of dist/) en herlaad met Ctrl+F5.
+Geen SQL-migratie nodig voor deze interfacecorrectie.
+
+De JavaScript-syntaxis is gecontroleerd, maar de website is niet in
+een ingelogde leerlingensessie met Supabase getest.
