@@ -361,3 +361,6 @@
   .scene .hotspot[data-object^="object"] span{width:clamp(29px,8vw,38px);height:clamp(29px,8vw,38px)}
   .scene .hotspot[data-object^="object"] small{font-size:clamp(.56rem,2.25vw,.7rem);padding:3px 5px;line-height:1.1}
 }
+
+/* Extra leerkrachtenvragenbanken binnen Bonusspellen */
+.bonus-teacher-tabs{display:flex;flex-wrap:wrap;justify-content:flex-start;gap:8px}.bonus-teacher-tabs [data-bonus-bank]{flex:0 1 auto;max-width:100%;white-space:normal;text-align:center}#mono-extra-teacher[hidden]{display:none!important}#mono-extra-teacher{width:100%;min-width:0}
