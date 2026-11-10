@@ -1,0 +1,9 @@
+Syntheselabo v10 — losse machineillustraties
+
+1. Upload de VOLLEDIGE inhoud van Escape-main, met name bonus-games.js, style.css en de nieuwe map assets/synth_machines/.
+2. Als je dist gebruikt, upload ook dist/ volledig.
+3. Ververs met Ctrl+F5.
+4. De verbindingen tussen naburige toestellen verschijnen alleen als beide gekocht zijn. Grondstoftanks verbinden na aankoop van de compressor.
+5. Er is GEEN nieuwe SQL nodig. De bestaande Supabase-productie en verkoop blijven ongewijzigd.
+
+Opmerking: de CO₂-opslagtank in labo 2 gebruikt nog een pictogram. De overige 10 toestellen gebruiken de afzonderlijke afbeeldingen.
