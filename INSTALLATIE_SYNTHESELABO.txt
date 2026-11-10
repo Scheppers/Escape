@@ -35,3 +35,5 @@ spelmechanieken verkregen zijn. Deze migratie maakt toekomstige aankopen
 via de actuele winkelregels onmogelijk, maar trekt eerder verkregen
 kaarten niet in. Controleer bestaande kaartreacties die NH3 opleveren
 als je absolute exclusiviteit wilt afdwingen.
+
+FIX v9.1: De Syntheselabo-module is geïntegreerd in bonus-games.js; geen aparte synth-lab.js scriptload meer nodig. Publiceer de volledige website inclusief bonus-games.js en dist/ indien van toepassing. Deze UI-fix vereist geen nieuwe SQL.
