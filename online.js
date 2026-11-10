@@ -190,7 +190,7 @@
     teacherNav?.classList.toggle('hidden', data.role !== 'teacher');
     nav?.querySelectorAll('[data-online-view="cards"],[data-online-view="skins"],[data-online-view="battles"]').forEach(b => b.classList.toggle('hidden', data.role === 'teacher'));
     const level = Math.floor(Number(data.xp) / 100) + 1;
-    summary.innerHTML = `<div class="online-profile"><span class="online-avatar">${esc((window.ChemieGameBridge?.getEconomyState?.().equippedSkin === 'brass') ? '🥽' : '🧪')}</span><div class="online-profile-copy"><strong>${esc(data.username)}</strong><small>Level ${level} · ${Number(data.xp)} XP</small></div><div class="online-currency"><span class="online-currency-amount">${LABCOIN_ICON} ${Number(data.coins)}</span><small>LabCoins</small></div></div>`;
+    summary.innerHTML = `<div class="online-profile"><span class="online-avatar">${avatarImage(data.equipped_skin)}</span><div class="online-profile-copy"><strong>${esc(data.username)}</strong><small>Level ${level} · ${Number(data.xp)} XP</small></div><div class="online-currency"><span class="online-currency-amount">${LABCOIN_ICON} ${Number(data.coins)}</span><small>LabCoins</small></div></div>`;
     if (window.ChemieGameBridge) {
       const econ = await getEconomy();
       window.ChemieGameBridge.applyOnlineEconomy(econ);
@@ -247,15 +247,17 @@
     const table = `<div class="online-table-wrap"><table class="online-table"><thead><tr><th>#</th><th>Speler</th><th>Level</th><th>XP</th></tr></thead><tbody>${(rows || []).map(r => `<tr class="${r.username === currentProfile?.username ? 'is-me' : ''}"><td>${Number(r.position)}</td><td>${esc(r.username)}${r.username === currentProfile?.username ? ' (jij)' : ''}</td><td>${Number(r.level)}</td><td>${Number(r.xp)}</td></tr>`).join('') || '<tr><td colspan="4">Nog geen rankinggegevens voor deze klas.</td></tr>'}</tbody></table></div>`;
     view.innerHTML = `<div class="online-view-heading"><div><h3>🏆 XP-ranking</h3><p>${currentProfile?.role === 'teacher' ? 'Kies een klas om de rangschikking van die leerlingen te bekijken.' : 'Alleen leerlingen uit jouw klas zijn zichtbaar.'}</p></div><button class="online-small-btn" data-online-refresh>Vernieuwen</button></div>${classFilter}${table}`;
   }
+  const avatarImage = id => `<img src="assets/avatars/${['starter','brass','crystal','neon','cosmic','master'].includes(id)?id:'starter'}.webp" alt="" class="online-chemist-img" loading="lazy">`;
   async function renderSkins() {
     const [{ data: catalog, error: cErr }, econ] = await Promise.all([
       supabase.from('skin_catalog').select('id,name,emoji,price,description').order('price'), getEconomy()
     ]);
     if (cErr) throw cErr;
-    const cards = (catalog || []).map(s => {
+    const names={starter:['Professor Proton','De slimme professor met bril en strikje.'],brass:['Meth Maker','Een ondeugende chemicus met een smoezelige labojas.'],crystal:['Chemistry Chick','Een energieke chemicus met kleurrijke handschoenen.'],neon:['Luie Laborant','Een slaperige vrouwelijke laborant.'],cosmic:['Analytische Alchemist','Een wijze alchemist met grijze baard.'],master:['Moleculaire Mia','Een kleurrijke chemicus met moleculaire accessoires.']};
+    const cards = (catalog || []).map(s => { s={...s,name:names[s.id]?.[0]||s.name,description:names[s.id]?.[1]||s.description};
       const owned = econ.ownedSkins.includes(s.id), equipped = econ.equippedSkin === s.id;
       let label = equipped ? '✓ Uitgerust' : owned ? 'Uitrusten' : `Koop · ${s.price} coins`;
-      return `<article class="online-store-card"><div class="online-store-emoji">${esc(s.emoji)}</div><h4>${esc(s.name)}</h4><p>${esc(s.description)}</p><strong>${LABCOIN_ICON} ${Number(s.price)}</strong><button data-skin-action="${owned ? 'equip' : 'buy'}" data-id="${esc(s.id)}" ${equipped ? 'disabled' : ''}>${label}</button></article>`;
+      return `<article class="online-store-card"><div class="online-store-emoji">${avatarImage(s.id)}</div><h4>${esc(s.name)}</h4><p>${esc(s.description)}</p><strong>${LABCOIN_ICON} ${Number(s.price)}</strong><button data-skin-action="${owned ? 'equip' : 'buy'}" data-id="${esc(s.id)}" ${equipped ? 'disabled' : ''}>${label}</button></article>`;
     }).join('');
     view.innerHTML = `<div class="online-view-heading"><div><h3>🎭 Skinwinkel</h3><p>Je saldo: ${econ.coins} LabCoins. Alleen uiterlijke aanpassingen.</p></div><button class="online-small-btn" data-online-refresh>Vernieuwen</button></div><div class="online-store-grid">${cards}</div>`;
   }

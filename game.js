@@ -182,13 +182,16 @@ function normaliseOxidationAnswer(value){return String(value??"").trim().replace
 function formatOxidationFormula(value){const subs={"0":"₀","1":"₁","2":"₂","3":"₃","4":"₄","5":"₅","6":"₆","7":"₇","8":"₈","9":"₉"};return [...String(value??"")].map(ch=>subs[ch]??ch).join("");}
 
 const COSMETIC_SKINS=[
- {id:"starter",name:"Beginnende alchemist",emoji:"🧪",price:0,detail:"Je vertrouwde startuitrusting."},
- {id:"brass",name:"Messing Meester",emoji:"🥽",price:8,detail:"Een veiligheidsbril voor de echte laboprofessional."},
- {id:"crystal",name:"Kristalchemicus",emoji:"🔮",price:15,detail:"Een mysterieuze, fonkelende alchemistenskin."},
- {id:"neon",name:"Neononderzoeker",emoji:"🧑‍🔬",price:25,detail:"Een futuristische onderzoeker met flair."},
- {id:"cosmic",name:"Kosmische Alchemist",emoji:"🧑‍🚀",price:40,detail:"Voor chemici die tussen de sterren thuishoren."},
- {id:"master",name:"Meester der Elementen",emoji:"👑",price:60,detail:"De prestigieuze kroon voor verzamelaars."}
+ {id:"starter",name:"Professor Proton",emoji:"🧪",price:0,detail:"De slimme professor met grote bril en strikje."},
+ {id:"brass",name:"Meth Maker",emoji:"🥽",price:8,detail:"Een ondeugende chemicus met een smoezelige labojas."},
+ {id:"crystal",name:"Chemistry Chick",emoji:"🔮",price:15,detail:"Een energieke chemicus met kleurrijke handschoenen."},
+ {id:"neon",name:"Luie Laborant",emoji:"😴",price:25,detail:"Een slaperige vrouwelijke laborant met konijnensloffen."},
+ {id:"cosmic",name:"Analytische Alchemist",emoji:"🧙",price:40,detail:"Een wijze alchemist met lange grijze baard."},
+ {id:"master",name:"Moleculaire Mia",emoji:"👩‍🔬",price:60,detail:"Een kleurrijke chemicus met moleculaire accessoires."}
 ];
+const skinImage=id=>`assets/avatars/${COSMETIC_SKINS.some(s=>s.id===id)?id:'starter'}.webp`;
+const skinPortrait=(id,klass='skin-portrait')=>`<img class="${klass}" src="${skinImage(id)}" alt="" loading="lazy">`;
+
 let labCoins=0, ownedSkins=new Set(["starter"]), equippedSkin="starter", sprintTimer=null, sprintTransitionTimer=null;
 let sprintState={running:false,startingCoins:0,correct:0,answered:0,startedAt:0,queue:[],index:0,current:null,best:0,onlineSessionId:null,specialCardAwarded:false,wrongAnswers:[]};
 let acidSprintTimer=null, acidSprintTransitionTimer=null;
@@ -921,7 +924,7 @@ function initEconomyUI(){
 function renderEconomyPanel(){
  const balance=$("labcoin-balance");if(balance)balance.textContent=String(labCoins);
  const icon=$("equipped-skin-icon"),name=$("equipped-skin-name"),skin=COSMETIC_SKINS.find(x=>x.id===equippedSkin)||COSMETIC_SKINS[0];
- if(icon)icon.textContent=skin.emoji;if(name)name.textContent=skin.name;
+ if(icon)icon.innerHTML=skinPortrait(skin.id);if(name)name.textContent=skin.name;
  const anySprintRunning=sprintState.running||acidSprintState.running||ogSprintState.running||alkaneArchitectState.running;
  const bonusButtons=[
   ['element-sprint-open','medieval',1,'Elementensprint'],
@@ -945,8 +948,10 @@ function renderEconomyPanel(){
 }
 function applyEquippedSkin(){
  const skin=COSMETIC_SKINS.find(x=>x.id===equippedSkin)||COSMETIC_SKINS[0];
- const avatar=document.querySelector(".shadow-duel .hero");if(avatar){avatar.textContent=skin.emoji;avatar.title=skin.name;avatar.setAttribute("aria-label",skin.name);}
- const panelIcon=$("equipped-skin-icon"),panelName=$("equipped-skin-name");if(panelIcon)panelIcon.textContent=skin.emoji;if(panelName)panelName.textContent=skin.name;
+ const puzzleAvatar=document.getElementById('puzzle-chemist-avatar');
+ if(puzzleAvatar){puzzleAvatar.innerHTML=skinPortrait(skin.id,'puzzle-portrait');puzzleAvatar.title=skin.name;}
+ const avatar=document.querySelector(".shadow-duel .hero");if(avatar){avatar.innerHTML=skinPortrait(skin.id);avatar.title=skin.name;avatar.setAttribute("aria-label",skin.name);}
+ const panelIcon=$("equipped-skin-icon"),panelName=$("equipped-skin-name");if(panelIcon)panelIcon.innerHTML=skinPortrait(skin.id);if(panelName)panelName.textContent=skin.name;
 }
 function showEconomyOverlay(content){const closeButton=$("economy-close");if(closeButton)closeButton.disabled=false;$("economy-content").innerHTML=content;$("economy-overlay").classList.remove("hidden");}
 async function closeEconomyOverlay(){
@@ -978,7 +983,7 @@ function renderShop(){
   else if(isOwned){label="Draag deze skin";buttonClass="secondary";}
   else if(labCoins<skin.price){label=`Nog ${skin.price-labCoins} coins nodig`;disabled=true;buttonClass="secondary";}
   else label=`Koop voor ${skin.price} ${LABCOIN_ICON}`;
-  return `<article class="shop-item ${isEquipped?"equipped":""}"><div class="shop-item-top"><span class="shop-item-icon" aria-hidden="true">${skin.emoji}</span><div><h3>${skin.name}</h3><div class="shop-price">${skin.price===0?"Gratis startskin":`${skin.price} ${LABCOIN_ICON} LabCoins`}</div></div></div>${isEquipped?'<span class="shop-tag">Momenteel gedragen</span>':""}<p class="shop-detail">${skin.detail}</p><button type="button" class="${buttonClass}" data-skin-id="${skin.id}" ${disabled?"disabled":""}>${label}</button></article>`;
+  return `<article class="shop-item ${isEquipped?"equipped":""}"><div class="shop-item-top"><span class="shop-item-icon" aria-hidden="true">${skinPortrait(skin.id)}</span><div><h3>${skin.name}</h3><div class="shop-price">${skin.price===0?"Gratis startskin":`${skin.price} ${LABCOIN_ICON} LabCoins`}</div></div></div>${isEquipped?'<span class="shop-tag">Momenteel gedragen</span>':""}<p class="shop-detail">${skin.detail}</p><button type="button" class="${buttonClass}" data-skin-id="${skin.id}" ${disabled?"disabled":""}>${label}</button></article>`;
  }).join("");
  showEconomyOverlay(`<p class="economy-eyebrow">LABCOIN-WINKEL</p><h2 class="economy-title" id="economy-title">🛍️ De skinwinkel</h2><p class="economy-lead">Koop alleen uiterlijke aanpassingen voor je chemicus. Skins geven geen voordeel bij de vragen. Je saldo: <strong>${labCoins} LabCoins</strong>.</p><div class="shop-grid">${cards}</div>`);
 }
