@@ -1,0 +1,9 @@
+Chemie Escape Room - verwijder 'halveert'
+1. Maak een Supabase-back-up.
+2. Zorg dat 2026_11_10_allotropen_kaarttypes_battle_effecten.sql al uitgevoerd is.
+3. Voer supabase/2026_11_10_verwijder_halveren_ondersteuning.sql uit in Supabase SQL Editor.
+4. Publiceer de bijgewerkte websitebestanden (of dist/).
+5. Controleer met een testbattle.
+
+Bestaande kaarten met 'halve' worden omgezet naar 'minus_2'. Bijbehorende
+beschrijvingen met 'halve' worden aangepast. Historische battles blijven ongewijzigd.

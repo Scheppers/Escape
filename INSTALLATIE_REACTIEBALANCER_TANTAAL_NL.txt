@@ -1,0 +1,15 @@
+Nieuwe versie: glanzende mascottekaarten, Reactiebalancer-niveaus en Tantaal.
+
+1. Maak een back-up van Supabase.
+2. Zorg dat de eerdere bonusspel- en kaartmigraties zijn uitgevoerd.
+3. Voer supabase/2026_11_10_reactiebalancer_niveaus_tantaal.sql uit in de SQL Editor.
+4. Publiceer de nieuwe websitebestanden (of dist/).
+5. Test met een leerling: kies basis/gemiddeld/moeilijk, balanceer een reactie, bekijk de voortgang.
+
+Per niveau zijn minimaal 5 actieve reacties nodig om een spelronde te starten.
+Alleen de eerste correcte beantwoording van elke unieke actieve reactie telt mee voor de voortgang.
+Tantaal wordt eenmalig toegekend als alle op dat moment actieve reacties correct zijn beantwoord.
+Bij het toevoegen van nieuwe actieve reacties kan de voortgangsteller weer onder 100% zakken,
+maar een reeds verdiende tantaalkaart blijft behouden.
+Historische correcte antwoorden van voor deze migratie kunnen niet betrouwbaar worden
+teruggevonden en tellen daarom niet automatisch mee.
