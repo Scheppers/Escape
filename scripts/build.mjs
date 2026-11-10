@@ -5,7 +5,7 @@ const root = process.cwd();
 const out = resolve(root, 'dist');
 await rm(out, { recursive: true, force: true });
 await mkdir(out, { recursive: true });
-for (const file of ['index.html', 'game.js', 'style.css', 'config.js', 'online.js', 'bonus-games.js', 'vragen.json', '_redirects']) {
+for (const file of ['index.html', 'game.js', 'style.css', 'config.js', 'online.js', 'bonus-games.js', 'mono-games.js', 'synth-lab.js', 'vragen.json', '_redirects']) {
   await copyFile(resolve(root, file), resolve(out, file));
 }
 await cp(resolve(root, 'assets'), resolve(out, 'assets'), { recursive: true });
