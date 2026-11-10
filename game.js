@@ -714,7 +714,7 @@ let alkaneArchitectState={running:false,queue:[],index:0,correct:0,earned:0,grap
 function openAlkaneArchitect(){
  if(currentLevel!=="future"){setStatus("De Alkanenarchitect is beschikbaar in level 4, het futuristische chemielabo.");return;}
  if(alkaneArchitectState.running){setStatus("Maak eerst de huidige Alkanenarchitect-ronde af.");return;}
- showEconomyOverlay(`<p class="economy-eyebrow">BONUSLEVEL · LEVEL 4</p><h2 class="economy-title" id="economy-title">🏗️ Alkanenarchitect</h2><p class="economy-lead">Krijg 10 namen van vertakte alkanen en teken telkens de koolstofketen in skeletnotatie. Teken eerst de koolstofatomen en verbind deze daarna met bindingen. Je krijgt één poging per molecule.</p><div class="sprint-rules"><strong>Speciale beloning:</strong> teken alle tien alkanen foutloos en verdien de speciale palladiumkaart Pd.<br>Elke hoek en elk uiteinde stelt een koolstofatoom voor. Waterstofatomen teken je niet.</div><button type="button" class="primary full" id="alkane-architect-start">Start de architect</button>`);
+ showEconomyOverlay(`<p class="economy-eyebrow">BONUSLEVEL · LEVEL 4</p><h2 class="economy-title" id="economy-title">🏗️ Alkanenarchitect</h2><p class="economy-lead">Krijg 10 namen van vertakte alkanen en teken telkens de koolstofketen in skeletnotatie. Teken eerst de koolstofatomen en verbind deze daarna met bindingen. Je krijgt één poging per molecule.</p><div class="sprint-rules"><strong>Speciale beloning:</strong> teken alle tien alkanen foutloos en verdien de speciale palladiumkaart Pd.<br>Elke hoek en elk uiteinde stelt een koolstofatoom voor. Waterstofatomen teken je niet.</div><button type="button" class="primary full" id="alkane-architect-start">Start de architect</button><button type="button" class="secondary full" data-mono-start="alkane">Oefen extra alkanen van je leerkracht</button>`);
 }
 async function startAlkaneArchitect(){
  let queue=shuffleAlkanes(ALKANE_ARCHITECT_POOL).slice(0,10),onlineSessionId=null;
@@ -869,7 +869,8 @@ function initEconomyUI(){
   <button type="button" class="primary full economy-action bonus-game-launch" id="stoffenindeler-open">🧩 Anorganische stoffen</button>
   <button type="button" class="primary full economy-action" id="og-sprint-open">⚗️ The OG of chemistry</button>
   <button type="button" class="primary full economy-action bonus-game-launch" id="lewisstructuren-open">⚛️ Lewisstructuren</button>
-  <button type="button" class="primary full economy-action" id="alkane-architect-open">🏗️ Alkanenarchitect</button>`;
+  <button type="button" class="primary full economy-action" id="alkane-architect-open">🏗️ Alkanenarchitect</button>
+  <button type="button" class="primary full economy-action" id="monofunctionele-open">🧬 Monofunctionele verbindingsklassen</button>`;
  const skinPanel=document.createElement("section");
  skinPanel.id="skin-panel";skinPanel.className="skin-panel";
  skinPanel.innerHTML=`<p class="economy-eyebrow">PERSONALISATIE</p><h3>🎭 Jouw chemicus</h3>
@@ -927,13 +928,14 @@ function renderEconomyPanel(){
   ['stoffenindeler-open','lavoisier',2,'Anorganische stoffen'],
   ['og-sprint-open','modern',3,'The OG of chemistry'],
   ['lewisstructuren-open','modern',3,'Lewisstructuren'],
-  ['alkane-architect-open','future',4,'Alkanenarchitect']
+  ['alkane-architect-open','future',4,'Alkanenarchitect'],
+  ['monofunctionele-open','future',4,'Monofunctionele verbindingsklassen']
  ];
  bonusButtons.forEach(([id,level,n,label])=>{
   const btn=$(id);if(!btn)return;
   const available=currentLevel===level;
-  btn.disabled=!available||anySprintRunning||Boolean(window.BonusGames?.isRunning?.());
-  const icon=({"Elementensprint":"⚡","Reactiebalancer":"⚖️","Zurenkenner":"🧪","Anorganische stoffen":"🧩","The OG of chemistry":"⚗️","Lewisstructuren":"⚛️","Alkanenarchitect":"🏗️"})[label]||"🎯";
+  btn.disabled=!available||anySprintRunning||Boolean(window.BonusGames?.isRunning?.())||Boolean(window.MonoGames?.isRunning?.());
+  const icon=({"Elementensprint":"⚡","Reactiebalancer":"⚖️","Zurenkenner":"🧪","Anorganische stoffen":"🧩","The OG of chemistry":"⚗️","Lewisstructuren":"⚛️","Alkanenarchitect":"🏗️","Monofunctionele verbindingsklassen":"🧬"})[label]||"🎯";
   btn.textContent=available?`${icon} ${label}`:`${icon} Beschikbaar in level ${n}`;
   btn.title=available?`Start ${label}`:`Beschikbaar in level ${n}`;
  });

@@ -1,0 +1,36 @@
+CHEMIE ESCAPE ROOM – MONOFUNCTIONELE VERBINDINGSKLASSEN
+======================================================
+
+INSTALLATIE
+1. Maak een back-up van je bestaande Supabase-database.
+2. Zorg dat de eerdere bonusspellen-migratie al is uitgevoerd.
+3. Voer in Supabase SQL Editor uit:
+   supabase/2026_11_10_monofunctionele_verbindingsklassen.sql
+4. Publiceer alle websitebestanden (of de volledige inhoud van dist/),
+   inclusief het nieuwe mono-games.js.
+5. Vernieuw de browser en test met een leerkracht- en leerlingaccount.
+
+NIEUW BONUSLEVEL (LEVEL 4)
+- Monofunctionele verbindingsklassen onder Alkanenarchitect.
+- Bepaal de functionele groep: sprint van 60 seconden, beloning zoals
+  Elementensprint (1 LabCoin voor de eerste 5 juiste, dan 2 enz.).
+- Benoem en Teken: elk 5 vragen, oplopende beloning 1 t/m 5 per
+  correct antwoord (maximaal 15).
+- Alle drie gebruiken één leerkrachtenvragenbank.
+- Tekenvenster met C-punten, expliciete heteroatomen en 1/2/3 bindingen.
+  Vrije elektronenparen ontbreken. Alleen H aan C mag worden weggelaten.
+  Positie en volgorde van atomen zijn irrelevant voor de controle.
+
+ALKANENARCHITECT
+- Een eigen leerkrachtenvragenbank voor extra alkanen.
+- De leerling vindt deze als aparte oefenoptie binnen Alkanenarchitect:
+  'Oefen extra alkanen van je leerkracht' (5 vragen, max. 15 LabCoins).
+- De bestaande standaardronde van 10 alkanen en de palladiumbeloning
+  blijven ongewijzigd. Eigen vragen worden dus NIET gemengd met die
+  standaardronde. Dit onderscheid voorkomt een wijziging van de bestaande
+  beveiligde palladiumvoorwaarde.
+
+LET OP
+De SQL is statisch nagekeken maar niet uitgevoerd tegen je eigen
+Supabase-project. Test eerst het opslaan van een structuur, de drie
+spelvormen en de LabCoin-beloning met een testaccount.
