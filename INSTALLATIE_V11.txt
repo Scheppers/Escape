@@ -1,0 +1,1 @@
+Syntheselabo v11: machine-afbeeldingen opgeschoond (geen buurtoestellen in de uitsnede), ureummachines met sterkere dekking, toestellen met voet op 16% boven onderrand van fabriekshal. Leidingen uitgelijnd op toestellen. Geen SQL vereist. Upload volledige website inclusief assets en ververs met Ctrl+F5.
