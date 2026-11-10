@@ -1,8 +1,8 @@
 const LEVELS={
- medieval:{name:"Middeleeuws alchemistenlabo",art:"assets/medieval_lab.svg",labels:["Scheidingstechnieken","Aspecten en wetten","Atoommodellen","De chemische binding"],code:[3,7,2,4],intro:"Je bent aangekomen in een middeleeuws alchemistenlabo."},
- lavoisier:{name:"Labo tijdens de Franse Revolutie",art:"assets/french_lab.svg",labels:["Reacties in waterig midden","Kwantitatieve aspecten","Koolstofchemie","Redoxreacties"],code:[8,1,5,6],intro:"De tijdreis brengt je naar het labo van Lavoisier."},
- modern:{name:"Modern chemielabo",art:"assets/modern_lab.svg",labels:["Chemisch evenwicht","pH van een oplossing","Redoxreacties","Elektronenconfiguratie"],code:[6,4,9,2],intro:"Je bereikt het moderne chemielabo."},
- future:{name:"Futuristisch chemielabo",art:"assets/futuristic_lab.svg",labels:["Koolwaterstoffen","Monofunctionele verbindingsklassen","Polyfunctionele verbindingsklassen","Kunststoffen"],code:[5,2,8,1],intro:"Je stapt de toekomst binnen. Het futuristische labo bewaakt de laatste tijdcode."}
+ medieval:{name:"Middeleeuws alchemistenlabo",art:"assets/medieval_lab.webp",labels:["Scheidingstechnieken","Aspecten en wetten","Atoommodellen","De chemische binding"],code:[3,7,2,4],intro:"Je bent aangekomen in een middeleeuws alchemistenlabo."},
+ lavoisier:{name:"Labo tijdens de Franse Revolutie",art:"assets/french_lab.webp",labels:["Reacties in waterig midden","Kwantitatieve aspecten","Koolstofchemie","Redoxreacties"],code:[8,1,5,6],intro:"De tijdreis brengt je naar het labo van Lavoisier."},
+ modern:{name:"Modern chemielabo",art:"assets/modern_lab.webp",labels:["Chemisch evenwicht","pH van een oplossing","Redoxreacties","Elektronenconfiguratie"],code:[6,4,9,2],intro:"Je bereikt het moderne chemielabo."},
+ future:{name:"Futuristisch chemielabo",art:"assets/futuristic_lab.webp",labels:["Koolwaterstoffen","Monofunctionele verbindingsklassen","Polyfunctionele verbindingsklassen","Kunststoffen"],code:[5,2,8,1],intro:"Je stapt de toekomst binnen. Het futuristische labo bewaakt de laatste tijdcode."}
 };
 const LEVEL_ORDER=Object.keys(LEVELS);
 const LEVEL_TOTAL=LEVEL_ORDER.length;
