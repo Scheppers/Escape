@@ -1,0 +1,37 @@
+CHEMIE ESCAPE ROOM – SYNTHESELABO (eerste interactieve versie)
+========================================================
+
+1. Maak een back-up van de Supabase-database.
+2. Voer in Supabase SQL Editor uit:
+   supabase/2026_11_10_syntheselabo.sql
+   (na alle bestaande kaartenmigraties).
+3. Publiceer de volledige website, inclusief synth-lab.js,
+   style.css, index.html en assets/synth_*.png.
+   Als je dist/ publiceert, gebruik dan alle bestanden uit dist/.
+4. Vernieuw met Ctrl+F5 en log in als leerling.
+5. Klik boven Missieoverzicht op 'Ga naar je eigen syntheselabo'.
+
+WERKING
+- De bestaande puzzelomgeving blijft behouden.
+- Twee fabrieken met vaste toestelposities; aankoop server-side.
+- Labo 2 wordt ontgrendeld na de eerste geslaagde NH3-productie.
+- 2 NH3 per ureumbatch; 1 batch per Belgische kalenderdag
+  te verkopen voor 50 LabCoins.
+- Exclusieve ammoniak- en ureumkaart na eerste synthese.
+- Procesinformatie en verdieping over warmtewisselaar en recyclage.
+- Toestellen zijn in deze eerste interactieve versie eenvoudige
+  illustratieve pictogrammen op de goedgekeurde fabriekshalachtergronden;
+  afzonderlijke gedetailleerde toestelillustraties zijn nog niet gemaakt.
+
+TESTEN
+Test eerst met een testleerling: toestellen kopen, foutieve en correcte
+instellingen, beide kaarten, ureumproductie, eerste verkoop en
+blokkering van tweede verkoop op dezelfde dag.
+De SQL is niet tegen jouw Supabase-project uitgevoerd.
+
+OPGELET BESTAANDE KAARTEN
+Ammoniak bestond mogelijk al in de catalogus en kon via oudere
+spelmechanieken verkregen zijn. Deze migratie maakt toekomstige aankopen
+via de actuele winkelregels onmogelijk, maar trekt eerder verkregen
+kaarten niet in. Controleer bestaande kaartreacties die NH3 opleveren
+als je absolute exclusiviteit wilt afdwingen.

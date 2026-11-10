@@ -1,0 +1,21 @@
+CHEMIE ESCAPE ROOM – FEEDBACK BIJ FOUT GETEKENDE STRUCTUUR (v8)
+
+INSTALLATIE
+1. Maak een Supabase-back-up.
+2. Zorg dat de eerdere bonusspellen- en gecorrigeerde Alkanenarchitect-v7.1-SQL zijn uitgevoerd.
+3. Voer supabase/2026_11_10_feedback_juiste_structuren.sql uit in de SQL Editor.
+4. Publiceer alle websitebestanden uit deze ZIP (of de dist-map).
+5. Vernieuw met Ctrl+F5 en test de drie tekenopgaven met een leerlingaccount.
+
+GEDRAG
+- Lewisstructuren: na een fout toont het spel de goedgekeurde modelstructuren,
+  inclusief vrije elektronenparen (maximaal vier modellen).
+- Alkanenarchitect: na een fout toont het spel het door de leerkracht getekende alkaan.
+- Monofunctionele verbindingsklassen / Teken: na een fout toont het spel
+  de door de leerkracht getekende structuur.
+- Bij correcte antwoorden geen model tonen; geen veranderingen in LabCoins.
+- Bij Lewismodellen zonder bewaarde coördinaten wordt een automatisch schema getekend.
+  De verbindingen en vrije paren blijven behouden; de lay-out kan afwijken.
+
+De SQL en de JavaScript zijn statisch gecontroleerd, maar niet tegen jouw
+Supabase-database of in een ingelogde browser uitgevoerd.

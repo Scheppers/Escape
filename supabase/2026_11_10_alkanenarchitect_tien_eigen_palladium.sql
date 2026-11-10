@@ -3,6 +3,7 @@
 -- 2026_11_10_monofunctionele_verbindingsklassen.sql migratie.
 -- Deze migratie verwijdert geen bestaande opgaven of leerlinggegevens.
 -- De database controleert antwoorden en kent beloningen server-side toe.
+-- Correctie v7.1: CASE-expressie in IF-voorwaarde tussen haakjes.
 
 create or replace function public.start_mono_game(p_mode text)
 returns jsonb language plpgsql security definer set search_path=public as $$
@@ -54,7 +55,7 @@ begin
  end if;
  update public.mono_sessions set answered=answered+1,correct=correct+case when ok then 1 else 0 end,coins_earned=coins_earned+reward,
  finished_at=case when expires_at is null and p_sequence=cardinality(question_ids) then now() else finished_at end where id=s.id;
- if s.mode='alkane' and p_sequence=10 and s.correct+case when ok then 1 else 0 end=10 then
+ if s.mode='alkane' and p_sequence=10 and (s.correct + (case when ok then 1 else 0 end)) = 10 then
   insert into public.user_cards(user_id,card_id)
   select auth.uid(),'palladium' where exists(select 1 from public.card_catalog where id='palladium')
   on conflict (user_id,card_id) do nothing;
@@ -62,7 +63,7 @@ begin
   awarded := balance=1;
  end if;
  update public.profiles set coins=coins+reward,xp=xp+case when ok then 2 else 0 end where id=auth.uid() returning coins into balance;
- return jsonb_build_object('correct',ok,'reward',reward,'special_card_awarded',awarded,'coins',balance,'correct_count',s.correct+case when ok then 1 else 0 end,
+ return jsonb_build_object('correct',ok,'reward',reward,'special_card_awarded',awarded,'coins',balance,'correct_count',(s.correct + (case when ok then 1 else 0 end)),
  'expected',case when s.mode='alkane' then aq.name when s.mode='group' then q.category else q.name end);
 end $$;
 
