@@ -1,5 +1,6 @@
 /* Monofunctionele verbindingsklassen: 3 spelvormen + vragenbankbeheer. */
 (()=>{'use strict';
+if(window.ChemieMonoTeacher)return;
 const $=id=>document.getElementById(id), esc=s=>String(s??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));
 const client=()=>window.ChemieOnline?.getClient?.();
 const CATS=['alkeen','alkyn','halogeenalkaan','alcohol','ether','aldehyde','keton','carbonzuur','ester','amine','amide'];
