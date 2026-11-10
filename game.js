@@ -630,9 +630,11 @@ document.querySelectorAll(".level-tab").forEach(b=>b.addEventListener("click",()
  if(teacherMode){unlocked=Object.fromEntries(LEVEL_ORDER.map(level=>[level,true]));currentLevel=target;renderLevel();setStatus(`Leerkrachtweergave: ${LEVELS[target].name} is geopend.`);log(`Leerkracht opent ${LEVELS[target].name}.`);scheduleShadow();return;}
  if(gameCompleted){unlocked=Object.fromEntries(LEVEL_ORDER.map(level=>[level,true]));currentLevel=target;renderLevel();setStatus(`Vrije verkenning: ${LEVELS[target].name}. Je kunt hier extra puzzels en bonusspellen spelen.`);log(`Vrij labo geopend: ${LEVELS[target].name}.`);scheduleShadow();return;}
  if(target==="medieval") { currentLevel="medieval"; renderLevel(); setStatus("Je keert terug naar het middeleeuwse labo."); return; }
+ // Een eenmaal ontgrendeld labo blijft toegankelijk, ook als de leerling
+ // later naar een eerder tijdperk terugkeert. De database bewaart deze status.
+ if(unlocked[target]) { currentLevel=target; renderLevel(); setStatus("Je betreedt: "+LEVELS[currentLevel].name+"."); log(LEVELS[currentLevel].intro); scheduleShadow(); return; }
  const previous=LEVEL_ORDER[LEVEL_ORDER.indexOf(target)-1];
  if(!levelSolved[previous]){setStatus("Deze tijdpoort blijft gesloten. Los eerst alle vier puzzels in het vorige labo minstens één keer op.");return;}
- if(unlocked[target]) { currentLevel=target; renderLevel(); setStatus("Je betreedt: "+LEVELS[currentLevel].name+"."); log(LEVELS[currentLevel].intro); scheduleShadow(); return; }
  askCode(target);
 }));
 document.querySelectorAll(".hotspot").forEach(b=>b.addEventListener("click",()=>{if(b.dataset.object==="door"){if(teacherMode){setStatus("Leerkrachtweergave: de exclusieve goudkaart wordt alleen aan leerlingaccounts uitgereikt.");return;}if(gameCompleted){setStatus("Je hebt de exclusieve goudkaart Au al ontvangen. Je kunt nu vrij door alle labo’s bewegen.");return;}if(levelSolved.future)askCode("exit",true);else setStatus("De uitgang blijft gesloten. Los eerst alle vier puzzels in het futuristische labo minstens één keer op.");return;}openObject(b.dataset.object)}));

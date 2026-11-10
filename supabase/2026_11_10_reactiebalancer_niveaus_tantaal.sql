@@ -81,7 +81,25 @@ begin
    elsif v_s.game_type='classification' then v_reward:=((v_s.correct_count)/10)+1;
    elsif v_s.game_type='naming' then v_reward:=((v_s.correct_count)/5)+1; end if;
  end if;
- -- Registratie is per unieke reactie, niet per sessie of vraagpositie.\n if v_ok and v_s.game_type='reaction' then\n   insert into public.reaction_bonus_correct(user_id,item_id) values(v_uid,v_item.id) on conflict do nothing;\n   select count(*) into v_total from public.bonus_game_items where game_type='reaction' and is_active;\n   select count(*) into v_done from public.reaction_bonus_correct r join public.bonus_game_items i on i.id=r.item_id\n     where r.user_id=v_uid and i.game_type='reaction' and i.is_active;\n   if v_total>0 and v_done=v_total then\n     -- Eén beloning per leerling; een gelijktijdige inzending kan niet dubbel belonen.\n     insert into public.reaction_bonus_tantalum_awards(user_id) values(v_uid) on conflict do nothing;\n     if found then\n       select id into v_tantalum_id from public.card_catalog where formula='Ta' order by (id='tantalum') desc limit 1;\n       if v_tantalum_id is null then raise exception 'De tantaalkaart ontbreekt in de kaartenbank.'; end if;\n       insert into public.user_cards(user_id,card_id,quantity) values(v_uid,v_tantalum_id,1)\n         on conflict(user_id,card_id) do update set quantity=public.user_cards.quantity+1;\n       v_tantalum_awarded:=true;\n     end if;\n   end if;\n end if;\n update public.bonus_game_sessions set answered_count=answered_count+1,correct_count=correct_count+case when v_ok then 1 else 0 end,earned_coins=earned_coins+v_reward,
+ -- Registratie is per unieke reactie, niet per sessie of vraagpositie.
+ if v_ok and v_s.game_type='reaction' then
+   insert into public.reaction_bonus_correct(user_id,item_id) values(v_uid,v_item.id) on conflict do nothing;
+   select count(*) into v_total from public.bonus_game_items where game_type='reaction' and is_active;
+   select count(*) into v_done from public.reaction_bonus_correct r join public.bonus_game_items i on i.id=r.item_id
+     where r.user_id=v_uid and i.game_type='reaction' and i.is_active;
+   if v_total>0 and v_done=v_total then
+     -- Eén beloning per leerling; een gelijktijdige inzending kan niet dubbel belonen.
+     insert into public.reaction_bonus_tantalum_awards(user_id) values(v_uid) on conflict do nothing;
+     if found then
+       select id into v_tantalum_id from public.card_catalog where formula='Ta' order by (id='tantalum') desc limit 1;
+       if v_tantalum_id is null then raise exception 'De tantaalkaart ontbreekt in de kaartenbank.'; end if;
+       insert into public.user_cards(user_id,card_id,quantity) values(v_uid,v_tantalum_id,1)
+         on conflict(user_id,card_id) do update set quantity=public.user_cards.quantity+1;
+       v_tantalum_awarded:=true;
+     end if;
+   end if;
+ end if;
+ update public.bonus_game_sessions set answered_count=answered_count+1,correct_count=correct_count+case when v_ok then 1 else 0 end,earned_coins=earned_coins+v_reward,
  finished_at=case when (expires_at is null and p_sequence=cardinality(item_ids)) or (expires_at is not null and now()>=expires_at) then now() else finished_at end where id=v_s.id;
  if v_reward>0 then update public.profiles set coins=coins+v_reward,xp=xp+2 where id=v_uid returning coins into v_coins; else select coins into v_coins from public.profiles where id=v_uid; end if;
  v_expected:=case when v_s.game_type='naming' then (select string_agg(value,', ') from jsonb_array_elements_text(v_item.accepted_answers)) when v_s.game_type='lewis' then 'De goedgekeurde Lewisstructuur' when v_s.game_type='classification' then v_item.category else coalesce(v_item.answer,v_item.category) end;

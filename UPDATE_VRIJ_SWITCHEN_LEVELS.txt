@@ -1,0 +1,6 @@
+Aanpassing: eerder geopende levels zijn opnieuw toegankelijk zonder code.
+De bestaande Supabase-functie get_my_level_unlocks bewaart de ontgrendeling.
+Geen nieuwe SQL nodig.
+
+De gevraagde Monofunctionele verbindingsklassen en het leerkrachtenbeheer
+voor Alkanenarchitect zijn NIET in dit tussenpakket geïmplementeerd.
