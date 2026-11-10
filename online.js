@@ -636,7 +636,7 @@ Optie D"></textarea></label>
       return `<article class="online-battle-card ${needsAction ? 'battle-action-needed' : ''}"><div class="online-view-heading"><div><h4>⚔️ Jij vs. ${esc(opponentName)}</h4><small>${esc(b.status)} · ${new Date(b.updated_at).toLocaleString('nl-BE')}</small></div><div class="battle-status-tags"><span class="online-pill">${b.status === 'active' ? `${isChallenger ? b.challenger_hp : b.opponent_hp} HP` : esc(b.status)}</span>${needsAction ? '<span class="battle-needs-action">ACTIE VEREIST</span>' : ''}</div></div>${sub}</article>`;
     }));
     const deckOptions = deckSelectMarkup(cards,ownedCardCache,'challenge');
-    view.innerHTML = `<div class="online-view-heading"><div><h3>⚔️ Chemiebattles</h3><p>Stel een battledeck van vijf verschillende kaarten samen en daag een leerling uit. Elke kaartsoort mag maar één keer voorkomen, ook als je meerdere exemplaren bezit. Een battle duurt maximaal vier rondes: per speler blijft dus één kaart ongebruikt. De Au-eindkaart mag wel mee in je deck.</p></div><button class="online-small-btn" data-online-refresh>Vernieuwen</button></div><form id="battle-invite-form" class="online-invite-form"><label for="battle-opponent">Gebruikersnaam tegenstander</label><input id="battle-opponent" name="username" minlength="3" maxlength="20" pattern="[a-z0-9_-]{3,20}" placeholder="bv. chemicus_123" required><strong>Kies jouw vijf kaarten</strong><div class="battle-deck-builder">${deckOptions}</div><button>Verstuur uitdaging</button></form><div class="online-battles-list">${battleMarkup.join('') || '<p class="online-help">Nog geen uitdagingen of battles. Daag een klasgenoot uit!</p>'}</div>`;
+    view.innerHTML = `<div class="online-view-heading"><div><h3>⚔️ Stoffenstrijd</h3><p>Stel een battledeck van vijf verschillende kaarten samen en daag een leerling uit. Elke kaartsoort mag maar één keer voorkomen, ook als je meerdere exemplaren bezit. Een battle duurt maximaal vier rondes: per speler blijft dus één kaart ongebruikt. De Au-eindkaart mag wel mee in je deck.</p></div><button class="online-small-btn" data-online-refresh>Vernieuwen</button></div><form id="battle-invite-form" class="online-invite-form"><label for="battle-opponent">Gebruikersnaam tegenstander</label><input id="battle-opponent" name="username" minlength="3" maxlength="20" pattern="[a-z0-9_-]{3,20}" placeholder="bv. chemicus_123" required><strong>Kies jouw vijf kaarten</strong><div class="battle-deck-builder">${deckOptions}</div><button>Verstuur uitdaging</button></form><div class="online-battles-list">${battleMarkup.join('') || '<p class="online-help">Nog geen uitdagingen of battles. Daag een klasgenoot uit!</p>'}</div>`;
     const suggestions = suggestDeck(cards,ownedCardCache);
     const inviteForm = document.querySelector('#battle-invite-form');
     inviteForm?.querySelectorAll('.deck-slot-select').forEach((select,i)=>{if(suggestions[i])select.value=suggestions[i];});
@@ -971,6 +971,16 @@ Optie D"></textarea></label>
   // Compatibility API used by the existing escape-room game.
   window.ChemieOnline = {
     isAuthenticated: () => Boolean(currentUser),
+    openArenaSection(section) {
+      if (!currentUser) return;
+      if (section === 'collection' || section === 'shop') {
+        cardShopTab = section === 'collection' ? 'collection' : 'shop';
+        setView('cards');
+      } else if (section === 'battles') {
+        setView('battles');
+      } else return;
+      document.getElementById('online-root')?.scrollIntoView({ behavior: 'smooth', block: 'start' });
+    },
     async startPuzzleAttempt(levelId, objectId, difficulty) { requireLogin(); return rpc('start_puzzle_attempt', { p_level_id: levelId, p_object_id: objectId, p_difficulty: difficulty }); },
     async getActivePuzzleAttempt(levelId, objectId) { requireLogin(); return rpc('get_my_active_puzzle_attempt', { p_level_id: levelId, p_object_id: objectId }); },
     async unlockLevel(levelId, code) { requireLogin(); return rpc('unlock_level_with_code', { p_target_level: levelId, p_code: code }); },
