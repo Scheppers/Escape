@@ -1,0 +1,26 @@
+CHEMIE ESCAPE ROOM – 94 STOFFEN EN NIEUWE BATTLE-EFFECTEN
+
+1. Maak een back-up van je Supabase-database.
+2. Open Supabase > SQL Editor > New query.
+3. Voer ALLEEN deze nieuwe migratie uit:
+   supabase/2026_11_10_allotropen_kaarttypes_battle_effecten.sql
+4. Publiceer de nieuwe websitebestanden (zeker online.js en index.html).
+5. Vernieuw de website en test met een leerkrachtaccount en twee testleerlingen.
+
+NIEUW
+- 94 afzonderlijk verzamelbare enkelvoudige stoffen inclusief ozon en diamant.
+- Ozon en diamant zijn niet te koop; ze maken deel uit van de bestaande willekeurige exclusieve battlebeloningen.
+- Beide kaarten hebben een glanzende illustratie; de leerkracht kan hun kaartgegevens aanpassen.
+- Kaarttypes zijn centraal opgeslagen in card_types. Via 'Nieuw type toevoegen' voeg je een type toe; beide ondersteuning-doeltypevelden gebruiken dezelfde lijst.
+- Ondersteuning 1 en 2 kunnen per duel kracht −1, −2, −3, naar 0, of alle schade voorkomen. Oudere 'halveert'-kaarten blijven ondersteund.
+- Alle berekende krachtveranderingen zijn tijdelijk; de kaartcatalogus blijft ongewijzigd.
+
+TESTEN
+- Bewerk een kaart, voeg een nieuw type toe, herlaad de pagina, controleer de drie keuzelijsten.
+- Test beide ondersteuningseffecten, inclusief een effect op de aanvaller en op de verdediger.
+- Test 'alle schade voorkomen': 0 schade en geen HP-verlies tijdens de betreffende duelronde.
+- Win battles en controleer dat ozon/diamant als willekeurige beloning kunnen voorkomen.
+- Controleer dat de verzamelmeter diamant en ozon apart telt.
+
+OPGELET
+Deze migratie is voorbereid en de JavaScript-syntaxis is gecontroleerd, maar niet live uitgevoerd tegen jouw Supabase-project. Gebruik eerst testaccounts.
