@@ -206,9 +206,44 @@
     if (pErr) throw pErr; if (sErr) throw sErr;
     return { coins: Number(profile.coins), equippedSkin: profile.equipped_skin, ownedSkins: (skins || []).map(x => x.skin_id) };
   }
+  // Meldingen worden door Supabase vastgelegd bij het EERSTE verkrijgen van een speciale kaart.
+  // Dezelfde kaartillustratie als in de collectie: specialAllotropeArt(card).
+  let rewardPopupBusy = false, rewardPopupQueue = [];
+  function showNextRewardPopup() {
+    if (document.getElementById('chemie-card-reward-popup') || !rewardPopupQueue.length) return;
+    const card = rewardPopupQueue.shift();
+    const popup = document.createElement('div');
+    popup.id = 'chemie-card-reward-popup';
+    popup.className = 'chemie-reward-backdrop';
+    popup.innerHTML = `<section class="chemie-reward-dialog" role="dialog" aria-modal="true" aria-labelledby="chemie-reward-title"><h2 id="chemie-reward-title">🎉 Proficiat!</h2><p>Je verdiende de <strong>${esc(card.formula)}-kaart</strong> voor je collectie!</p><article class="online-card owned chemie-reward-card"><div class="online-card-top"><span>${esc(card.card_type||card.category||'Speciale kaart')}</span><span>${esc(card.rarity||'Exclusief')}</span></div>${specialAllotropeArt(card)}<h4>${esc(card.name)}</h4><p>${esc(card.description||'')}</p></article><button type="button" class="primary" id="chemie-reward-close">Geweldig!</button></section>`;
+    document.body.appendChild(popup);
+    const close = () => { popup.remove(); showNextRewardPopup(); };
+    popup.querySelector('#chemie-reward-close').addEventListener('click', close);
+    popup.addEventListener('click', e => { if(e.target===popup) close(); });
+    popup.querySelector('button').focus();
+  }
+  async function checkSpecialCardRewards() {
+    if (!currentUser || !supabase || rewardPopupBusy) return;
+    rewardPopupBusy = true;
+    try {
+      const key = 'chemie-special-reward-cursor-'+currentUser.id;
+      const cursor = Number(localStorage.getItem(key)||0);
+      const {data, error} = await supabase.from('card_reward_notifications').select('id,card_id').eq('user_id',currentUser.id).gt('id',cursor).order('id',{ascending:true}).limit(50);
+      if (error) { if(error.code!=='42P01') console.warn('Kaartmeldingen niet beschikbaar:',error.message); return; }
+      if (!data?.length) return;
+      const ids = [...new Set(data.map(x=>x.card_id))];
+      const {data:cards,error:cardsError} = await supabase.from('card_catalog').select('id,name,formula,category,rarity,description,card_type').in('id',ids);
+      if (cardsError) throw cardsError;
+      const byId = new Map((cards||[]).map(c=>[c.id,c]));
+      for(const entry of data) { const card=byId.get(entry.card_id); if(card) rewardPopupQueue.push(card); }
+      localStorage.setItem(key,String(data[data.length-1].id));
+      showNextRewardPopup();
+    } catch(e) { console.warn('Kaartbeloning kon niet getoond worden:',e); }
+    finally { rewardPopupBusy = false; }
+  }
   async function refreshDashboard() {
     if (!currentUser) return;
-    try { await loadProfile(); if (currentView === 'leaderboard') await renderLeaderboard(); else if (currentView === 'cards') await renderCards(); else if (currentView === 'skins') await renderSkins(); else if (currentView === 'battles') await renderBattles(); else if (currentView === 'teacher') await renderTeacher(); }
+    try { await loadProfile(); await checkSpecialCardRewards(); if (currentView === 'leaderboard') await renderLeaderboard(); else if (currentView === 'cards') await renderCards(); else if (currentView === 'skins') await renderSkins(); else if (currentView === 'battles') await renderBattles(); else if (currentView === 'teacher') await renderTeacher(); }
     catch (e) { console.error(e); msg(e.message || 'Vernieuwen is mislukt.', 'bad'); }
   }
   function setView(name) {
@@ -881,11 +916,13 @@ Optie D"></textarea></label>
     try { const completion = await rpc('get_my_game_completion'); window.ChemieGameBridge?.applyOnlineGameCompletion?.(completion); } catch (completionError) { console.warn('Voltooide hoofdmissie kon niet worden geladen.', completionError); }
     window.ChemieGameBridge?.onOnlineLogin?.();
     setView('home');
+    checkSpecialCardRewards().catch(console.warn);
     if(loginRewardResult?.holmium_awarded||loginRewardResult?.tungsten_awarded){const earned=[loginRewardResult.holmium_awarded?'Holmium (Ho)':'',loginRewardResult.tungsten_awarded?'Wolfraam (W)':''].filter(Boolean).join(' en ');msg(`Speciale kaart verdiend: ${earned}! Je vindt de kaart in je collectie.`,'good');}
     if (refreshTimer) clearInterval(refreshTimer);
     refreshTimer = setInterval(async () => {
       if (!currentUser) return;
       try {
+        await checkSpecialCardRewards();
         if (currentView === 'battles' && !view?.querySelector(':focus')) await renderBattles();
         else await refreshBattleActionBadge();
       } catch(e) { console.warn('Battleoverzicht kon niet automatisch worden vernieuwd.', e); }
