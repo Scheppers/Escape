@@ -546,3 +546,67 @@ body.guest-mode .scene-wrap{grid-area:scene}
   .materials-inventory,.left-panel .safe-box{background-size:cover,auto 128px}
   #skin-panel.skin-panel{background-size:cover,auto 128px,cover}
 }
+
+/* 2026-11-11: uniforme paneeltitels en steampunkactieknoppen. */
+.left-panel .panel-heading h2,
+.left-panel .materials-inventory > h3,
+.left-panel .safe-box > h3,
+#skin-panel.skin-panel > h3,
+#cards-arena-panel.cards-arena-panel > h3{
+  font-family:"Space Grotesk",Arial,sans-serif!important;
+  font-size:1.05rem!important;
+  font-weight:800!important;
+  line-height:1.3!important;
+  letter-spacing:0!important;
+  text-transform:none!important;
+  margin:0 0 12px!important;
+  color:#203849!important;
+}
+.left-panel .panel-heading{gap:0;min-height:28px}
+#cards-arena-panel > h3 .steam-icon{display:none!important}
+#cards-arena-panel .cards-arena-grid [data-arena-target="shop"],
+#cards-arena-panel .cards-arena-button[data-arena-target="battles"],
+#skin-panel #skin-shop-open{
+  position:relative; isolation:isolate; overflow:hidden;
+  display:flex;align-items:center;justify-content:flex-start;
+  text-align:left;min-height:90px;
+  padding:13px 43% 13px 12px;
+  border:2px solid #b58b4b;border-radius:11px;
+  color:#fff2d4!important;text-shadow:0 2px 4px #000c;
+  background-color:#193b54!important;
+  font-weight:800;
+  transition:filter .18s ease,transform .18s ease;
+}
+#cards-arena-panel .cards-arena-grid [data-arena-target="shop"]{
+  background-image:linear-gradient(90deg,rgba(18,43,63,.98) 0%,rgba(22,55,76,.92) 48%,rgba(22,55,76,.10) 100%),url('assets/ui-steampunk/card-shop.webp')!important;
+  background-position:center,right center!important;
+  background-size:cover,auto 100%!important;
+  background-repeat:no-repeat!important;
+}
+#cards-arena-panel .cards-arena-button[data-arena-target="battles"]{
+  width:100%;margin-top:8px;
+  background-image:linear-gradient(90deg,rgba(18,43,63,.98) 0%,rgba(22,55,76,.92) 48%,rgba(22,55,76,.10) 100%),url('assets/ui-steampunk/battle.webp')!important;
+  background-position:center,right center!important;
+  background-size:cover,auto 100%!important;
+  background-repeat:no-repeat!important;
+}
+#skin-panel #skin-shop-open{
+  width:100%;margin-top:9px!important;
+  background-image:linear-gradient(90deg,rgba(18,43,63,.98) 0%,rgba(22,55,76,.92) 48%,rgba(22,55,76,.10) 100%),url('assets/ui-steampunk/skin-shop.webp')!important;
+  background-position:center,right center!important;
+  background-size:cover,auto 100%!important;
+  background-repeat:no-repeat!important;
+}
+#cards-arena-panel .cards-arena-grid [data-arena-target="shop"] span,
+#cards-arena-panel .cards-arena-button[data-arena-target="battles"] span{font-size:.85rem;line-height:1.3}
+#cards-arena-panel .cards-arena-grid [data-arena-target="shop"]:hover,
+#cards-arena-panel .cards-arena-button[data-arena-target="battles"]:hover,
+#skin-panel #skin-shop-open:hover{filter:brightness(1.14);transform:translateY(-1px)}
+#cards-arena-panel .cards-arena-grid [data-arena-target="shop"]:focus-visible,
+#cards-arena-panel .cards-arena-button[data-arena-target="battles"]:focus-visible,
+#skin-panel #skin-shop-open:focus-visible{outline:3px solid #e4a63b;outline-offset:2px}
+@media(max-width:560px){
+ #cards-arena-panel .cards-arena-grid [data-arena-target="shop"],
+ #cards-arena-panel .cards-arena-button[data-arena-target="battles"],
+ #skin-panel #skin-shop-open{min-height:85px;padding-right:38%;}
+}
