@@ -664,3 +664,19 @@ body.guest-mode .scene-wrap{grid-area:scene}
   #skin-panel #skin-shop-open{min-height:78px;font-size:.78rem!important;background-size:cover,auto 62%!important;}
   #skin-panel #skin-shop-open{background-size:cover,auto 75%!important;}
 }
+
+/* Vragenvoortgang direct onder syntheselabo: steampunkboeken als sfeerbeeld. */
+.left-panel #question-coverage{position:relative;isolation:isolate;overflow:hidden;background:linear-gradient(90deg,rgba(16,22,28,.91),rgba(30,24,21,.76)),url("assets/ui-steampunk/books.webp") right center/cover no-repeat;border:1px solid #9e7941;border-radius:12px;color:#f7e9c8;padding:15px;margin:12px 0;box-shadow:inset 0 0 0 1px #d4a75b35}
+.left-panel #question-coverage>strong{font-family:Georgia,serif;font-size:1.2rem;color:#ffe6ad;text-shadow:0 2px 3px #000;display:block;margin-bottom:10px}
+.left-panel #question-coverage>small{color:#f2e3cc}
+.left-panel #question-coverage .question-coverage-item{background:#fffcf0f2;color:#253b48}
+/* De puzzelobjecten krijgen vier verschillende, chemisch geïnspireerde symbolen. */
+.scene .hotspot[data-object^="object"] span.chemical-marker{background-color:#173847;background-position:center;background-repeat:no-repeat;background-size:72% 72%;border:2px solid #dcb86d;box-shadow:0 0 0 2px #102a39,0 3px 12px #0008;color:#ffe7a7}
+.scene .hotspot[data-object="object1"] .chemical-marker{background-image:url("assets/ui-steampunk/puzzle-flask.svg")}
+.scene .hotspot[data-object="object2"] .chemical-marker{background-image:url("assets/ui-steampunk/puzzle-atom.svg")}
+.scene .hotspot[data-object="object3"] .chemical-marker{background-image:url("assets/ui-steampunk/puzzle-molecule.svg")}
+.scene .hotspot[data-object="object4"] .chemical-marker{background-image:url("assets/ui-steampunk/puzzle-beaker.svg")}
+.scene .hotspot[data-object^="object"] span.chemical-marker.has-digit{background-image:none;background-color:#176e53;color:#fff7d8;font-weight:900}
+.scene .hotspot[data-object^="object"]:hover span.chemical-marker,.scene .hotspot[data-object^="object"]:focus-visible span.chemical-marker{box-shadow:0 0 0 3px #edc56a,0 0 18px #d5b45a}
+/* De schaduw zweeft als uitgesneden figuur zonder rechthoekige foto. */
+.hotspot.antagonist span{background-image:url("assets/ui-steampunk/shadow-cutout.webp")!important}

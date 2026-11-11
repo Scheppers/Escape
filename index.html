@@ -1,5 +1,5 @@
 <!doctype html>
-<html lang="nl"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>Een chemische tijdreis</title><link rel="stylesheet" href="style.css?v=20261111-steampunk-eenvormig"></head>
+<html lang="nl"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>Een chemische tijdreis</title><link rel="stylesheet" href="style.css?v=20261111-steampunk-vragenvoortgang-chemicons"></head>
 <body>
 <header class="topbar"><div><h1>Een chemische tijdreis</h1></div><div class="progress-wrap"><span id="progress-text">Level 1 van 4</span><div class="progress"><div id="progress-fill"></div></div></div></header>
 <div class="guest-intro"><strong>🧪 Gratis Chemie Escape Room</strong><span>Ontdek alle vier tijdperken. Speel basispuzzels zonder account, codes of beloningen.</span><a href="#online-root">Inloggen voor de volledige versie</a></div>
@@ -13,19 +13,17 @@
 <section class="game-layout">
 <aside class="side-panel left-panel" aria-label="Missie en inventaris">
 <button id="synth-toggle" class="synth-toggle" type="button"><img class="steam-icon steam-synth" src="assets/ui-steampunk/synthesis.webp" alt="" loading="lazy">Ga naar je eigen syntheselabo</button>
-<div class="panel-heading"><h2 id="mission-title">Missieoverzicht</h2></div>
-<div class="level-status" id="level-status">Leerjaar 1: nog geen puzzels voltooid</div>
-<div class="question-coverage" id="question-coverage"><small>Vragenkennis wordt geladen…</small></div>
+<div class="question-coverage" id="question-coverage"><strong>Vragenvoortgang</strong><small>Vragenkennis wordt geladen…</small></div>
 <div class="status-box"><span class="status-dot"></span><p id="status-text">Klik op een voorwerp om te beginnen.</p></div>
 <div class="inventory materials-inventory"><h3 class="steam-heading"><img class="steam-icon" src="assets/ui-steampunk/inventory.webp" alt="" loading="lazy">Grondstoffeninventaris</h3><div class="inventory-items" id="inventory-items"><div class="material-item empty"><span class="material-icon">🧂</span><strong>Kaliumnitraat</strong><b>0 mol</b><small>KNO3</small></div><div class="material-item empty"><span class="material-icon">⚫</span><strong>Koolstof</strong><b>0 mol</b><small>C</small></div><div class="material-item empty"><span class="material-icon">🟡</span><strong>Zwavel</strong><b>0 mol</b><small>S</small></div></div></div>
 <div class="safe-box"><h3 class="steam-heading"><img class="steam-icon" src="assets/ui-steampunk/vault.webp" alt="" loading="lazy">De kluis</h3><p>Blaas de kluis op met buskruit en verdien een beloning.</p><button id="blow-safe-button" class="primary full">Blaas de kluis op</button><div id="safe-feedback" class="safe-feedback hidden" role="status" aria-live="polite"></div></div>
 </aside>
 <div class="scene-wrap"><section id="synth-workspace" class="synth-workspace hidden" aria-label="Syntheselabo"></section><div class="scene" id="scene">
 <img src="assets/medieval_lab.webp" class="lab-art" id="lab-art" alt="Getekend historisch laboratorium">
-<button class="hotspot h1" data-object="object1"><span>✦</span><small id="label1">Kookpot</small></button>
-<button class="hotspot h2" data-object="object2"><span>✦</span><small id="label2">Oud boek</small></button>
-<button class="hotspot h3" data-object="object3"><span>✦</span><small id="label3">Glazen potten</small></button>
-<button class="hotspot h4" data-object="object4"><span>✦</span><small id="label4">Werktafel</small></button>
+<button class="hotspot h1" data-object="object1"><span class="chemical-marker chemical-flask" aria-hidden="true"></span><small id="label1">Kookpot</small></button>
+<button class="hotspot h2" data-object="object2"><span class="chemical-marker chemical-atom" aria-hidden="true"></span><small id="label2">Oud boek</small></button>
+<button class="hotspot h3" data-object="object3"><span class="chemical-marker chemical-molecule" aria-hidden="true"></span><small id="label3">Glazen potten</small></button>
+<button class="hotspot h4" data-object="object4"><span class="chemical-marker chemical-beaker" aria-hidden="true"></span><small id="label4">Werktafel</small></button>
 <button class="hotspot door-hotspot hidden" data-object="door" aria-hidden="true" tabindex="-1"><span>🚪</span><small>Uitgang / tijdslot</small></button>
 <button class="hotspot antagonist hidden" id="antagonist" data-object="antagonist" aria-label="Vang De Schaduw en verzamel een grondstof" title="Vang De Schaduw"><span aria-hidden="true"></span></button>
 
@@ -97,7 +95,7 @@
 
 <div class="modal-backdrop hidden" id="modal-backdrop" role="dialog" aria-modal="true" aria-labelledby="modal-title"><div class="puzzle-avatar-dock" id="puzzle-chemist-avatar" aria-label="Jouw chemicus"></div><section class="question-modal"><button class="close-button" id="close-modal" aria-label="Sluiten">×</button><p class="eyebrow" id="modal-category">CHEMIEPUZZEL</p><h2 id="modal-title">Vraag</h2><p id="question-text" class="question-text"></p><form id="answer-form"><div id="answer-area"></div><div class="modal-actions"><button type="button" class="secondary hidden" id="hint-button" tabindex="-1" aria-hidden="true">Hint</button><button type="submit" class="primary" id="check-button">Controleer antwoord</button></div></form><div class="feedback hidden" id="feedback" role="status"></div></section></div>
 <div class="win-screen hidden" id="win-screen"><div class="win-card"><div class="win-icon">⌛</div><p class="eyebrow">TIJDSLOT GEOPEND</p><h2>De tijdlijn is hersteld!</h2><p>Je hebt de vier laboratoria onderzocht, de codes verzameld en de kluis geopend.</p><button class="primary" id="play-again">Speel opnieuw</button></div></div>
-<script src="game.js?v=20261111-steampunk-eenvormig"></script>
+<script src="game.js?v=20261111-steampunk-vragenvoortgang-chemicons"></script>
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 <script src="config.js"></script>
 <script src="online.js?v=20261111-puzzelreview"></script><script src="bonus-games.js?v=20261111-bonus-sluiten-en-atomen"></script><script src="guest.js?v=20261111-gratis-gastmodus"></script></body></html>

@@ -215,21 +215,18 @@ function renderLevel(){
  ["label1","label2","label3","label4"].forEach((id,i)=>{if($(id))$(id).textContent=l.labels[i]||"Puzzel";});
  document.querySelectorAll('.hotspot[data-object^="object"]').forEach(btn=>{
   const obj=btn.dataset.object,idx=Number(obj.replace("object",""))-1,digit=(puzzleSolved[currentLevel]?.[obj])?LEVELS[currentLevel].code[idx]:undefined,marker=btn.querySelector('span');
-  if(marker){marker.textContent=digit!==undefined?String(digit):"✦";marker.setAttribute('aria-label',digit!==undefined?`Verdiend cijfer ${digit}`:"Puzzelplek nog niet voltooid");}
+  if(marker){marker.textContent=digit!==undefined?String(digit):"";marker.classList.toggle("has-digit",digit!==undefined);btn.setAttribute("aria-label",`${l.labels[idx]||"Chemiepuzzel"}${digit!==undefined?` – verdiend cijfer ${digit}`:""}`);}
   btn.classList.toggle('puzzle-solved',Boolean(puzzleSolved[currentLevel]?.[obj]));
  });
- const solvedCount=Object.values(puzzleSolved[currentLevel]||{}).filter(Boolean).length;
- const inProgress=Object.values(objectProgress[currentLevel]||{}).reduce((a,b)=>a+Number(b||0),0);
- $("level-status").textContent=`${l.name}: ${solvedCount} van 4 puzzels voor het eerst voltooid · ${inProgress} vragen juist in de huidige poging`;
  const sceneCaption=$("scene-caption");if(sceneCaption)sceneCaption.textContent=levelSolved[currentLevel]?"Alle vier puzzels zijn minstens één keer opgelost. Je kunt ze opnieuw oefenen en LabCoins verdienen.":"";
  renderQuestionCoverage();renderInventory();renderEconomyPanel();
 }
 function renderQuestionCoverage(){
  const el=$("question-coverage");if(!el)return;
  const rows=questionCoverage.filter(r=>r.level_id===currentLevel);
- if(!rows.length){el.innerHTML="<small>Vragenkennis: meld je online aan om je verzamelde juiste antwoorden bij te houden.</small>";return;}
+ if(!rows.length){el.innerHTML="<strong>Vragenvoortgang</strong><small>Meld je online aan om je beantwoorde vragen bij te houden.</small>";return;}
  const byObject=new Map(rows.map(r=>[r.object_id,r]));
- el.innerHTML=`<strong>📚 Alle vragen leren</strong><div class="question-coverage-grid">${["object1","object2","object3","object4"].map((obj,i)=>{const r=byObject.get(obj)||{};const done=Number(r.answered_count)||0,total=Number(r.total_count)||0,complete=Boolean(r.complete);const pct=total?Math.min(100,done/total*100):0;return `<div class="question-coverage-item ${complete?"complete":""}"><span>${LEVELS[currentLevel].labels[i]}</span><b>${done}/${total}</b><i><em style="width:${pct}%"></em></i><small>${complete?"✓ Alle vragen juist beantwoord":total?"Nog te ontdekken":"Geen actieve vragen"}</small></div>`;}).join("")}</div><small>Elke vraag telt mee zodra je ze minstens één keer juist hebt beantwoord, ongeacht de gekozen moeilijkheid.</small>`;
+ el.innerHTML=`<strong>Vragenvoortgang</strong><div class="question-coverage-grid">${["object1","object2","object3","object4"].map((obj,i)=>{const r=byObject.get(obj)||{};const done=Number(r.answered_count)||0,total=Number(r.total_count)||0,complete=Boolean(r.complete);const pct=total?Math.min(100,done/total*100):0;return `<div class="question-coverage-item ${complete?"complete":""}"><span>${LEVELS[currentLevel].labels[i]}</span><b>${done}/${total}</b><i><em style="width:${pct}%"></em></i><small>${complete?"✓ Alle vragen juist beantwoord":total?"Nog te ontdekken":"Geen actieve vragen"}</small></div>`;}).join("")}</div><small>Elke vraag telt mee zodra je ze minstens één keer juist hebt beantwoord, ongeacht de gekozen moeilijkheid.</small>`;
 }
 function updateProgress(){const n=Object.values(levelSolved).filter(Boolean).length;$("progress-text").textContent=`${n} van ${LEVEL_TOTAL} levels voltooid`;$("progress-fill").style.width=`${n/LEVEL_TOTAL*100}%`;}
 function localAttemptStorageKey(level,obj){return `chemie-escape-attempt:${level}:${obj}`;}
