@@ -610,3 +610,10 @@ body.guest-mode .scene-wrap{grid-area:scene}
  #cards-arena-panel .cards-arena-button[data-arena-target="battles"],
  #skin-panel #skin-shop-open{min-height:85px;padding-right:38%;}
 }
+
+/* De Schaduw: herkenbaar figuur zonder los tekstlabel onder het personage. */
+.hotspot.antagonist{width:clamp(65px,9vw,112px);height:clamp(84px,13vw,152px);padding:0;z-index:6;filter:drop-shadow(0 0 10px #a45affaa);transition:filter .2s ease}
+.hotspot.antagonist span{display:block;width:100%;height:100%;border:0;border-radius:0;background:transparent url("assets/ui-steampunk/shadow-figure.webp") center center/contain no-repeat;box-shadow:none;transition:transform .18s ease}
+.hotspot.antagonist:hover span,.hotspot.antagonist:focus-visible span{transform:scale(1.09);box-shadow:none}
+.hotspot.antagonist:focus-visible{outline:3px solid #dcb7ff;outline-offset:3px;border-radius:12px}
+@media(max-width:560px){.hotspot.antagonist{width:56px;height:78px}}
