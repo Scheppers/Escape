@@ -680,3 +680,24 @@ body.guest-mode .scene-wrap{grid-area:scene}
 .scene .hotspot[data-object^="object"]:hover span.chemical-marker,.scene .hotspot[data-object^="object"]:focus-visible span.chemical-marker{box-shadow:0 0 0 3px #edc56a,0 0 18px #d5b45a}
 /* De schaduw zweeft als uitgesneden figuur zonder rechthoekige foto. */
 .hotspot.antagonist span{background-image:url("assets/ui-steampunk/shadow-cutout.webp")!important}
+
+/* Vragenvoortgang: lichte achtergrond en exact dezelfde kopstijl als de overige panelen. */
+.left-panel #question-coverage{
+  background:linear-gradient(90deg,rgba(248,252,253,.98) 0%,rgba(246,251,252,.96) 59%,rgba(246,251,252,.87) 100%),url("assets/ui-steampunk/books.webp") right center/auto 100% no-repeat;
+  border:1px solid #c7d9df;
+  color:#203849;
+  box-shadow:0 8px 22px #172c4008;
+}
+.left-panel #question-coverage > strong{
+  font-family:"Space Grotesk",Arial,sans-serif!important;
+  font-size:1.05rem!important;
+  font-weight:800!important;
+  line-height:1.3!important;
+  letter-spacing:0!important;
+  text-transform:none!important;
+  margin:0 0 12px!important;
+  color:#203849!important;
+  text-shadow:none!important;
+}
+.left-panel #question-coverage > small{color:#526d7c}
+.left-panel #question-coverage .question-coverage-item{background:#ffffffed;color:#253b48}

@@ -505,7 +505,7 @@ function showSafeFeedback(html,kind='info'){
 function hideSafeFeedback(){const box=$("safe-feedback");if(box){box.className="safe-feedback hidden";box.textContent="";}}
 function updateShadowStatus(text){const node=$("antagonist-status");if(node)node.textContent=text;}
 function moveShadowToRandomSpot(){const node=$("antagonist");if(!node)return;const left=12+Math.random()*72;const top=10+Math.random()*57;node.style.left=`${left}%`;node.style.top=`${top}%`;}
-function hideShadow(scheduleNext=true){if(shadowTimer){clearTimeout(shadowTimer);shadowTimer=null;}shadowVisible=false;shadowEncounterId=null;localShadowMaterial=null;const node=$("antagonist");if(node)node.classList.add("hidden");const fill=$("shadow-meter-fill");if(fill)fill.style.width="0%";updateShadowStatus("De Schaduw is weer verdwenen…");if(scheduleNext)scheduleShadow();}
+function hideShadow(scheduleNext=true){if(shadowTimer){clearTimeout(shadowTimer);shadowTimer=null;}shadowVisible=false;shadowEncounterId=null;localShadowMaterial=null;const node=$("antagonist");if(node)node.classList.add("hidden");const fill=$("shadow-meter-fill");if(fill)fill.style.width="0%";updateShadowStatus("");if(scheduleNext)scheduleShadow();}
 async function spawnShadow(){
  if(document.body.classList.contains("guest-mode"))return;
  let encounter=null,visibleMs=10000;
@@ -521,10 +521,10 @@ async function spawnShadow(){
  }
  shadowVisible=true;const node=$("antagonist");if(!node)throw new Error("De Schaduwknop ontbreekt op de pagina.");
  moveShadowToRandomSpot();node.classList.remove("hidden");node.disabled=false;
- updateShadowStatus("Hij is verschenen! Klik snel op De Schaduw om 1 mol grondstof te verzamelen.");
+ updateShadowStatus("");
  const fill=$("shadow-meter-fill");if(fill){fill.style.transition='none';fill.style.width='100%';requestAnimationFrame(()=>{fill.style.transition=`width ${visibleMs}ms linear`;fill.style.width='0%';});}
- setStatus("Pas op! De Schaduw is verschenen. Klik snel op hem!");log("De Schaduw verschijnt onverwacht in "+LEVELS[currentLevel].name+".");
- shadowTimer=setTimeout(()=>{hideShadow(true);setStatus("De Schaduw is alweer verdwenen. Misschien verschijnt hij straks opnieuw.");},visibleMs);
+ // Geen melding bij verschijnen: de speler ontdekt De Schaduw zelf.
+ shadowTimer=setTimeout(()=>{hideShadow(true);},visibleMs);
 }
 function scheduleShadow(delay=null){
  if(document.body.classList.contains("guest-mode"))return;
