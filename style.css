@@ -465,3 +465,52 @@ body.guest-mode .scene-wrap{grid-area:scene}
 .synth-toggle .steam-icon{width:48px;height:46px;margin-right:7px}
 .steam-card-icon{width:48px;height:40px}
 @media(max-width:560px){.steam-icon{width:43px;height:39px}}
+
+
+/* Grote steampunkillustraties op de bestaande actieknoppen.
+   Geen extra downloads: dezelfde geoptimaliseerde WebP-bestanden als de iconen. */
+#synth-toggle.synth-toggle{
+  position:relative; isolation:isolate; overflow:hidden;
+  display:flex; align-items:center; justify-content:flex-start;
+  min-height:116px; padding:20px 44% 20px 17px;
+  border:2px solid #b58b4b; border-radius:13px;
+  background:
+    linear-gradient(90deg,rgba(11,31,48,.97) 0%,rgba(13,39,58,.94) 46%,rgba(13,39,58,.23) 100%),
+    url('assets/ui-steampunk/synthesis.webp') right 7px center / auto 105% no-repeat,
+    linear-gradient(135deg,#193a53,#27607c);
+  color:#fff2d4; font-size:1.06rem; font-weight:800; line-height:1.35;
+  text-align:left; text-shadow:0 2px 4px #000b;
+  box-shadow:0 5px 0 #674e30,0 9px 16px #0003;
+  transition:transform .16s ease,filter .16s ease;
+}
+#synth-toggle.synth-toggle:hover{filter:brightness(1.12);transform:translateY(-2px)}
+#synth-toggle.synth-toggle:focus-visible{outline:3px solid #ffd879;outline-offset:3px}
+#synth-toggle.synth-toggle .steam-icon{display:none}
+
+/* Kaartenarena: de illustratie is een volwaardig deel van het paneel,
+   en de collectieknop heeft een grote eigen kaartillustratie. */
+#cards-arena-panel.cards-arena-panel{
+  background:
+    linear-gradient(90deg,rgba(242,249,250,.98) 0%,rgba(239,248,251,.95) 48%,rgba(239,248,251,.54) 100%),
+    url('assets/ui-steampunk/cards.webp') right 6px top 3px / 48% auto no-repeat,
+    linear-gradient(145deg,#f8fcfd,#e9f4f8);
+  border:1px solid #a9bfc5;
+}
+#cards-arena-panel .cards-arena-grid [data-arena-target="collection"]{
+  position:relative; min-height:112px; padding:12px 45% 12px 9px;
+  align-items:flex-start; text-align:left;
+  background:
+    linear-gradient(90deg,rgba(18,43,63,.98) 0%,rgba(22,55,76,.95) 45%,rgba(22,55,76,.15) 100%),
+    url('assets/ui-steampunk/cards.webp') right -8px center / auto 98% no-repeat,
+    #193b54;
+  border:2px solid #b58b4b; color:#fff2d4;
+  text-shadow:0 2px 3px #000b;
+}
+#cards-arena-panel .cards-arena-grid [data-arena-target="collection"] .steam-card-icon{display:none}
+#cards-arena-panel .cards-arena-grid [data-arena-target="collection"] span{font-size:.87rem}
+#cards-arena-panel .cards-arena-grid [data-arena-target="collection"]:hover{filter:brightness(1.12)}
+#cards-arena-panel .cards-arena-grid [data-arena-target="collection"]:focus-visible{outline:3px solid #e4a63b;outline-offset:2px}
+@media(max-width:560px){
+  #synth-toggle.synth-toggle{min-height:104px;padding:16px 43% 16px 13px;font-size:.95rem}
+  #cards-arena-panel .cards-arena-grid [data-arena-target="collection"]{min-height:100px;padding-right:38%}
+}
