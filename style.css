@@ -452,3 +452,9 @@ body.guest-mode .game-layout{grid-template-columns:minmax(170px,250px) minmax(0,
 body.guest-mode .scene-wrap{width:100%;max-width:none}
 body.guest-mode .level-tab{opacity:1!important;cursor:pointer!important}
 @media(max-width:760px){body.guest-mode .game-layout{display:block!important}body.guest-mode .left-panel{margin-bottom:12px}}
+
+/* Gratis gastmodus: geen missieoverzicht, statusmeldingen of Schaduw.
+   De volledige linkerzijbalk verdwijnt; de vier labo's vullen de ruimte. */
+body.guest-mode .left-panel{display:none!important}
+body.guest-mode .game-layout{grid-template-columns:minmax(0,1fr)!important;grid-template-areas:"scene"!important}
+body.guest-mode .scene-wrap{grid-area:scene}

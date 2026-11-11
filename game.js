@@ -510,6 +510,7 @@ function updateShadowStatus(text){const node=$("antagonist-status");if(node)node
 function moveShadowToRandomSpot(){const node=$("antagonist");if(!node)return;const left=12+Math.random()*72;const top=10+Math.random()*57;node.style.left=`${left}%`;node.style.top=`${top}%`;}
 function hideShadow(scheduleNext=true){if(shadowTimer){clearTimeout(shadowTimer);shadowTimer=null;}shadowVisible=false;shadowEncounterId=null;localShadowMaterial=null;const node=$("antagonist");if(node)node.classList.add("hidden");const fill=$("shadow-meter-fill");if(fill)fill.style.width="0%";updateShadowStatus("De Schaduw is weer verdwenen…");if(scheduleNext)scheduleShadow();}
 async function spawnShadow(){
+ if(document.body.classList.contains("guest-mode"))return;
  let encounter=null,visibleMs=10000;
  const online=Boolean(window.ChemieOnline&&window.ChemieOnline.isAuthenticated());
  if(online){
@@ -529,6 +530,7 @@ async function spawnShadow(){
  shadowTimer=setTimeout(()=>{hideShadow(true);setStatus("De Schaduw is alweer verdwenen. Misschien verschijnt hij straks opnieuw.");},visibleMs);
 }
 function scheduleShadow(delay=null){
+ if(document.body.classList.contains("guest-mode"))return;
  if(shadowVisible||appearanceTimer||document.getElementById('win-screen')?.classList.contains('game-finished'))return;
  const wait=delay??(10000+Math.random()*15000);
  appearanceTimer=setTimeout(async()=>{
@@ -1079,9 +1081,23 @@ function tickSprintTimer(){
 function renderSprintQuestion(){
  if(!sprintState.running)return;
  if(sprintState.index>=sprintState.queue.length){finishElementSprint();return;}const item=sprintState.queue[sprintState.index];sprintState.current=item;sprintState.index++;
- showEconomyOverlay(`<p class="economy-eyebrow">ELEMENTENSPRINT · LEVEL 1</p><h2 class="economy-title" id="economy-title">Noem het elementsymbool</h2><div class="sprint-hud"><div class="sprint-timer" id="sprint-time-left">1:00</div><div class="sprint-score"><span id="sprint-correct-count">${sprintState.correct}</span> juist · <span id="sprint-answered-count">${sprintState.answered}</span> beantwoord</div></div><div class="sprint-question"><small>Welk symbool hoort bij dit element?</small><div class="sprint-element-name">${item.name}</div></div><form class="sprint-form" id="sprint-answer-form"><input class="sprint-input" id="sprint-symbol-answer" name="symbol" type="text" maxlength="3" placeholder="Elementsymbool" autocomplete="off" autocapitalize="off" spellcheck="false" aria-label="Elementsymbool" required><button type="submit" class="primary">Antwoord</button></form><p class="sprint-feedback" id="sprint-feedback" aria-live="polite">Let op hoofdletters, zoals Na, Fe en Pb.</p>`);
+ showEconomyOverlay(`<p class="economy-eyebrow">ELEMENTENSPRINT · LEVEL 1</p><h2 class="economy-title" id="economy-title">Noem het elementsymbool</h2><div class="sprint-hud"><div class="sprint-timer" id="sprint-time-left">1:00</div><div class="sprint-score"><span id="sprint-correct-count">${sprintState.correct}</span> juist · <span id="sprint-answered-count">${sprintState.answered}</span> beantwoord</div></div><div class="sprint-question"><small>Welk symbool hoort bij dit element?</small><div class="sprint-element-name">${item.name}</div></div><form class="sprint-form" id="sprint-answer-form"><input class="sprint-input" id="sprint-symbol-answer" name="symbol" type="text" maxlength="3" placeholder="Elementsymbool" autocomplete="off" autocapitalize="sentences" spellcheck="false" aria-label="Elementsymbool" required><button type="submit" class="primary">Antwoord</button></form><p class="sprint-feedback" id="sprint-feedback" aria-live="polite">Let op hoofdletters, zoals Na, Fe en Pb.</p>`);
  tickSprintTimer();
- const input=$("sprint-symbol-answer");if(input)input.focus({preventScroll:true});
+ const input=$("sprint-symbol-answer");
+ if(input){
+  // Alleen de eerste letter automatisch groot maken (Na, Fe, Pb).
+  // Ook op een fysiek toetsenbord; autocapitalize alleen is niet betrouwbaar.
+  input.addEventListener("input",()=>{
+   const before=input.value;
+   const after=before.replace(/^([a-z])/,letter=>letter.toUpperCase());
+   if(before!==after){
+    const start=input.selectionStart,end=input.selectionEnd;
+    input.value=after;
+    if(start!==null&&end!==null)input.setSelectionRange(start,end);
+   }
+  });
+  input.focus({preventScroll:true});
+ }
 }
 async function submitSprintAnswer(e){
  e.preventDefault();if(!sprintState.running||!sprintState.current)return;
