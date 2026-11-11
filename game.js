@@ -898,7 +898,7 @@ function initEconomyUI(){
  const panel=document.createElement("section");
  panel.id="labcoins-panel";panel.className="labcoins-panel";
  panel.innerHTML=`
-  <div class="labcoins-heading"><div><p class="economy-eyebrow">EXTRA UITDAGINGEN</p><h3>🎯 Bonusspellen</h3></div><div class="coin-count"><span id="labcoin-balance">0</span><small>LabCoins</small></div></div>
+  <div class="labcoins-heading"><div><p class="economy-eyebrow">EXTRA UITDAGINGEN</p><h3 class="steam-heading"><img class="steam-icon" src="assets/ui-steampunk/bonus.webp" alt="" loading="lazy">Bonusspellen</h3></div><div class="coin-count"><span id="labcoin-balance">0</span><small>LabCoins</small></div></div>
   <p class="labcoins-copy">Speel de bonusspellen om LabCoins en speciale kaarten te verdienen.</p>
   <button type="button" class="primary full economy-action" id="element-sprint-open">⚡ Elementensprint</button>
   <button type="button" class="primary full economy-action bonus-game-launch" id="reactiebalancer-open">⚖️ Reactiebalancer</button>
@@ -915,7 +915,7 @@ function initEconomyUI(){
   <button type="button" class="secondary full economy-action" id="skin-shop-open">🛍️ Open de skinwinkel</button>`;
  const arenaPanel=document.createElement("section");
  arenaPanel.id="cards-arena-panel";arenaPanel.className="cards-arena-panel";
- arenaPanel.innerHTML=`<p class="economy-eyebrow">VERZAMEL & STRIJD</p><h3>🃏 Kaartenarena</h3><p class="cards-arena-copy">Jouw stoffen, jouw verzameling.</p><div class="cards-arena-grid"><button type="button" class="cards-arena-button" data-arena-target="collection">📚<span>Mijn collectie</span></button><button type="button" class="cards-arena-button" data-arena-target="shop">🛍️<span>Kaartenwinkel</span></button></div><button type="button" class="cards-arena-button cards-arena-battle" data-arena-target="battles">⚔️ <span>Stoffenstrijd</span></button><p class="cards-arena-note" id="cards-arena-note" role="status"></p>`;
+ arenaPanel.innerHTML=`<p class="economy-eyebrow">VERZAMEL & STRIJD</p><h3 class="steam-heading"><img class="steam-icon" src="assets/ui-steampunk/cards.webp" alt="" loading="lazy">Kaartenarena</h3><p class="cards-arena-copy">Jouw stoffen, jouw verzameling.</p><div class="cards-arena-grid"><button type="button" class="cards-arena-button" data-arena-target="collection"><img class="steam-icon steam-card-icon" src="assets/ui-steampunk/cards.webp" alt="" loading="lazy"><span>Mijn collectie</span></button><button type="button" class="cards-arena-button" data-arena-target="shop">🛍️<span>Kaartenwinkel</span></button></div><button type="button" class="cards-arena-button cards-arena-battle" data-arena-target="battles">⚔️ <span>Stoffenstrijd</span></button><p class="cards-arena-note" id="cards-arena-note" role="status"></p>`;
  bonusSidebar.append(panel,skinPanel,arenaPanel);
  arenaPanel.addEventListener("click",event=>{const button=event.target.closest("[data-arena-target]");if(!button)return;const online=window.ChemieOnline;if(!online?.isAuthenticated?.()){const note=$("cards-arena-note");if(note)note.textContent="Log eerst in bij de online arena om je kaarten te bekijken.";document.getElementById("online-root")?.scrollIntoView({behavior:"smooth",block:"start"});return;}online.openArenaSection?.(button.dataset.arenaTarget);});
  const overlay=document.createElement("div");

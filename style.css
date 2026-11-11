@@ -458,3 +458,10 @@ body.guest-mode .level-tab{opacity:1!important;cursor:pointer!important}
 body.guest-mode .left-panel{display:none!important}
 body.guest-mode .game-layout{grid-template-columns:minmax(0,1fr)!important;grid-template-areas:"scene"!important}
 body.guest-mode .scene-wrap{grid-area:scene}
+
+/* Eigen steampunkillustraties: alleen decoratief, bestaande knoppen blijven functioneel. */
+.steam-heading{display:flex;align-items:center;gap:8px;min-height:47px}
+.steam-icon{display:inline-block;width:51px;height:46px;object-fit:contain;vertical-align:middle;flex:none;filter:drop-shadow(0 2px 2px #0002)}
+.synth-toggle .steam-icon{width:48px;height:46px;margin-right:7px}
+.steam-card-icon{width:48px;height:40px}
+@media(max-width:560px){.steam-icon{width:43px;height:39px}}
