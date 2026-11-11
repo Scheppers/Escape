@@ -439,3 +439,16 @@ body.synth-open .level-tabs{display:none}body.synth-open .left-panel>:not(#synth
 .online-hand-grid .online-play-card>span{font-weight:800;color:#f8d988;}
 @media(max-width:700px){.battle-deck-builder{grid-template-columns:repeat(2,minmax(0,1fr));}.battle-deck-previews{grid-template-columns:repeat(2,minmax(0,1fr));}.battle-round-cards{grid-template-columns:repeat(2,minmax(0,1fr));}.online-hand-grid{grid-template-columns:repeat(2,minmax(0,1fr));}}
 @media(max-width:390px){.battle-deck-previews{grid-template-columns:1fr 1fr;}.battle-full-card{padding:8px!important;}}
+
+/* Gratis gastmodus: alleen de vier puzzeltijdperken en de aanmeldmogelijkheid. */
+.guest-intro{display:none;gap:12px;align-items:center;justify-content:center;flex-wrap:wrap;padding:15px 20px;background:#e9f5ff;color:#123657;text-align:center}
+.guest-intro a{color:#115f9e;font-weight:800}
+body.guest-mode .guest-intro{display:flex}
+body.guest-mode .left-panel .synth-toggle,body.guest-mode .inventory,body.guest-mode .safe-box,
+body.guest-mode .bonus-sidebar,body.guest-mode #question-coverage,body.guest-mode .door-hotspot,
+body.guest-mode #antagonist,body.guest-mode #synth-workspace,body.guest-mode .puzzle-avatar-dock,
+body.guest-mode .win-screen{display:none!important}
+body.guest-mode .game-layout{grid-template-columns:minmax(170px,250px) minmax(0,1fr)!important}
+body.guest-mode .scene-wrap{width:100%;max-width:none}
+body.guest-mode .level-tab{opacity:1!important;cursor:pointer!important}
+@media(max-width:760px){body.guest-mode .game-layout{display:block!important}body.guest-mode .left-panel{margin-bottom:12px}}
