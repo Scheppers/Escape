@@ -6,11 +6,12 @@ const LEVELS={
 };
 const LEVEL_ORDER=Object.keys(LEVELS);
 const LEVEL_TOTAL=LEVEL_ORDER.length;
-const QUESTIONS_PER_LEVEL=12, QUESTIONS_PER_PUZZLE=3, PENALTY=60;
+const QUESTIONS_PER_LEVEL=12, QUESTIONS_PER_PUZZLE=3, PENALTY=0;
 const DIFFICULTIES={basis:"Basis",gemiddeld:"Gemiddeld",moeilijk:"Moeilijk"};
 let teacherMode=false, gameCompleted=false;
 let codeEntered=Object.fromEntries(Object.keys(LEVELS).map(k=>[k,false]));
-let questions=[], pendingOnlineQuestionBank=null, questionCoverage=[], objectProgress={}, puzzleSolved={}, puzzleCompletions={}, currentLevel="medieval", progress={}, levelSolved={}, levelQuestions={}, lockouts={}, inventory={kno3:0,carbon:0,sulfur:0}, activeQuestion=null, activeObject=null, activeKind="question", activeAttemptId=null, activeAttemptQuestions=[], activeAttemptCorrectIds=[], activeAttemptIndex=0, activeAttemptRequired=QUESTIONS_PER_PUZZLE, activeDifficulty="basis", activeRunLevel=null, activeRunObject=null, activeRunToken=0, shadowVisible=false, shadowTimer=null, appearanceTimer=null, shadowEncounterId=null, localShadowMaterial=null, codes={}, unlocked=Object.fromEntries(Object.keys(LEVELS).map((k,i)=>[k,i===0]));
+let activeAttemptAnsweredIds=[];
+let questions=[], pendingOnlineQuestionBank=null, questionCoverage=[], objectProgress={}, puzzleSolved={}, puzzleCompletions={}, currentLevel="medieval", progress={}, levelSolved={}, levelQuestions={}, lockouts={}, inventory={kno3:0,carbon:0,sulfur:0}, activeQuestion=null, activeObject=null, activeKind="question", activeAttemptId=null, activeAttemptQuestions=[], activeAttemptCorrectIds=[], activeAttemptMistakes=[], activeAttemptIndex=0, activeAttemptRequired=QUESTIONS_PER_PUZZLE, activeDifficulty="basis", activeRunLevel=null, activeRunObject=null, activeRunToken=0, shadowVisible=false, shadowTimer=null, appearanceTimer=null, shadowEncounterId=null, localShadowMaterial=null, codes={}, unlocked=Object.fromEntries(Object.keys(LEVELS).map((k,i)=>[k,i===0]));
 const $=id=>document.getElementById(id);
 const sortedLevelCode=levelId=>[...(LEVELS[levelId]?.code||[])].map(Number).sort((a,b)=>a-b).join("");
 const LABCOIN_ICON='<svg class="labcoin-coin-icon" viewBox="0 0 32 32" aria-hidden="true" focusable="false"><circle cx="16" cy="16" r="13.4" fill="#f5c85c" stroke="#9a681c" stroke-width="1.5"/><circle cx="16" cy="16" r="10.2" fill="none" stroke="#fff0a3" stroke-width="1.4"/><path d="M16 9.6l1.9 4.1 4.5.5-3.3 3 1 4.4-4.1-2.2-4.1 2.2 1-4.4-3.3-3 4.5-.5z" fill="#936015"/></svg>';
@@ -204,7 +205,7 @@ if(hintButton){hintButton.style.setProperty("display","none","important");hintBu
 async function init(){try{const r=await fetch("vragen.json");if(!r.ok)throw Error("JSON niet geladen");questions=await r.json();if(pendingOnlineQuestionBank)questions=pendingOnlineQuestionBank;resetState();log(LEVELS.medieval.intro);setStatus("Klik op een voorwerp om te beginnen.");scheduleShadow();}catch(e){setStatus("Vragen niet geladen. Start via start_windows.bat; zie LEESMIJ.txt.");console.error(e)}}
 function shuffle(a){a=[...a];for(let i=a.length-1;i>0;i--){let j=Math.floor(Math.random()*(i+1));[a[i],a[j]]=[a[j],a[i]]}return a}
 function rebuildQuestionSets(){Object.keys(LEVELS).forEach(level=>{levelQuestions[level]=[];["object1","object2","object3","object4"].forEach(obj=>levelQuestions[level].push(...shuffle(questions.filter(q=>q.level===level&&q.object===obj))));});}
-function resetState(){progress=Object.fromEntries(LEVEL_ORDER.map(l=>[l,0]));objectProgress=Object.fromEntries(LEVEL_ORDER.map(l=>[l,{object1:0,object2:0,object3:0,object4:0}]));puzzleSolved=Object.fromEntries(LEVEL_ORDER.map(l=>[l,{object1:false,object2:false,object3:false,object4:false}]));puzzleCompletions=Object.fromEntries(LEVEL_ORDER.map(l=>[l,{object1:0,object2:0,object3:0,object4:0}]));levelSolved=Object.fromEntries(LEVEL_ORDER.map(l=>[l,false]));lockouts={};inventory=readLocalMaterials();shadowVisible=false;shadowEncounterId=null;localShadowMaterial=null;codes={};codeEntered=Object.fromEntries(LEVEL_ORDER.map(l=>[l,false]));gameCompleted=localStorage.getItem("chemie-escape-completed")==="1";unlocked=gameCompleted?Object.fromEntries(LEVEL_ORDER.map(l=>[l,true])):Object.fromEntries(LEVEL_ORDER.map((l,i)=>[l,i===0]));activeAttemptId=null;activeAttemptQuestions=[];activeAttemptCorrectIds=[];activeAttemptIndex=0;rebuildQuestionSets();renderInventory();renderLevel();updateProgress();renderEconomyPanel();applyEquippedSkin()}
+function resetState(){progress=Object.fromEntries(LEVEL_ORDER.map(l=>[l,0]));objectProgress=Object.fromEntries(LEVEL_ORDER.map(l=>[l,{object1:0,object2:0,object3:0,object4:0}]));puzzleSolved=Object.fromEntries(LEVEL_ORDER.map(l=>[l,{object1:false,object2:false,object3:false,object4:false}]));puzzleCompletions=Object.fromEntries(LEVEL_ORDER.map(l=>[l,{object1:0,object2:0,object3:0,object4:0}]));levelSolved=Object.fromEntries(LEVEL_ORDER.map(l=>[l,false]));lockouts={};inventory=readLocalMaterials();shadowVisible=false;shadowEncounterId=null;localShadowMaterial=null;codes={};codeEntered=Object.fromEntries(LEVEL_ORDER.map(l=>[l,false]));gameCompleted=localStorage.getItem("chemie-escape-completed")==="1";unlocked=gameCompleted?Object.fromEntries(LEVEL_ORDER.map(l=>[l,true])):Object.fromEntries(LEVEL_ORDER.map((l,i)=>[l,i===0]));activeAttemptId=null;activeAttemptQuestions=[];activeAttemptCorrectIds=[];activeAttemptAnsweredIds=[];activeAttemptMistakes=[];activeAttemptIndex=0;rebuildQuestionSets();renderInventory();renderLevel();updateProgress();renderEconomyPanel();applyEquippedSkin()}
 function setStatus(s){$("status-text").textContent=s}
 function log(s){const el=$("logbook");el.textContent=s+"\n"+el.textContent}
 function renderLevel(){
@@ -239,7 +240,7 @@ function saveLocalAttempt(){
  if(activeAttemptId||!activeRunLevel||!activeRunObject||!activeAttemptQuestions.length)return;
  try{localStorage.setItem(localAttemptStorageKey(activeRunLevel,activeRunObject),JSON.stringify({
   difficulty:activeDifficulty,required:activeAttemptRequired,questions:activeAttemptQuestions,
-  correctIds:activeAttemptCorrectIds
+  correctIds:activeAttemptCorrectIds, answeredIds:activeAttemptAnsweredIds, mistakes:activeAttemptMistakes
  }));}catch(error){console.warn('Lokale puzzelpoging kon niet worden opgeslagen.',error);}
 }
 function removeLocalAttempt(level,obj){try{localStorage.removeItem(localAttemptStorageKey(level,obj));}catch{}}
@@ -254,20 +255,46 @@ function installPuzzleAttempt(result,level,obj){
   question:q.question_text||q.question,options:Array.isArray(q.options)?q.options:[],answer:q.answer
  }));
  activeAttemptCorrectIds=[...(result.correct_question_ids||result.correctIds||[])].map(String);
+ activeAttemptAnsweredIds=[...(result.answered_question_ids||result.answeredIds||activeAttemptCorrectIds)].map(String);
+ activeAttemptMistakes=Array.isArray(result.mistakes)?result.mistakes:loadAttemptMistakes(level,obj);
  objectProgress[level]=objectProgress[level]||{};
  objectProgress[level][obj]=Number(result.correct_count??activeAttemptCorrectIds.length)||0;
  if(!activeAttemptId)saveLocalAttempt();
 }
+function mistakeStorageKey(level,obj){return `chemie-escape-mistakes-${level}-${obj}`;}
+function loadAttemptMistakes(level,obj){try{return JSON.parse(localStorage.getItem(mistakeStorageKey(level,obj))||"[]");}catch{return [];}}
+function saveAttemptMistakes(){try{localStorage.setItem(mistakeStorageKey(activeRunLevel,activeRunObject),JSON.stringify(activeAttemptMistakes));}catch{}}
+function clearAttemptMistakes(level,obj){try{localStorage.removeItem(mistakeStorageKey(level,obj));}catch{}}
+function readableAnswer(q,value){return q.type==='multiple_choice'||(!['numeric','short_answer'].includes(q.type))?String(q.options?.[Number(value)]??value):String(value);}
+async function showPuzzleReview(attemptId,completedLevel,completedObject){
+ const mistakes=[...activeAttemptMistakes];
+ let answers={};
+ if(attemptId&&window.ChemieOnline?.isAuthenticated()){
+  try{const response=await window.ChemieOnline.getCompletedPuzzleAnswers(attemptId);for(const item of response?.answers||[])answers[String(item.question_id)]=item;}catch(error){console.warn('Antwoordenoverzicht niet beschikbaar:',error);}
+ }
+ const rows=mistakes.map((item,index)=>{
+  const answer=answers[String(item.id)];
+  const q=activeAttemptQuestions.find(x=>String(x.id)===String(item.id))||item;
+  const expected=answer?readableAnswer(q,q.type==='short_answer'?answer.correct_answer_text:answer.correct_answer):item.expected??'Niet beschikbaar';
+  return `<div class="puzzle-review-item"><strong>${index+1}. ${escapeHtml(item.question)}</strong><p>Jouw antwoord: <b>${escapeHtml(item.typed)}</b></p><p>Juiste antwoord: <b>${escapeHtml(expected)}</b></p></div>`;
+ }).join('');
+ $('modal-category').textContent='PUZZEL AFGEROND';$('modal-title').textContent='Overzicht van je antwoorden';
+ $('question-text').textContent=`Eindscore: ${activeAttemptCorrectIds.length}/${activeAttemptRequired}. `+(mistakes.length?`Bekijk de correctie van je ${mistakes.length} foutieve antwoorden.`:'Uitstekend! Alle vragen zijn juist. Het codecijfer is verdiend.');
+ $('answer-area').innerHTML=(rows||'<p>Geen foute antwoorden. Goed gedaan!</p>')+'<button type="button" class="primary full" id="puzzle-new-session">Nieuwe sessie starten</button>'; 
+ $('hint-button').classList.add('hidden');$('check-button').classList.add('hidden');$('feedback').className='feedback hidden';
+ $('modal-backdrop').classList.remove('hidden');
+ clearAttemptMistakes(completedLevel,completedObject);
+}
 function currentRunMatches(level,obj){
- return Boolean(activeRunLevel===level&&activeRunObject===obj&&activeAttemptQuestions.length&&activeAttemptCorrectIds.length<activeAttemptRequired);
+ return Boolean(activeRunLevel===level&&activeRunObject===obj&&activeAttemptQuestions.length&&activeAttemptAnsweredIds.length<activeAttemptRequired);
 }
 function nextUnansweredQuestion(){
- const answered=new Set(activeAttemptCorrectIds.map(String));
+ const answered=new Set(activeAttemptAnsweredIds.map(String));
  return activeAttemptQuestions.find(item=>!answered.has(String(item.id)));
 }
 function showQuestion(q){
  activeQuestion=q;activeKind="question";
- const number=activeAttemptCorrectIds.length+1;
+ const number=activeAttemptAnsweredIds.length+1;
  $("modal-category").textContent=`${LEVELS[currentLevel].name.toUpperCase()} · ${DIFFICULTIES[activeDifficulty]} · VRAAG ${number}/${activeAttemptRequired}`;
  $("modal-title").textContent=q.type==="numeric"?"Rekenvraag":q.type==="short_answer"?"Kort antwoord":"Meerkeuzevraag";$("question-text").textContent=q.question;
  const area=$("answer-area");area.innerHTML="";
@@ -332,7 +359,7 @@ async function openObject(obj){
  if(obj==="antagonist"){if(!shadowVisible)return;collectShadowDrop();return;}
  if(teacherMode){setStatus("Leerkrachtweergave: je kunt de vier labo’s vrij bekijken. Puzzels hoef je met dit account niet op te lossen.");return;}
  if(!/^object[1-4]$/.test(obj))return;
- if(Date.now()<(lockouts[currentLevel]?.[obj]||0)){setStatus(`Deze puzzel heeft nog ${Math.ceil((lockouts[currentLevel][obj]-Date.now())/1000)} seconden straftijd.`);showLockout(obj);return;}
+
  activeObject=obj;
  if(await resumePuzzleRun(currentLevel,obj))return;
  showDifficultyChoice(obj);
@@ -400,50 +427,53 @@ async function submitAnswer(e){
      ? String(submittedAnswer??"").normalize("NFKC").trim().replace(/\s+/g," ").toLocaleLowerCase("nl-BE")===String(q.answer??"").normalize("NFKC").trim().replace(/\s+/g," ").toLocaleLowerCase("nl-BE")
      : submittedAnswer===Number(q.answer);
    const nextCount=(activeAttemptCorrectIds.length||0)+(localCorrect?1:0);
-   verified={ok:true,correct:localCorrect,completed:localCorrect&&nextCount>=activeAttemptRequired,correct_count:nextCount,required_count:activeAttemptRequired,xp_awarded:0,coins_awarded:0};
+   verified={ok:true,correct:localCorrect,completed:activeAttemptAnsweredIds.length+1>=activeAttemptRequired,perfect:localCorrect&&nextCount>=activeAttemptRequired,correct_count:nextCount,required_count:activeAttemptRequired,xp_awarded:0,coins_awarded:0};
   }
  }catch(err){console.error(err);if(button)button.disabled=false;feedback(err.message||"Geen verbinding met de controle. Probeer opnieuw.","bad");return;}
  if(!verified.correct){
-  lockouts[currentLevel]=lockouts[currentLevel]||{};lockouts[currentLevel][activeObject]=Date.now()+PENALTY*1000;
-  feedback("Fout antwoord! Deze puzzelplek is één minuut geblokkeerd. Daarna ga je verder met dezelfde moeilijkheid en dezelfde vragenreeks.","bad");
-  setStatus("Straftijd actief op "+LEVELS[currentLevel].labels[Number(activeObject.replace("object",""))-1]);
-  $("answer-area").querySelectorAll("input").forEach(i=>i.disabled=true);if(button){button.disabled=false;button.textContent="Verder";button.onclick=e=>{e.preventDefault();closeModal();button.onclick=null;};}return;
+  activeAttemptMistakes.push({id:String(q.id),question:q.question,typed:readableAnswer(q,submittedAnswer),expected:online?null:readableAnswer(q,q.answer)});
+  saveAttemptMistakes();
  }
- const oldSolved=Boolean(puzzleSolved[currentLevel]?.[activeObject]);
  const qid=String(q.id);
- if(!activeAttemptCorrectIds.map(String).includes(qid))activeAttemptCorrectIds.push(qid);
+ if(!activeAttemptAnsweredIds.includes(qid))activeAttemptAnsweredIds.push(qid);
+ if(verified.correct&&!activeAttemptCorrectIds.includes(qid))activeAttemptCorrectIds.push(qid);
+ const oldSolved=Boolean(puzzleSolved[currentLevel]?.[activeObject]);
+
  objectProgress[currentLevel][activeObject]=Number(verified.correct_count)||activeAttemptCorrectIds.length;
  progress[currentLevel]=Object.values(objectProgress[currentLevel]||{}).reduce((a,b)=>a+Number(b||0),0);
  if(!activeAttemptId)saveLocalAttempt();
  const puzzleIndex=Number(activeObject.replace("object",""))-1;
- if(verified.completed||activeAttemptCorrectIds.length>=activeAttemptRequired){
-  puzzleSolved[currentLevel][activeObject]=true;
-  puzzleCompletions[currentLevel][activeObject]=(puzzleCompletions[currentLevel][activeObject]||0)+1;
-  codes[currentLevel]=codes[currentLevel]||[];codes[currentLevel][puzzleIndex]=LEVELS[currentLevel].code[puzzleIndex];
+ if(verified.completed||activeAttemptAnsweredIds.length>=activeAttemptRequired){
+  if(verified.perfect??(activeAttemptCorrectIds.length===activeAttemptRequired))puzzleSolved[currentLevel][activeObject]=true;
+  if(verified.perfect??(activeAttemptCorrectIds.length===activeAttemptRequired))puzzleCompletions[currentLevel][activeObject]=(puzzleCompletions[currentLevel][activeObject]||0)+1;
+  if(verified.perfect??(activeAttemptCorrectIds.length===activeAttemptRequired)){codes[currentLevel]=codes[currentLevel]||[];codes[currentLevel][puzzleIndex]=LEVELS[currentLevel].code[puzzleIndex];}
   const rewarded=Number(verified.coins_awarded)||0;
   if(rewarded&&verified.economy&&window.ChemieGameBridge)window.ChemieGameBridge.applyOnlineEconomy(verified.economy);
   else if(rewarded&&Number.isFinite(Number(verified.coins)))labCoins=Number(verified.coins);
   levelSolved[currentLevel]=Object.values(puzzleSolved[currentLevel]).every(Boolean);
-  if(!online&&oldSolved){labCoins+=10;renderEconomyPanel();}
+  if(!online&&oldSolved&&verified.perfect){labCoins+=10;renderEconomyPanel();}
   const rewardText=rewarded||(!online&&oldSolved)?` Je ontvangt ${rewarded||10} LabCoins.`:"";
-  if(!oldSolved)log(`Puzzel ${puzzleIndex+1} voor het eerst voltooid in ${LEVELS[currentLevel].name}. Verdiend cijfer: ${codes[currentLevel][puzzleIndex]}.`);
-  else log(`Puzzel ${puzzleIndex+1} opnieuw voltooid op niveau ${DIFFICULTIES[activeDifficulty]}.${rewardText}`);
+  if(!oldSolved&&verified.perfect)log(`Puzzel ${puzzleIndex+1} voor het eerst foutloos voltooid in ${LEVELS[currentLevel].name}. Verdiend cijfer: ${codes[currentLevel][puzzleIndex]}.`);
+  else log(`Puzzelreeks afgerond: ${activeAttemptCorrectIds.length}/${activeAttemptRequired} juist.${rewardText}`);
   if(levelSolved[currentLevel]){log("Alle vier puzzels zijn minstens één keer voltooid in: "+LEVELS[currentLevel].name);setStatus("Alle vier cijfers zijn verdiend. Je kunt het volgende labo openen door de code in te voeren.");}
   else setStatus(`Puzzel ${puzzleIndex+1} voltooid.${rewardText}`);
-  feedback(`Puzzel voltooid! ${oldSolved?"Je hebt deze puzzel opnieuw geoefend.":`Je hebt cijfer ${codes[currentLevel][puzzleIndex]} verdiend.`}${rewardText}`,"good");
+  feedback(`Reeks afgerond: ${activeAttemptCorrectIds.length}/${activeAttemptRequired} juist. ${verified.perfect?"Foutloos! Codecijfer vrijgegeven.":"Probeer een nieuwe sessie voor het codecijfer."}${rewardText}`,verified.perfect?"good":"bad");
   if(online)window.ChemieOnline.refreshDashboardSoon();
   renderLevel();updateProgress();$("answer-area").querySelectorAll("input").forEach(i=>i.disabled=true);$("check-button").classList.add("hidden");
-  const completedLevel=activeRunLevel,completedObject=activeRunObject;removeLocalAttempt(completedLevel,completedObject);
-  activeRunToken++;activeRunLevel=null;activeRunObject=null;activeAttemptId=null;activeAttemptQuestions=[];activeAttemptCorrectIds=[];
-  setTimeout(()=>closeModal(),1600);return;
+  const completedLevel=activeRunLevel,completedObject=activeRunObject,completedAttemptId=activeAttemptId;
+  removeLocalAttempt(completedLevel,completedObject);
+  activeRunToken++;
+  await showPuzzleReview(completedAttemptId,completedLevel,completedObject);
+  activeRunLevel=null;activeRunObject=null;activeAttemptId=null;activeAttemptQuestions=[];activeAttemptCorrectIds=[];activeAttemptAnsweredIds=[];activeAttemptMistakes=[];
+  return;
  }
  const token=activeRunToken;
  const answeredAttemptId=activeAttemptId;
  const answeredObject=activeObject,answeredLevel=currentLevel;
  const nextQ=nextUnansweredQuestion();
  saveLocalAttempt();
- feedback(`Juist! Vraag ${activeAttemptCorrectIds.length} van ${activeAttemptRequired} opgelost.`,"good");
- setStatus("Goed antwoord. De volgende vraag wordt automatisch geopend…");
+ feedback(`${verified.correct?"Juist!":"Niet juist."} Vraag ${activeAttemptAnsweredIds.length} van ${activeAttemptRequired} afgewerkt.`,verified.correct?"good":"bad");
+ setStatus("Antwoord opgeslagen. De volgende vraag wordt automatisch geopend…");
  if(verified.economy&&window.ChemieGameBridge)window.ChemieGameBridge.applyOnlineEconomy(verified.economy);
  // Een fout in een nevenweergave (zoals de inventaris) mag de vragenreeks
  // nooit onderbreken. De volgende vraag wordt daarom onafhankelijk ingepland.
@@ -453,7 +483,7 @@ async function submitAnswer(e){
   const sameRun=token===activeRunToken&&currentLevel===answeredLevel&&activeRunLevel===answeredLevel&&activeObject===answeredObject&&activeRunObject===answeredObject&&String(activeAttemptId||"")===String(answeredAttemptId||"");
   if(sameRun){
    showQuestion(nextQ);
-   setStatus(`Goed! Vraag ${activeAttemptCorrectIds.length+1} van ${activeAttemptRequired} wordt geopend.`);
+   setStatus(`Vraag ${activeAttemptAnsweredIds.length+1} van ${activeAttemptRequired} wordt geopend.`);
    const input=$("numeric-answer")||$("short-answer")||document.querySelector('input[name="choice"]');
    input?.focus?.();
   }
@@ -641,7 +671,7 @@ document.querySelectorAll(".level-tab").forEach(b=>b.addEventListener("click",()
  askCode(target);
 }));
 document.querySelectorAll(".hotspot").forEach(b=>b.addEventListener("click",()=>{if(b.dataset.object==="door"){if(teacherMode){setStatus("Leerkrachtweergave: de exclusieve goudkaart wordt alleen aan leerlingaccounts uitgereikt.");return;}if(gameCompleted){setStatus("Je hebt de exclusieve goudkaart Au al ontvangen. Je kunt nu vrij door alle labo’s bewegen.");return;}if(levelSolved.future)askCode("exit",true);else setStatus("De uitgang blijft gesloten. Los eerst alle vier puzzels in het futuristische labo minstens één keer op.");return;}openObject(b.dataset.object)}));
-$("answer-form").addEventListener("submit",submitAnswer);$("close-modal").addEventListener("click",closeModal);$("answer-area").addEventListener("click",e=>{const choice=e.target.closest("[data-puzzle-difficulty]");if(choice){e.preventDefault();startPuzzleRun(choice.dataset.puzzleDifficulty);}});
+$("answer-form").addEventListener("submit",submitAnswer);$("close-modal").addEventListener("click",closeModal);$("answer-area").addEventListener("click",e=>{if(e.target.closest("#puzzle-new-session")){const level=currentLevel,obj=activeObject;closeModal();if(obj)showDifficultyChoice(obj);return;}const choice=e.target.closest("[data-puzzle-difficulty]");if(choice){e.preventDefault();startPuzzleRun(choice.dataset.puzzleDifficulty);}});
 $("blow-safe-button")?.addEventListener("click",blowSafe);
 if($("play-again")){$("play-again").classList.add("hidden");$("play-again").disabled=true;}
 
