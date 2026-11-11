@@ -514,3 +514,35 @@ body.guest-mode .scene-wrap{grid-area:scene}
   #synth-toggle.synth-toggle{min-height:104px;padding:16px 43% 16px 13px;font-size:.95rem}
   #cards-arena-panel .cards-arena-grid [data-arena-target="collection"]{min-height:100px;padding-right:38%}
 }
+
+
+/* Steampunk panelen: beeld als achtergrond, leesbare inhoud voorop. */
+.materials-inventory, .left-panel .safe-box{
+  position:relative; isolation:isolate; overflow:hidden;
+  padding:15px 12px; border:1px solid #b7a17c; border-radius:13px;
+  background-color:#f0f5f5;
+  background-image:linear-gradient(90deg,rgba(248,251,251,.98) 0%,rgba(248,251,251,.94) 59%,rgba(248,251,251,.74) 100%),url('assets/ui-steampunk/inventory.webp');
+  background-position:center,right -16px top 4px;
+  background-size:cover,auto 155px;
+  background-repeat:no-repeat;
+}
+.left-panel .safe-box{
+  background-image:linear-gradient(90deg,rgba(248,251,251,.98) 0%,rgba(248,251,251,.94) 59%,rgba(248,251,251,.74) 100%),url('assets/ui-steampunk/vault.webp');
+}
+.materials-inventory .steam-icon,.left-panel .safe-box .steam-icon{display:none}
+.materials-inventory h3,.left-panel .safe-box h3{position:relative;z-index:1;color:#213d50;text-shadow:0 1px 1px #fff}
+.materials-inventory .inventory-items,.left-panel .safe-box p,.left-panel .safe-box button,.left-panel .safe-box .safe-feedback{position:relative;z-index:1}
+/* Een eigen illustratieve achtergrond voor het avatar- en skinpaneel. */
+#skin-panel.skin-panel{
+  position:relative;isolation:isolate;overflow:hidden;
+  background:linear-gradient(90deg,rgba(242,249,250,.98) 0%,rgba(239,248,251,.94) 58%,rgba(239,248,251,.65) 100%),
+    url('assets/avatars/starter.webp') right -18px top -14px / auto 155px no-repeat,
+    linear-gradient(145deg,#f8fcfd,#e9f4f8);
+  border:1px solid #a9bfc5;
+}
+#skin-panel.skin-panel h3{position:relative;color:#203849;font-size:1.05rem;margin:0 0 13px}
+#skin-panel.skin-panel .skin-preview,#skin-panel.skin-panel button{position:relative}
+@media(max-width:560px){
+  .materials-inventory,.left-panel .safe-box{background-size:cover,auto 128px}
+  #skin-panel.skin-panel{background-size:cover,auto 128px,cover}
+}
