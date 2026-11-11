@@ -898,7 +898,14 @@ function initEconomyUI(){
  .skin-panel{margin-top:12px;padding:14px;background:#fff;border:1px solid #d6e2e6;border-radius:13px;box-shadow:0 8px 22px #172c4008}.skin-panel h3{font-size:1rem;margin:0 0 9px;color:#203849}.labcoins-heading{display:flex;align-items:center;justify-content:space-between;gap:8px}.labcoins-heading h3{font-size:1rem;margin:0}.economy-eyebrow{font-size:.62rem;letter-spacing:.13em;color:#85d8dc;font-weight:900;margin:0 0 3px}.coin-count{min-width:60px;text-align:center;padding:5px 9px;border-radius:10px;background:#f5c86d;color:#44300a;font-weight:900;font-size:1.25rem;line-height:1.05}.coin-count small{display:block;font-size:.58rem;letter-spacing:.06em;text-transform:uppercase;margin-top:3px}.labcoins-copy{font-size:.75rem;line-height:1.45;color:#d6e7ee;margin:9px 0}.skin-preview{display:flex;align-items:center;gap:10px;border:1px solid #557382;background:#ffffff0d;border-radius:10px;padding:8px 10px;margin:10px 0}.skin-preview-icon{display:grid;place-items:center;width:42px;height:42px;flex-shrink:0;font-size:1.75rem;background:#ffffff12;border-radius:10px}.skin-preview small,.skin-preview strong{display:block}.skin-preview small{font-size:.65rem;color:#b8d1dc;margin-bottom:3px}.skin-preview strong{font-size:.78rem}.economy-action{margin-top:7px!important}.labcoins-panel .primary{background:#f5c86d;color:#42300c;box-shadow:0 3px 0 #b78d3d}.labcoins-panel .secondary{background:#e1eef3;color:#18394f}.skin-panel .skin-preview{background:#edf5f7;border-color:#d6e2e6;color:#203849}.skin-panel .skin-preview small{color:#687c88}.skin-panel .skin-preview-icon{background:#fff}.skin-panel .secondary{background:#e1eef3;color:#18394f}.economy-overlay{position:fixed;inset:0;z-index:30;display:grid;place-items:center;padding:15px;background:#0c2236e8;overflow:auto}.economy-dialog{position:relative;width:min(680px,100%);max-height:92vh;overflow:auto;background:#fffdf8;border:1px solid #e3d8c6;border-radius:19px;padding:25px;box-shadow:0 24px 90px #0006;color:#203b4c}.economy-dialog .close-button{position:absolute;z-index:2;right:10px;top:7px}.economy-title{font-size:1.45rem;margin:2px 38px 7px 0}.economy-lead{font-size:.88rem;line-height:1.55;color:#526a76;margin:0 0 16px}.sprint-hud{display:flex;gap:10px;justify-content:space-between;align-items:center;flex-wrap:wrap;margin:14px 0}.sprint-timer{font-size:1.65rem;font-weight:1000;color:#fff;background:#17364c;border-radius:10px;padding:8px 14px;font-variant-numeric:tabular-nums}.sprint-timer.urgent{background:#9c3445;animation:sprintPulse .7s infinite alternate}@keyframes sprintPulse{to{transform:scale(1.04)}}.sprint-score{font-size:.78rem;color:#4f6672;font-weight:800}.sprint-question{padding:18px 14px;border-radius:13px;background:#edf5f7;text-align:center;margin:11px 0}.sprint-question small{display:block;color:#52707e;font-weight:800;text-transform:uppercase;letter-spacing:.1em;font-size:.66rem;margin-bottom:8px}.sprint-element-name{font-size:clamp(1.65rem,5vw,2.5rem);font-weight:1000;line-height:1.15;color:#16384c}.sprint-form{display:flex;gap:8px;margin-top:12px}.sprint-input{flex:1;min-width:0;padding:12px;border:1px solid #bdd0d8;border-radius:9px;font:inherit;font-size:1.05rem}.sprint-feedback{min-height:24px;margin:10px 0 0;font-size:.85rem;font-weight:800}.sprint-feedback.good{color:#14754e}.sprint-feedback.bad{color:#a84b2c}.sprint-rules{font-size:.8rem;line-height:1.6;color:#506874;background:#f3f5f3;padding:11px 13px;border-radius:10px;margin:12px 0}.acid-sprint-form{display:grid;gap:8px;margin-top:12px}.acid-answer-line{display:flex;gap:8px;align-items:stretch}.acid-answer-line .sprint-input{flex:1;min-width:0}.acid-answer-line button{flex-shrink:0}.acid-formula-tools{width:100%;min-width:0}.acid-formula-keypad{display:grid;gap:8px;margin:9px 0}.acid-key-group{display:flex;flex-wrap:wrap;align-items:center;gap:6px}.acid-formula-keypad span{font-size:.72rem;color:#536c78;font-weight:800;margin-right:3px}.acid-formula-key{min-width:34px;padding:7px 9px!important;border:1px solid #b9ccd4!important;border-radius:7px!important;background:#eef5f6!important;color:#153e53!important;font-size:1rem!important;font-weight:900!important}.acid-format-hint{display:block;color:#526b78;font-size:.72rem;margin-top:5px}.acid-prompt{font-size:clamp(1.05rem,3.3vw,1.35rem);font-weight:900;line-height:1.45;color:#16384c;overflow-wrap:anywhere}.timed-review{margin:16px 0}.timed-review h3{font-size:1rem;margin:0 0 8px}.timed-review-scroll{overflow-x:auto}.timed-review-table{width:100%;border-collapse:collapse;font-size:.76rem}.timed-review-table th,.timed-review-table td{padding:8px;border-bottom:1px solid #dbe5e8;text-align:left;vertical-align:top}.timed-review-table th{background:#edf5f7;color:#294b5e}.timed-review-table td{overflow-wrap:anywhere}.sprint-results{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:9px;margin:17px 0}.sprint-result{padding:13px 7px;text-align:center;border:1px solid #d8e4e8;background:#f0f7f8;border-radius:11px}.sprint-result strong{display:block;font-size:1.45rem;color:#153e53}.sprint-result small{font-size:.68rem;color:#526b78}.shop-grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:10px;margin-top:15px}.shop-item{display:flex;flex-direction:column;gap:8px;min-width:0;border:1px solid #dbe4e7;background:#f7faf9;border-radius:13px;padding:12px}.shop-item.equipped{border-color:#4aab8a;box-shadow:inset 0 0 0 1px #4aab8a;background:#eff9f4}.shop-item-top{display:flex;align-items:center;gap:10px}.shop-item-icon{display:grid;place-items:center;width:52px;height:52px;flex-shrink:0;border-radius:12px;background:linear-gradient(145deg,#e0eff2,#f6e9cf);font-size:2rem}.shop-item h3{font-size:.92rem;line-height:1.2;margin:0 0 4px}.shop-price{font-size:.75rem;font-weight:900;color:#8a6516}.shop-detail{font-size:.76rem;line-height:1.4;color:#5a707b;flex:1}.shop-item button{width:100%;font-size:.76rem;padding:9px 8px}.shop-item .primary{background:#176f96}.shop-item .secondary{background:#e6eff2}.shop-tag{display:inline-block;align-self:flex-start;background:#e2f4eb;color:#166448;padding:3px 7px;border-radius:5px;font-size:.62rem;font-weight:900}.economy-dialog .primary{background:#176f96;color:white}.economy-dialog button:disabled{opacity:.48}@media(max-width:560px){.economy-dialog{padding:22px 15px 17px}.shop-grid{grid-template-columns:1fr}.sprint-form{flex-direction:column}.sprint-form button{width:100%}.acid-answer-line{flex-direction:column}.acid-answer-line button{width:100%}.sprint-results{gap:5px}.sprint-result strong{font-size:1.25rem}}
  `;
  document.head.append(style);
- $("economy-close").addEventListener("click",closeEconomyOverlay);
+ document.addEventListener("click",e=>{
+  if(!economyClosingPromise||e.target.closest("#economy-close"))return;
+  if(e.target.closest("#element-sprint-open,#acid-sprint-open,#og-sprint-open,#alkane-architect-open,#monofunctionele-open,[data-reaction-level],#bonus-choose-classification,#bonus-choose-naming,[data-mono-start],#alkane-architect-retry,#mono-again")){
+   e.preventDefault();e.stopImmediatePropagation();
+   setStatus("De vorige bonusronde wordt nog opgeslagen. Probeer het zo meteen opnieuw.");
+  }
+ },true);
+ $("economy-close").addEventListener("click",e=>{e.preventDefault();e.stopImmediatePropagation();closeEconomyOverlay();},true);
  overlay.addEventListener("click",e=>{if(e.target===overlay)closeEconomyOverlay()});
  $("element-sprint-open").addEventListener("click",openElementSprint);
  $("acid-sprint-open").addEventListener("click",openAcidSprint);
@@ -959,23 +966,43 @@ function applyEquippedSkin(){
  const panelIcon=$("equipped-skin-icon"),panelName=$("equipped-skin-name");if(panelIcon)panelIcon.innerHTML=skinPortrait(skin.id);if(panelName)panelName.textContent=skin.name;
 }
 function showEconomyOverlay(content){const closeButton=$("economy-close");if(closeButton)closeButton.disabled=false;$("economy-content").innerHTML=content;$("economy-overlay").classList.remove("hidden");}
+let economyClosingPromise=null;
 async function closeEconomyOverlay(){
- const active=sprintState.running||acidSprintState.running||ogSprintState.running||alkaneArchitectState.running||window.BonusGames?.isRunning?.()||window.ChemieMonoGame?.isRunning?.();
- if(active){
-  const closeButton=$("economy-close");if(closeButton)closeButton.disabled=true;
-  try{
-   if(sprintState.running){sprintState.running=false;if(sprintTimer)clearInterval(sprintTimer);if(sprintTransitionTimer)clearTimeout(sprintTransitionTimer);if(sprintState.onlineSessionId&&window.ChemieOnline?.isAuthenticated()){const r=await window.ChemieOnline.finishSprint(sprintState.onlineSessionId);if(r?.ok){labCoins=Number(r.coins)||labCoins;sprintState.specialCardAwarded=sprintState.specialCardAwarded||Boolean(r.bonus_card_awarded);}}}
-   if(acidSprintState.running){acidSprintState.running=false;if(acidSprintTimer)clearInterval(acidSprintTimer);if(acidSprintTransitionTimer)clearTimeout(acidSprintTransitionTimer);if(acidSprintState.onlineSessionId&&window.ChemieOnline?.isAuthenticated()){const r=await window.ChemieOnline.finishAcidSprint(acidSprintState.onlineSessionId);if(r?.ok){labCoins=Number(r.coins)||labCoins;acidSprintState.specialCardAwarded=Boolean(r.bonus_card_awarded);}}}
-   if(ogSprintState.running){ogSprintState.running=false;if(ogSprintTimer)clearInterval(ogSprintTimer);if(ogSprintTransitionTimer)clearTimeout(ogSprintTransitionTimer);if(ogSprintState.onlineSessionId&&window.ChemieOnline?.isAuthenticated()){const r=await window.ChemieOnline.finishOgSprint(ogSprintState.onlineSessionId);if(r?.ok){labCoins=Number(r.coins)||labCoins;ogSprintState.specialCardAwarded=Boolean(r.bonus_card_awarded);}}}
-   if(alkaneArchitectState.running){alkaneArchitectState.running=false;alkaneArchitectState.selectedNode=null;}
-   if(window.BonusGames?.isRunning?.())await window.BonusGames.finish();
-   if(window.ChemieMonoGame?.isRunning?.())await window.ChemieMonoGame.finish();
-   renderEconomyPanel();if(window.ChemieOnline)window.ChemieOnline.refreshDashboardSoon();
-   setStatus("Bonusspel afgesloten. Je reeds verdiende LabCoins zijn behouden.");
-  }catch(error){console.error("Bonusspel afsluiten mislukt:",error);setStatus("Het bonusspel is afgesloten. Controleer je online LabCoin-saldo.");}
- }
  $("economy-overlay").classList.add("hidden");
+ if(economyClosingPromise)return economyClosingPromise;
+ const active=sprintState.running||acidSprintState.running||ogSprintState.running||alkaneArchitectState.running||window.BonusGames?.isRunning?.()||window.ChemieMonoGame?.isRunning?.();
+ if(!active)return;
+ const sprintId=sprintState.running?sprintState.onlineSessionId:null;
+ const acidId=acidSprintState.running?acidSprintState.onlineSessionId:null;
+ const ogId=ogSprintState.running?ogSprintState.onlineSessionId:null;
+ sprintState.running=false;acidSprintState.running=false;ogSprintState.running=false;
+ if(sprintTimer)clearInterval(sprintTimer);
+ if(sprintTransitionTimer)clearTimeout(sprintTransitionTimer);
+ if(acidSprintTimer)clearInterval(acidSprintTimer);
+ if(acidSprintTransitionTimer)clearTimeout(acidSprintTransitionTimer);
+ if(ogSprintTimer)clearInterval(ogSprintTimer);
+ if(ogSprintTransitionTimer)clearTimeout(ogSprintTransitionTimer);
+ alkaneArchitectState.running=false;alkaneArchitectState.selectedNode=null;
+ const bonusFinish=window.BonusGames?.isRunning?.()?window.BonusGames.finish():Promise.resolve();
+ const monoFinish=window.ChemieMonoGame?.isRunning?.()?window.ChemieMonoGame.finish():Promise.resolve();
+ economyClosingPromise=(async()=>{
+  try{
+   const tasks=[bonusFinish,monoFinish];
+   if(window.ChemieOnline?.isAuthenticated()){
+    if(sprintId)tasks.push(window.ChemieOnline.finishSprint(sprintId));
+    if(acidId)tasks.push(window.ChemieOnline.finishAcidSprint(acidId));
+    if(ogId)tasks.push(window.ChemieOnline.finishOgSprint(ogId));
+   }
+   const results=await Promise.allSettled(tasks);
+   for(const r of results)if(r.status==="rejected")console.warn("Bonusspel afsluiten:",r.reason);
+   renderEconomyPanel();window.ChemieOnline?.refreshDashboardSoon?.();
+   setStatus("Bonusspel afgesloten. Reeds verdiende LabCoins blijven behouden.");
+  }catch(error){console.error("Bonusspel afsluiten mislukt:",error);}
+  finally{economyClosingPromise=null;}
+ })();
+ return economyClosingPromise;
 }
+
 function openSkinShop(){
  if(sprintState.running||acidSprintState.running||ogSprintState.running){setStatus("Maak eerst de bonusronde af voor je naar de winkel gaat.");return;}
  renderShop();
