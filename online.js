@@ -1057,6 +1057,7 @@ Optie D"></textarea></label>
       document.getElementById('online-root')?.scrollIntoView({ behavior: 'smooth', block: 'start' });
     },
     async startPuzzleAttempt(levelId, objectId, difficulty) { requireLogin(); return rpc('start_puzzle_attempt', { p_level_id: levelId, p_object_id: objectId, p_difficulty: difficulty }); },
+    async getCompletedPuzzleAnswers(attemptId) { requireLogin(); return rpc('get_completed_puzzle_answers', { p_attempt_id: attemptId }); },
     async getActivePuzzleAttempt(levelId, objectId) { requireLogin(); return rpc('get_my_active_puzzle_attempt', { p_level_id: levelId, p_object_id: objectId }); },
     async unlockLevel(levelId, code) { requireLogin(); return rpc('unlock_level_with_code', { p_target_level: levelId, p_code: code }); },
     async completeEscapeRoomWithCode(code) { requireLogin(); return rpc('complete_escape_room_with_code', { p_code: code }); },
