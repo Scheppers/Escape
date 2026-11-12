@@ -54,25 +54,7 @@
         <button type="button" id="online-login" class="online-primary">Inloggen</button>
       </form>
     </article>
-    <article class="online-auth-card teacher-setup-card">
-      <div class="online-card-symbol">🧑‍🏫</div>
-      <h3>Eerste leerkracht instellen</h3>
-      <p>Gebruik dit slechts één keer. De sitebeheerder moet vooraf <code>TEACHER_SETUP_SECRET</code> in de Netlify-omgevingsvariabelen instellen. Na het aanmaken logt de leerkracht hier in met de gebruikersnaam en het wachtwoord.</p>
-      <details>
-        <summary>Eenmalige setup openen</summary>
-        <form id="online-teacher-setup-form" class="online-form">
-          <label for="online-setup-secret">Setupcode van de beheerder</label>
-          <input id="online-setup-secret" type="password" autocomplete="off" required>
-          <label for="online-setup-class">Klasnaam</label>
-          <input id="online-setup-class" minlength="2" maxlength="80" placeholder="bv. 3ChemieA" required>
-          <label for="online-setup-username">Leerkrachtgebruikersnaam</label>
-          <input id="online-setup-username" minlength="3" maxlength="20" pattern="[a-zA-Z0-9_-]{3,20}" required>
-          <label for="online-setup-password">Leerkrachtwachtwoord (minstens 10 tekens)</label>
-          <input id="online-setup-password" type="password" minlength="10" autocomplete="new-password" required>
-          <button type="submit" class="online-secondary">Maak leerkrachtaccount</button>
-        </form>
-      </details>
-    </article>
+
   </section>
   <section id="online-dashboard" class="hidden">
     <div class="online-dashboard-top">

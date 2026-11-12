@@ -189,7 +189,7 @@
     const teacherNav = document.getElementById('online-teacher-nav');
     teacherNav?.classList.toggle('hidden', data.role !== 'teacher');
     nav?.querySelectorAll('[data-online-view="cards"],[data-online-view="skins"],[data-online-view="battles"]').forEach(b => b.classList.toggle('hidden', data.role === 'teacher'));
-    const level = Math.floor(Number(data.xp) / 100) + 1;
+    const level = levelFromXp(data.xp);
     summary.innerHTML = `<div class="online-profile"><span class="online-avatar">${avatarImage(data.equipped_skin)}</span><div class="online-profile-copy"><strong>${esc(data.username)}</strong><small>Level ${level} · ${Number(data.xp)} XP</small></div><div class="online-currency"><span class="online-currency-amount">${LABCOIN_ICON} ${Number(data.coins)}</span><small>LabCoins</small></div></div>`;
     if (window.ChemieGameBridge) {
       const econ = await getEconomy();
@@ -256,13 +256,17 @@
   }
   async function renderHome() {
     if (!view || !currentProfile) return;
-    const xp = Number(currentProfile.xp), level = Math.floor(xp / 100) + 1, rem = xp % 100;
+    const xp = Number(currentProfile.xp), level = levelFromXp(xp), rem = xp - xpThreshold(level), needed = xpThreshold(level+1) - xpThreshold(level);
     if (currentProfile.role === 'teacher') {
       view.innerHTML = `<div class="online-home-grid"><article class="online-mini-card"><span>🏫</span><strong>Leerkrachtbeheer</strong><small>Beheer klassen, vragenbanken, kaarten, reacties en gevechtsinstellingen in aparte tabs.</small></article><article class="online-mini-card"><span>🏆</span><strong>XP-ranking per klas</strong><small>Kies zelf welke klasrangschikking je wilt bekijken.</small></article><article class="online-mini-card"><span>🔐</span><strong>Geen zelfregistratie</strong><small>Leerlingen kunnen alleen inloggen met een account dat jij aanmaakt.</small></article></div><p class="online-help">De leerkracht beheert meerdere klassen. Leerlingen zien alleen de gebruikersnamen en XP van hun eigen klas; battles zijn mogelijk tussen leerlingen uit alle klassen.</p>`;
       return;
     }
-    view.innerHTML = `<div class="online-home-grid"><article class="online-mini-card"><span>⭐</span><strong>${xp} XP</strong><small>${rem}/100 XP tot level ${level + 1}</small><div class="online-xp-bar"><i style="width:${rem}%"></i></div></article><article class="online-mini-card"><span class="labcoin-mini-icon">${LABCOIN_ICON}</span><strong>${Number(currentProfile.coins)} LabCoins</strong><small>Verdien coins met de Elementensprint, de Zurenkennis-sprint, The OG of chemistry en de virtuele kluisreactie.</small></article><article class="online-mini-card"><span>🧬</span><strong>Kaartenbataljon</strong><small>Koop stofkaarten en daag een leerling uit.</small></article></div><p class="online-help">De gewone puzzels geven XP. LabCoins verdien je via de optionele Elementensprint, de Zurenkennis-sprint, The OG of chemistry en de virtuele kluisreactie. Met coins koop je kaarten en skins. De ranking is per klas; battles kunnen ook tussen verschillende klassen en levels.</p><p class="online-help login-streak-note">🔥 Je inlogreeks: <strong>${currentLoginStreak} ${currentLoginStreak===1?'dag':'dagen'}</strong>. Log drie dagen na elkaar in voor de speciale wolfraamkaart (W). In december verdien je bij je eerste login de holmiumkaart (Ho).</p>`;
+    view.innerHTML = `<div class="online-home-grid"><article class="online-mini-card"><span>⭐</span><strong>${xp} XP</strong><small>${rem}/${needed} XP tot level ${level + 1}</small><div class="online-xp-bar"><i style="width:${Math.min(100,100*rem/needed)}%"></i></div></article><article class="online-mini-card"><span class="labcoin-mini-icon">${LABCOIN_ICON}</span><strong>${Number(currentProfile.coins)} LabCoins</strong><small>Verdien coins met de Elementensprint, de Zurenkennis-sprint, The OG of chemistry en de virtuele kluisreactie.</small></article><article class="online-mini-card"><span>🧬</span><strong>Kaartenbataljon</strong><small>Koop stofkaarten en daag een leerling uit.</small></article></div><p class="online-help">De gewone puzzels geven XP. LabCoins verdien je via de optionele Elementensprint, de Zurenkennis-sprint, The OG of chemistry en de virtuele kluisreactie. Met coins koop je kaarten en skins. De ranking is per klas; battles kunnen ook tussen verschillende klassen en levels.</p><p class="online-help login-streak-note">🔥 Je inlogreeks: <strong>${currentLoginStreak} ${currentLoginStreak===1?'dag':'dagen'}</strong>. Na 3 opeenvolgende dagen: Wolfraam (W); na 7: Samarium (Sm). Na 20 verschillende inlogdagen: Promethium (Pm). In december verdien je bij je eerste login de holmiumkaart (Ho).</p>`;
   }
+  // Gedeelde XP-curve met public.xp_level_threshold() in Supabase.
+  // Level 10 = 500 XP; level 100 = exact 10.000 XP.
+  const xpThreshold = level => { const n = Math.max(1, Math.floor(level)) - 1; return Math.round((50*n*n + 5050*n)/99); };
+  const levelFromXp = xp => { const value = Math.max(0, Number(xp)||0); let lo=1,hi=2; while(xpThreshold(hi)<=value) hi*=2; while(lo+1<hi){const mid=Math.floor((lo+hi)/2);if(xpThreshold(mid)<=value)lo=mid;else hi=mid;}return lo; };
   let leaderboardSort = 'xp', leaderboardDescending = true;
   async function renderLeaderboard() {
     let rows = [], classFilter = '';
@@ -389,7 +393,7 @@
     students.forEach(student => counts.set(student.class_id, (counts.get(student.class_id) || 0) + 1));
     const classCards = teacherClassCache.map(c => `<article class="teacher-class-card"><strong>🏫 ${esc(c.name)}</strong><span>${counts.get(c.id) || 0} leerling(en)</span></article>`).join('');
     const studentRows = students.map(student => {
-      const username = esc(student.username); const xp = Number(student.xp || 0); const level = Math.floor(xp / 100) + 1;
+      const username = esc(student.username); const xp = Number(student.xp || 0); const level = levelFromXp(xp);
       const moveOptions = teacherClassCache.map(c => `<option value="${esc(c.id)}" ${c.id === student.class_id ? 'selected' : ''}>${esc(c.name)}</option>`).join('');
       return `<tr><td><strong>${username}</strong></td><td>${esc(student.class_name || 'Onbekende klas')}</td><td>${xp}</td><td>${level}</td><td><div class="teacher-student-class-action"><select data-student-class-select="${username}" aria-label="Nieuwe klas voor ${username}">${moveOptions}</select><button type="button" class="online-small-btn" data-teacher-move-student="${username}">Verplaats</button></div></td><td><button type="button" class="teacher-delete-btn" data-teacher-delete-student="${username}">Verwijderen</button></td></tr>`;
     }).join('');
@@ -936,7 +940,7 @@ Optie D"></textarea></label>
   async function afterAuth() {
     showDashboard(); await loadProfile();
     let loginRewardResult=null;
-    try { loginRewardResult=await rpc('record_login_rewards'); currentLoginStreak=Number(loginRewardResult?.streak_days)||0; }
+    try { loginRewardResult=await rpc('record_login_rewards_extended'); currentLoginStreak=Number(loginRewardResult?.streak_days)||0; }
     catch (loginRewardError) { console.warn('Inlogbeloningen konden niet worden bijgewerkt. Voer de seizoenskaartenmigratie uit.', loginRewardError); }
     try { await refreshBattleActionBadge(); } catch (badgeError) { console.warn('Battlemeldingen konden niet worden geladen.', badgeError); }
     try {
@@ -950,7 +954,7 @@ Optie D"></textarea></label>
     window.ChemieGameBridge?.onOnlineLogin?.();
     setView('home');
     checkSpecialCardRewards().catch(console.warn);
-    if(loginRewardResult?.holmium_awarded||loginRewardResult?.tungsten_awarded){const earned=[loginRewardResult.holmium_awarded?'Holmium (Ho)':'',loginRewardResult.tungsten_awarded?'Wolfraam (W)':''].filter(Boolean).join(' en ');msg(`Speciale kaart verdiend: ${earned}! Je vindt de kaart in je collectie.`,'good');}
+    if(loginRewardResult?.holmium_awarded||loginRewardResult?.tungsten_awarded||loginRewardResult?.samarium_awarded||loginRewardResult?.promethium_awarded){const earned=[loginRewardResult.holmium_awarded?'Holmium (Ho)':'',loginRewardResult.tungsten_awarded?'Wolfraam (W)':'',loginRewardResult.samarium_awarded?'Samarium (Sm)':'',loginRewardResult.promethium_awarded?'Promethium (Pm)':''].filter(Boolean).join(' en ');msg(`Speciale kaart verdiend: ${earned}! Je vindt de kaart in je collectie.`,'good');}
     if (refreshTimer) clearInterval(refreshTimer);
     refreshTimer = setInterval(async () => {
       if (!currentUser) return;
