@@ -701,3 +701,7 @@ body.guest-mode .scene-wrap{grid-area:scene}
 }
 .left-panel #question-coverage > small{color:#526d7c}
 .left-panel #question-coverage .question-coverage-item{background:#ffffffed;color:#253b48}
+
+/* Sorteerbare klasranking */
+.ranking-sort{border:0;background:transparent;color:inherit;font:inherit;font-weight:700;cursor:pointer;white-space:nowrap;padding:4px 2px;text-decoration:underline;text-underline-offset:3px}
+.ranking-sort:focus-visible{outline:2px solid currentColor;outline-offset:3px}

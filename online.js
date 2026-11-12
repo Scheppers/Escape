@@ -263,24 +263,32 @@
     }
     view.innerHTML = `<div class="online-home-grid"><article class="online-mini-card"><span>⭐</span><strong>${xp} XP</strong><small>${rem}/100 XP tot level ${level + 1}</small><div class="online-xp-bar"><i style="width:${rem}%"></i></div></article><article class="online-mini-card"><span class="labcoin-mini-icon">${LABCOIN_ICON}</span><strong>${Number(currentProfile.coins)} LabCoins</strong><small>Verdien coins met de Elementensprint, de Zurenkennis-sprint, The OG of chemistry en de virtuele kluisreactie.</small></article><article class="online-mini-card"><span>🧬</span><strong>Kaartenbataljon</strong><small>Koop stofkaarten en daag een leerling uit.</small></article></div><p class="online-help">De gewone puzzels geven XP. LabCoins verdien je via de optionele Elementensprint, de Zurenkennis-sprint, The OG of chemistry en de virtuele kluisreactie. Met coins koop je kaarten en skins. De ranking is per klas; battles kunnen ook tussen verschillende klassen en levels.</p><p class="online-help login-streak-note">🔥 Je inlogreeks: <strong>${currentLoginStreak} ${currentLoginStreak===1?'dag':'dagen'}</strong>. Log drie dagen na elkaar in voor de speciale wolfraamkaart (W). In december verdien je bij je eerste login de holmiumkaart (Ho).</p>`;
   }
+  let leaderboardSort = 'xp', leaderboardDescending = true;
   async function renderLeaderboard() {
     let rows = [], classFilter = '';
     if (currentProfile?.role === 'teacher') {
       const data = await teacherFunction('teacher-list-students', { method: 'GET' });
       teacherClassCache = data.classes || [];
       if (!teacherClassCache.length) {
-        view.innerHTML = '<h3>🏆 XP-ranking</h3><p class="online-help">Maak eerst minstens één klas aan in Klasbeheer.</p>';
+        view.innerHTML = '<h3>🏆 Stand per klas</h3><p class="online-help">Maak eerst minstens één klas aan in Klasbeheer.</p>';
         return;
       }
       if (!teacherClassCache.some(c => c.id === teacherLeaderboardClassId)) teacherLeaderboardClassId = teacherClassCache[0].id;
       const options = teacherClassCache.map(c => `<option value="${esc(c.id)}" ${c.id === teacherLeaderboardClassId ? 'selected' : ''}>${esc(c.name)}</option>`).join('');
       classFilter = `<label class="teacher-ranking-filter">Ranking van klas<select id="teacher-ranking-class">${options}</select></label>`;
-      rows = await rpc('get_leaderboard', { p_limit: 50, p_class_id: teacherLeaderboardClassId });
+      rows = await rpc('get_class_leaderboard_stats', { p_limit: 50, p_class_id: teacherLeaderboardClassId });
     } else {
-      rows = await rpc('get_leaderboard', { p_limit: 20, p_class_id: null });
+      rows = await rpc('get_class_leaderboard_stats', { p_limit: 50, p_class_id: null });
     }
-    const table = `<div class="online-table-wrap"><table class="online-table"><thead><tr><th>#</th><th>Speler</th><th>Level</th><th>XP</th></tr></thead><tbody>${(rows || []).map(r => `<tr class="${r.username === currentProfile?.username ? 'is-me' : ''}"><td>${Number(r.position)}</td><td>${esc(r.username)}${r.username === currentProfile?.username ? ' (jij)' : ''}</td><td>${Number(r.level)}</td><td>${Number(r.xp)}</td></tr>`).join('') || '<tr><td colspan="4">Nog geen rankinggegevens voor deze klas.</td></tr>'}</tbody></table></div>`;
-    view.innerHTML = `<div class="online-view-heading"><div><h3>🏆 XP-ranking</h3><p>${currentProfile?.role === 'teacher' ? 'Kies een klas om de rangschikking van die leerlingen te bekijken.' : 'Alleen leerlingen uit jouw klas zijn zichtbaar.'}</p></div><button class="online-small-btn" data-online-refresh>Vernieuwen</button></div>${classFilter}${table}`;
+    const score = r => Number(r.wins || 0) - Number(r.losses || 0);
+    const keyValue = r => leaderboardSort === 'battle' ? score(r) : Number(r[leaderboardSort] || 0);
+    rows = [...(rows || [])].sort((a,b) => {
+      const diff = keyValue(a) - keyValue(b);
+      return (leaderboardDescending ? -diff : diff) || Number(b.xp || 0) - Number(a.xp || 0) || String(a.username).localeCompare(String(b.username));
+    });
+    const heading = (key, label) => `<button type="button" class="ranking-sort" data-ranking-sort="${key}" aria-label="Sorteer op ${label}">${label}${leaderboardSort === key ? (leaderboardDescending ? ' ▼' : ' ▲') : ' ↕'}</button>`;
+    const table = `<div class="online-table-wrap"><table class="online-table"><thead><tr><th>#</th><th>Speler</th><th>${heading('xp','XP')}</th><th>${heading('level','Level')}</th><th>${heading('card_count','Stofkaarten')}</th><th>${heading('battle','Battle W-G-V')}</th></tr></thead><tbody>${rows.map((r,i) => `<tr class="${r.username === currentProfile?.username ? 'is-me' : ''}"><td>${i+1}</td><td>${esc(r.username)}${r.username === currentProfile?.username ? ' (jij)' : ''}</td><td>${Number(r.xp)}</td><td>${Number(r.level)}</td><td>${Number(r.card_count || 0)}</td><td title="Rangschikkingswaarde: ${score(r)}">${Number(r.wins||0)}-${Number(r.draws||0)}-${Number(r.losses||0)}</td></tr>`).join('') || '<tr><td colspan="6">Nog geen rankinggegevens voor deze klas.</td></tr>'}</tbody></table></div>`;
+    view.innerHTML = `<div class="online-view-heading"><div><h3>🏆 Stand per klas</h3><p>${currentProfile?.role === 'teacher' ? 'Kies een klas om de rangschikking van die leerlingen te bekijken.' : 'Alleen leerlingen uit jouw klas zijn zichtbaar.'} Klik op een kolomtitel om te sorteren. Battlescore = winst − verlies; gelijke spelen tellen niet mee.</p></div><button class="online-small-btn" data-online-refresh>Vernieuwen</button></div>${classFilter}${table}`;
   }
   const avatarImage = id => `<img src="assets/avatars/${['starter','brass','crystal','neon','cosmic','master'].includes(id)?id:'starter'}.webp" alt="" class="online-chemist-img" loading="lazy">`;
   async function renderSkins() {
@@ -986,6 +994,7 @@ Optie D"></textarea></label>
     }
     const qDelete = e.target.closest('[data-q-delete]'); if (qDelete) { try { await handleTeacherQuestionArchive(qDelete.dataset.qDelete); } catch(err) { console.error(err); msg(err.message || 'Vraag archiveren is mislukt.', 'bad'); } return; }
     if (e.target.closest('#teacher-question-new')) { resetTeacherQuestionForm(); return; }
+    const sortButton = e.target.closest('[data-ranking-sort]'); if (sortButton) { const key=sortButton.dataset.rankingSort; if (['xp','level','card_count','battle'].includes(key)) { if (leaderboardSort===key) leaderboardDescending=!leaderboardDescending; else { leaderboardSort=key; leaderboardDescending=true; } await renderLeaderboard(); } return; }
     if (e.target.closest('[data-online-refresh]')) { await action(async () => { await refreshDashboard(); }); return; }
     if (e.target.closest('[data-online-logout]')) { await action(signOut); return; }
     const skin = e.target.closest('[data-skin-action]'); if (skin) { await action(async () => { if (skin.dataset.skinAction === 'buy') await rpc('buy_skin', { p_skin_id: skin.dataset.id }); else await rpc('equip_skin', { p_skin_id: skin.dataset.id }); }); return; }
