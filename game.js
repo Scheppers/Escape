@@ -210,8 +210,8 @@ function setStatus(s){$("status-text").textContent=s}
 function log(s){const el=$("logbook");el.textContent=s+"\n"+el.textContent}
 function renderLevel(){
  const l=LEVELS[currentLevel];$("lab-art").src=l.art;$("lab-art").alt=l.name;
- const exitHotspot=document.querySelector('.hotspot[data-object="door"]');if(exitHotspot){const showExit=currentLevel==="future";exitHotspot.classList.toggle("hidden",!showExit);exitHotspot.setAttribute("aria-hidden",showExit?"false":"true");exitHotspot.tabIndex=showExit?0:-1;}
- document.querySelectorAll(".level-tab").forEach(b=>{b.classList.toggle("active",b.dataset.level===currentLevel);b.disabled=false;b.title=unlocked[b.dataset.level]?"Open dit tijdperk":"Voltooi eerst de puzzels van het vorige tijdperk en voer de code in";});
+ const exitHotspot=document.querySelector('.hotspot[data-object="door"]');if(exitHotspot){const showExit=currentLevel==="future" && Boolean(levelSolved.future);exitHotspot.classList.toggle("hidden",!showExit);exitHotspot.setAttribute("aria-hidden",showExit?"false":"true");exitHotspot.tabIndex=showExit?0:-1;}
+ document.querySelectorAll(".level-tab").forEach(b=>{b.classList.toggle("active",b.dataset.level===currentLevel);b.disabled=false;b.title=unlocked[b.dataset.level]?"Open dit tijdperk":"Voer de juiste tijdpoortcode in";});
  ["label1","label2","label3","label4"].forEach((id,i)=>{if($(id))$(id).textContent=l.labels[i]||"Puzzel";});
  document.querySelectorAll('.hotspot[data-object^="object"]').forEach(btn=>{
   const obj=btn.dataset.object,idx=Number(obj.replace("object",""))-1,digit=(puzzleSolved[currentLevel]?.[obj])?LEVELS[currentLevel].code[idx]:undefined,marker=btn.querySelector('span');
@@ -665,11 +665,9 @@ document.querySelectorAll(".level-tab").forEach(b=>b.addEventListener("click",()
  // Een eenmaal ontgrendeld labo blijft toegankelijk, ook als de leerling
  // later naar een eerder tijdperk terugkeert. De database bewaart deze status.
  if(unlocked[target]) { currentLevel=target; renderLevel(); setStatus("Je betreedt: "+LEVELS[currentLevel].name+"."); log(LEVELS[currentLevel].intro); scheduleShadow(); return; }
- const previous=LEVEL_ORDER[LEVEL_ORDER.indexOf(target)-1];
- if(!levelSolved[previous]){setStatus("Deze tijdpoort blijft gesloten. Los eerst alle vier puzzels in het vorige labo minstens één keer op.");return;}
  askCode(target);
 }));
-document.querySelectorAll(".hotspot").forEach(b=>b.addEventListener("click",()=>{if(b.dataset.object==="door"){if(teacherMode){setStatus("Leerkrachtweergave: de exclusieve goudkaart wordt alleen aan leerlingaccounts uitgereikt.");return;}if(gameCompleted){setStatus("Je hebt de exclusieve goudkaart Au al ontvangen. Je kunt nu vrij door alle labo’s bewegen.");return;}if(levelSolved.future)askCode("exit",true);else setStatus("De uitgang blijft gesloten. Los eerst alle vier puzzels in het futuristische labo minstens één keer op.");return;}openObject(b.dataset.object)}));
+document.querySelectorAll(".hotspot").forEach(b=>b.addEventListener("click",()=>{if(b.dataset.object==="door"){if(teacherMode){setStatus("Leerkrachtweergave: de exclusieve goudkaart wordt alleen aan leerlingaccounts uitgereikt.");return;}if(gameCompleted){setStatus("Je hebt de exclusieve goudkaart Au al ontvangen. Je kunt nu vrij door alle labo’s bewegen.");return;}if(levelSolved.future)askCode("exit",true);else setStatus("De eindpoort verschijnt pas na alle vier voltooide puzzels.");return;}openObject(b.dataset.object)}));
 $("answer-form").addEventListener("submit",submitAnswer);$("close-modal").addEventListener("click",closeModal);$("answer-area").addEventListener("click",e=>{if(e.target.closest("#puzzle-new-session")){const level=currentLevel,obj=activeObject;closeModal();if(obj)showDifficultyChoice(obj);return;}const choice=e.target.closest("[data-puzzle-difficulty]");if(choice){e.preventDefault();startPuzzleRun(choice.dataset.puzzleDifficulty);}});
 $("blow-safe-button")?.addEventListener("click",blowSafe);
 if($("play-again")){$("play-again").classList.add("hidden");$("play-again").disabled=true;}

@@ -705,3 +705,10 @@ body.guest-mode .scene-wrap{grid-area:scene}
 /* Sorteerbare klasranking */
 .ranking-sort{border:0;background:transparent;color:inherit;font:inherit;font-weight:700;cursor:pointer;white-space:nowrap;padding:4px 2px;text-decoration:underline;text-underline-offset:3px}
 .ranking-sort:focus-visible{outline:2px solid currentColor;outline-offset:3px}
+
+/* Eindpoort verschijnt pas na de vier voltooide futuristische puzzels. */
+.scene .door-hotspot{left:50%;top:50%;right:auto;bottom:auto;transform:translate(-50%,-50%);z-index:5;width:clamp(130px,39%,340px);max-width:48%;filter:drop-shadow(0 0 18px #7c5cf4)}
+.scene .door-hotspot img{display:block;width:100%;height:auto;animation:portal-breathe 3.4s ease-in-out infinite}
+.scene .door-hotspot small{white-space:normal;text-align:center;font-size:.75rem;background:#142038ee;border:1px solid #b8a5ff}
+@keyframes portal-breathe{50%{filter:drop-shadow(0 0 18px #6ce6ff);transform:scale(1.045)}}
+@media(prefers-reduced-motion:reduce){.scene .door-hotspot img{animation:none}}

@@ -582,7 +582,7 @@ Optie D"></textarea></label>
   }
 
 
-  async function getMyBattles() { const data = await rpc('get_my_battles'); return Array.isArray(data) ? data : []; }
+  async function getMyBattles() { await rpc('expire_my_overdue_battles'); const data = await rpc('get_my_battles'); return Array.isArray(data) ? data : []; }
   function updateBattleActionBadge(battles = []) {
     const button = nav?.querySelector('[data-online-view="battles"]');
     const badge = document.getElementById('battle-action-count');
@@ -675,11 +675,12 @@ Optie D"></textarea></label>
       const isChallenger = b.challenger_id === currentUser.id;
       const opponentName = isChallenger ? b.opponent_username : b.challenger_username;
       const isMyTurn = b.current_turn === currentUser.id;
+      const deadlineText = b.status === 'active' && b.updated_at ? `<p class="online-help">⏳ Tijd om te zetten: uiterlijk ${new Date(new Date(b.updated_at).getTime()+86400000).toLocaleString('nl-BE')}. Na 24 uur verliest de speler aan zet automatisch.</p>` : ''; 
       const needsAction = (b.status === 'pending' && b.opponent_id === currentUser.id) || (b.status === 'active' && isMyTurn);
       let sub = '';
       if (b.status === 'pending' && b.opponent_id === currentUser.id) {
         sub = `<p>${esc(b.challenger_username)} daagt je uit. Kies vijf kaarten voor jouw deck voordat je aanvaardt.</p><form class="battle-accept-form" data-battle-accept-form="${b.battle_id}"><div class="battle-deck-builder">${deckSelectMarkup(cards,ownedCardCache,`accept-${b.battle_id}`)}<div class="battle-deck-previews" aria-live="polite"></div></div><div class="online-actions"><button type="button" data-battle-response="accept" data-id="${b.battle_id}">Aanvaarden met dit deck</button><button type="button" class="danger" data-battle-response="decline" data-id="${b.battle_id}">Weigeren</button></div></form>`;
-      } else if (b.status === 'pending') sub = '<p>Uitdaging verstuurd. Je deck is vastgelegd; wachten op de keuze van je tegenstander.</p>';
+      } else if (b.status === 'pending') sub = `<p>Uitdaging verstuurd. Je deck is vastgelegd; wachten op de keuze van je tegenstander.</p><button type="button" class="danger" data-battle-cancel="${b.battle_id}">Uitdaging intrekken</button>`;
       else if (b.status === 'declined') sub = '<p>Uitdaging geweigerd.</p>';
       else if (b.status === 'completed') { const rewardCard=cards.find(c=>c.id===b.reward_card_id); sub = `<p>${b.winner_id ? (b.winner_id === currentUser.id ? '🏆 Jij hebt gewonnen!' : 'De tegenstander heeft gewonnen.') : '🤝 Gelijkspel'}</p>${rewardCard && b.winner_id===currentUser.id ? `<p class="battle-reward">🎁 Je ontvangt ${esc(rewardCard.formula)} · ${esc(rewardCard.name)} — een exclusieve kaart die niet in de winkel te koop is.</p>` : ''}<div class="online-hp"><span>Jij: ${isChallenger ? b.challenger_hp : b.opponent_hp}/${isChallenger ? (b.challenger_start_hp ?? b.starting_hp) : (b.opponent_start_hp ?? b.starting_hp)} HP</span><span>${esc(opponentName)}: ${isChallenger ? b.opponent_hp : b.challenger_hp}/${isChallenger ? (b.opponent_start_hp ?? b.starting_hp) : (b.challenger_start_hp ?? b.starting_hp)} HP</span></div>`; }
       else if (b.status === 'active') {
@@ -701,7 +702,7 @@ Optie D"></textarea></label>
         }).join('');
         const hand = isMyTurn ? `<div class="online-hand"><strong>${b.current_role==='attacker'?'🗡️ Jij valt aan':'🛡️ Jij verdedigt'} — kies één kaart:</strong><div class="online-hand-grid">${(ownDeck||[]).filter(d=>!usedSlots.has(Number(d.slot_number))).map(d=>{const c=cards.find(x=>x.id===d.card_id);return `<button class="online-play-card" data-play-slot="${Number(d.slot_number)}" data-battle-id="${b.battle_id}">${battleFullCard(c)}<span>Speel ${esc(c?.name||'kaart')} · slot ${Number(d.slot_number)}</span></button>`;}).join('') || '<p>Je hebt alle vier ingezette kaarten al gespeeld. Eén kaart blijft ongebruikt.</p>'}</div></div>` : `<p class="battle-waiting">${b.current_role==='attacker'?'Tegenstander kiest een aanvalskaart.':'Tegenstander kiest een verdedigingskaart.'}</p>`;
         const role = isMyTurn ? (b.current_role==='attacker'?'Jij bent de aanvaller':'Jij bent de verdediger') : (b.current_role==='attacker'?'Tegenstander is de aanvaller':'Tegenstander is de verdediger');
-        sub = `<div class="battle-turn-banner ${isMyTurn?'your-turn':'waiting-turn'}"><strong>${isMyTurn?'JOUW BEURT':'BEURT TEGENSTANDER'}</strong><span>${role}</span></div><div class="online-hp"><span>🧪 Jij: ${isChallenger ? b.challenger_hp : b.opponent_hp}/${isChallenger ? (b.challenger_start_hp ?? b.starting_hp) : (b.opponent_start_hp ?? b.starting_hp)} HP</span><span>⚗ ${esc(opponentName)}: ${isChallenger ? b.opponent_hp : b.challenger_hp}/${isChallenger ? (b.opponent_start_hp ?? b.starting_hp) : (b.challenger_start_hp ?? b.starting_hp)} HP</span></div><p class="battle-round-indicator">Ronde ${Number(b.round_count)+1}/4 · ${b.current_role==='attacker'?'aanval':'verdediging'}</p><ol class="online-moves">${moveList || '<li>De battle is gestart. De uitdager valt aan.</li>'}</ol>${hand}`;
+        sub = `<div class="battle-turn-banner ${isMyTurn?'your-turn':'waiting-turn'}"><strong>${isMyTurn?'JOUW BEURT':'BEURT TEGENSTANDER'}</strong><span>${role}</span></div><div class="online-hp"><span>🧪 Jij: ${isChallenger ? b.challenger_hp : b.opponent_hp}/${isChallenger ? (b.challenger_start_hp ?? b.starting_hp) : (b.opponent_start_hp ?? b.starting_hp)} HP</span><span>⚗ ${esc(opponentName)}: ${isChallenger ? b.opponent_hp : b.challenger_hp}/${isChallenger ? (b.opponent_start_hp ?? b.starting_hp) : (b.challenger_start_hp ?? b.starting_hp)} HP</span></div><p class="battle-round-indicator">Ronde ${Number(b.round_count)+1}/4 · ${b.current_role==='attacker'?'aanval':'verdediging'}</p><ol class="online-moves">${moveList || '<li>De battle is gestart. De uitdager valt aan.</li>'}</ol>${deadlineText}${hand}`;
       }
       return `<article class="online-battle-card ${needsAction ? 'battle-action-needed' : ''}"><div class="online-view-heading"><div><h4>⚔️ Jij vs. ${esc(opponentName)}</h4><small>${esc(b.status)} · ${new Date(b.updated_at).toLocaleString('nl-BE')}</small></div><div class="battle-status-tags"><span class="online-pill">${b.status === 'active' ? `${isChallenger ? b.challenger_hp : b.opponent_hp} HP` : esc(b.status)}</span>${needsAction ? '<span class="battle-needs-action">ACTIE VEREIST</span>' : ''}</div></div>${sub}</article>`;
     }));
@@ -1003,6 +1004,7 @@ Optie D"></textarea></label>
     if (e.target.closest('[data-online-logout]')) { await action(signOut); return; }
     const skin = e.target.closest('[data-skin-action]'); if (skin) { await action(async () => { if (skin.dataset.skinAction === 'buy') await rpc('buy_skin', { p_skin_id: skin.dataset.id }); else await rpc('equip_skin', { p_skin_id: skin.dataset.id }); }); return; }
     const card = e.target.closest('[data-card-buy]'); if (card) { await action(async () => { await rpc('buy_card', { p_card_id: card.dataset.cardBuy }); }); return; }
+    const cancel = e.target.closest('[data-battle-cancel]'); if (cancel) { await action(async () => { await rpc('cancel_pending_battle', {p_battle_id:cancel.dataset.battleCancel}); }); return; }
     const response = e.target.closest('[data-battle-response]'); if (response) { await action(async () => { const accept=response.dataset.battleResponse==='accept'; const form=response.closest('.battle-accept-form'); const deck=accept?selectedDeck(form):null; await rpc('respond_to_battle', { p_battle_id: response.dataset.id, p_accept: accept, p_deck_card_ids: deck }); }); return; }
     const play = e.target.closest('[data-play-slot]'); if (play) { await action(async () => { await rpc('play_battle_card', { p_battle_id: play.dataset.battleId, p_deck_slot: Number(play.dataset.playSlot) }); }); return; }
   }
