@@ -166,10 +166,10 @@
     return result;
   }
   const LEVELS_FOR_QUESTIONS = [
-    { id: 'medieval', name: 'Leerjaar 1 · Middeleeuws labo', objects: { object1:'Scheidingstechnieken', object2:'Aspecten en wetten', object3:'Atoommodellen', object4:'De chemische binding' } },
+    { id: 'medieval', name: 'Leerjaar 1 · Middeleeuws labo', objects: { object1:'Scheidings-technieken', object2:'Aspecten en wetten', object3:'Atoommodellen', object4:'De chemische binding' } },
     { id: 'lavoisier', name: 'Leerjaar 2 · Lavoisierlabo', objects: { object1:'Reacties in waterig midden', object2:'Kwantitatieve aspecten', object3:'Koolstofchemie', object4:'Redoxreacties' } },
-    { id: 'modern', name: 'Leerjaar 3 · Modern labo', objects: { object1:'Chemisch evenwicht', object2:'pH van een oplossing', object3:'Redoxreacties', object4:'Elektronenconfiguratie' } },
-    { id: 'future', name: 'Leerjaar 4 · Futuristisch labo', objects: { object1:'Koolwaterstoffen', object2:'Monofunctionele verbindingsklassen', object3:'Polyfunctionele verbindingsklassen', object4:'Kunststoffen' } }
+    { id: 'modern', name: 'Leerjaar 3 · Modern labo', objects: { object1:'Chemisch evenwicht', object2:'pH van een oplossing', object3:'Redoxreacties', object4:'Elektronen-configuratie' } },
+    { id: 'future', name: 'Leerjaar 4 · Futuristisch labo', objects: { object1:'Koolwaterstoffen', object2:'Monofunctionele koolstof-verbindingen', object3:'Polyfunctionele koolstof-verbindingen', object4:'Kunststoffen' } }
   ];
 
 
@@ -1058,6 +1058,7 @@ Optie D"></textarea></label>
       } else return;
       document.getElementById('online-root')?.scrollIntoView({ behavior: 'smooth', block: 'start' });
     },
+    async getPuzzleDifficultyProgress(levelId, objectId) { requireLogin(); return rpc('get_my_puzzle_difficulty_progress', { p_level_id: levelId, p_object_id: objectId }); },
     async startPuzzleAttempt(levelId, objectId, difficulty) { requireLogin(); return rpc('start_puzzle_attempt', { p_level_id: levelId, p_object_id: objectId, p_difficulty: difficulty }); },
     async getCompletedPuzzleAnswers(attemptId) { requireLogin(); return rpc('get_completed_puzzle_answers', { p_attempt_id: attemptId }); },
     async getActivePuzzleAttempt(levelId, objectId) { requireLogin(); return rpc('get_my_active_puzzle_attempt', { p_level_id: levelId, p_object_id: objectId }); },

@@ -1,8 +1,8 @@
 const LEVELS={
- medieval:{name:"Middeleeuws alchemistenlabo",art:"assets/medieval_lab.webp",labels:["Scheidingstechnieken","Aspecten en wetten","Atoommodellen","De chemische binding"],code:[3,7,2,4],intro:"Je bent aangekomen in een middeleeuws alchemistenlabo."},
+ medieval:{name:"Middeleeuws alchemistenlabo",art:"assets/medieval_lab.webp",labels:["Scheidings-technieken","Aspecten en wetten","Atoommodellen","De chemische binding"],code:[3,7,2,4],intro:"Je bent aangekomen in een middeleeuws alchemistenlabo."},
  lavoisier:{name:"Labo tijdens de Franse Revolutie",art:"assets/french_lab.webp",labels:["Reacties in waterig midden","Kwantitatieve aspecten","Koolstofchemie","Redoxreacties"],code:[8,1,5,6],intro:"De tijdreis brengt je naar het labo van Lavoisier."},
- modern:{name:"Modern chemielabo",art:"assets/modern_lab.webp",labels:["Chemisch evenwicht","pH van een oplossing","Redoxreacties","Elektronenconfiguratie"],code:[6,4,9,2],intro:"Je bereikt het moderne chemielabo."},
- future:{name:"Futuristisch chemielabo",art:"assets/futuristic_lab.webp",labels:["Koolwaterstoffen","Monofunctionele verbindingsklassen","Polyfunctionele verbindingsklassen","Kunststoffen"],code:[5,2,8,1],intro:"Je stapt de toekomst binnen. Het futuristische labo bewaakt de laatste tijdcode."}
+ modern:{name:"Modern chemielabo",art:"assets/modern_lab.webp",labels:["Chemisch evenwicht","pH van een oplossing","Redoxreacties","Elektronen-configuratie"],code:[6,4,9,2],intro:"Je bereikt het moderne chemielabo."},
+ future:{name:"Futuristisch chemielabo",art:"assets/futuristic_lab.webp",labels:["Koolwaterstoffen","Monofunctionele koolstof-verbindingen","Polyfunctionele koolstof-verbindingen","Kunststoffen"],code:[5,2,8,1],intro:"Je stapt de toekomst binnen. Het futuristische labo bewaakt de laatste tijdcode."}
 };
 const LEVEL_ORDER=Object.keys(LEVELS);
 const LEVEL_TOTAL=LEVEL_ORDER.length;
@@ -17,7 +17,7 @@ const sortedLevelCode=levelId=>[...(LEVELS[levelId]?.code||[])].map(Number).sort
 const LABCOIN_ICON='<svg class="labcoin-coin-icon" viewBox="0 0 32 32" aria-hidden="true" focusable="false"><circle cx="16" cy="16" r="13.4" fill="#f5c85c" stroke="#9a681c" stroke-width="1.5"/><circle cx="16" cy="16" r="10.2" fill="none" stroke="#fff0a3" stroke-width="1.4"/><path d="M16 9.6l1.9 4.1 4.5.5-3.3 3 1 4.4-4.1-2.2-4.1 2.2 1-4.4-3.3-3 4.5-.5z" fill="#936015"/></svg>';
 
 const MATERIAL_INFO={
- kno3:{name:"kaliumnitraat",formula:"KNO3",emoji:"🧂"},
+ kno3:{name:"kaliumnitraat",formula:"KNO<sub>3</sub>",emoji:"🧂"},
  carbon:{name:"koolstof",formula:"C",emoji:"⚫"},
  sulfur:{name:"zwavel",formula:"S",emoji:"🟡"}
 };
@@ -311,6 +311,21 @@ function showDifficultyChoice(obj){
  $("modal-title").textContent="Kies je uitdaging";$("question-text").textContent=puzzleSolved[currentLevel]?.[obj]?"Deze puzzel is al vrijgespeeld. Kies één moeilijkheid om een nieuwe oefenreeks te starten.":"Kies één keer de moeilijkheidsgraad. Daarna volgen je vragen automatisch.";
  $("answer-area").innerHTML=Object.entries(DIFFICULTIES).map(([key,label])=>`<button type="button" class="difficulty-choice difficulty-${key}" data-puzzle-difficulty="${key}"><strong>${label}</strong><small>${key==="basis"?"Basiskennis en eenvoudige toepassingen":key==="gemiddeld"?"Toepassen en verbanden leggen":"Complexere toepassingen en redeneringen"}</small></button>`).join("");
  $("check-button").classList.add("hidden");$("feedback").className="feedback hidden";$("modal-backdrop").classList.remove("hidden");
+ refreshDifficultyProgress(currentLevel,obj);
+}
+async function refreshDifficultyProgress(level,obj){
+ const buttons=Array.from(document.querySelectorAll("#answer-area [data-puzzle-difficulty]"));
+ if(!buttons.length)return;
+ if(!window.ChemieOnline?.isAuthenticated?.()){
+  for(const button of buttons){const d=button.dataset.puzzleDifficulty;const total=questions.filter(q=>q.level===level&&q.object===obj&&(q.difficulty||"basis")===d).length;const small=button.querySelector("small");if(small)small.textContent=`0/${total} verschillende vragen juist · ${small.textContent}`;}
+  return;
+ }
+ for(const button of buttons){const small=button.querySelector("small");if(small)small.textContent="Vragenvoortgang laden…";}
+ try{
+  const rows=await window.ChemieOnline.getPuzzleDifficultyProgress(level,obj);
+  if(activeKind!=="difficulty-choice"||currentLevel!==level||activeObject!==obj)return;
+  for(const button of buttons){const row=(Array.isArray(rows)?rows:[]).find(r=>r.difficulty===button.dataset.puzzleDifficulty);const small=button.querySelector("small");if(small)small.textContent=`${Number(row?.answered_count)||0}/${Number(row?.total_count)||0} verschillende vragen juist`;}
+ }catch(error){console.warn("Voortgang per moeilijkheid kon niet worden geladen",error);for(const button of buttons){const small=button.querySelector("small");if(small)small.textContent="Voortgang niet beschikbaar";}}
 }
 async function startPuzzleRun(difficulty){
  if(!Object.hasOwn(DIFFICULTIES,difficulty)||!/^object[1-4]$/.test(activeObject||''))return;
@@ -910,7 +925,7 @@ function initEconomyUI(){
   <button type="button" class="secondary full economy-action" id="skin-shop-open">Open de skinwinkel</button>`;
  const arenaPanel=document.createElement("section");
  arenaPanel.id="cards-arena-panel";arenaPanel.className="cards-arena-panel";
- arenaPanel.innerHTML=`<h3 class="steam-heading">Kaartenarena</h3><div class="cards-arena-grid"><button type="button" class="cards-arena-button" data-arena-target="collection"><img class="steam-icon steam-card-icon" src="assets/ui-steampunk/cards.webp" alt="" loading="lazy"><span>Mijn collectie</span></button><button type="button" class="cards-arena-button" data-arena-target="shop"><span>Kaartenwinkel</span></button></div><button type="button" class="cards-arena-button cards-arena-battle" data-arena-target="battles"><span>Stoffenstrijd</span></button><p class="cards-arena-note" id="cards-arena-note" role="status"></p>`;
+ arenaPanel.innerHTML=`<h3 class="steam-heading">Kaartenarena</h3><div class="cards-arena-grid"><button type="button" class="cards-arena-button" data-arena-target="collection"><img class="steam-icon steam-card-icon" src="assets/ui-steampunk/cards.webp" alt="" loading="lazy"><span>Mijn collectie</span></button><button type="button" class="cards-arena-button" data-arena-target="shop"><span>Winkel</span></button></div><button type="button" class="cards-arena-button cards-arena-battle" data-arena-target="battles"><span>Stoffenstrijd</span></button><p class="cards-arena-note" id="cards-arena-note" role="status"></p>`;
  bonusSidebar.append(panel,skinPanel,arenaPanel);
  arenaPanel.addEventListener("click",event=>{const button=event.target.closest("[data-arena-target]");if(!button)return;const online=window.ChemieOnline;if(!online?.isAuthenticated?.()){const note=$("cards-arena-note");if(note)note.textContent="Log eerst in bij de online arena om je kaarten te bekijken.";document.getElementById("online-root")?.scrollIntoView({behavior:"smooth",block:"start"});return;}online.openArenaSection?.(button.dataset.arenaTarget);});
  const overlay=document.createElement("div");

@@ -712,3 +712,16 @@ body.guest-mode .scene-wrap{grid-area:scene}
 .scene .door-hotspot small{white-space:normal;text-align:center;font-size:.75rem;background:#142038ee;border:1px solid #b8a5ff}
 @keyframes portal-breathe{50%{filter:drop-shadow(0 0 18px #6ce6ff);transform:scale(1.045)}}
 @media(prefers-reduced-motion:reduce){.scene .door-hotspot img{animation:none}}
+
+/* Visuele verfijningen: compacte eindportal, muntjeswinkel en chemische notatie. */
+.scene .door-hotspot{width:clamp(78px,23.4%,204px);max-width:28.8%}
+#cards-arena-panel .cards-arena-grid [data-arena-target="shop"]{
+ background-image:linear-gradient(90deg,rgba(18,35,45,.94) 0%,rgba(18,35,45,.77) 45%,rgba(18,35,45,.12) 100%),url("assets/ui-steampunk/coins-shop.webp")!important;
+ background-size:cover,cover!important;
+ background-position:center,center!important;
+ display:flex!important;align-items:center!important;justify-content:flex-start!important;
+}
+#cards-arena-panel .cards-arena-grid [data-arena-target="shop"] span{align-self:center;margin:0!important}
+.material-item sub{font-size:.7em;line-height:0;vertical-align:sub}
+.question-coverage-item span{overflow-wrap:anywhere;hyphens:auto}
+.difficulty-choice small{display:block;line-height:1.4}
