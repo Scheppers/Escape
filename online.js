@@ -168,8 +168,8 @@
   const LEVELS_FOR_QUESTIONS = [
     { id: 'medieval', name: 'Leerjaar 1 · Middeleeuws labo', objects: { object1:'Scheidings-technieken', object2:'Aspecten en wetten', object3:'Atoommodellen', object4:'De chemische binding' } },
     { id: 'lavoisier', name: 'Leerjaar 2 · Lavoisierlabo', objects: { object1:'Reacties in waterig midden', object2:'Kwantitatieve aspecten', object3:'Koolstofchemie', object4:'Redoxreacties' } },
-    { id: 'modern', name: 'Leerjaar 3 · Modern labo', objects: { object1:'Chemisch evenwicht', object2:'pH van een oplossing', object3:'Redoxreacties', object4:'Elektronen-configuratie' } },
-    { id: 'future', name: 'Leerjaar 4 · Futuristisch labo', objects: { object1:'Koolwaterstoffen', object2:'Monofunctionele koolstof-verbindingen', object3:'Polyfunctionele koolstof-verbindingen', object4:'Kunststoffen' } }
+    { id: 'modern', name: 'Leerjaar 3 · Modern labo', objects: { object1:'Chemisch evenwicht', object2:'pH van een oplossing', object3:'Redoxreacties', object4:'Elektronenconfiguratie' } },
+    { id: 'future', name: 'Leerjaar 4 · Futuristisch labo', objects: { object1:'Koolwaterstoffen', object2:'Monofunctionele koolstofverbindingen', object3:'Polyfunctionele koolstofverbindingen', object4:'Kunststoffen' } }
   ];
 
 

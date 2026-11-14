@@ -725,3 +725,14 @@ body.guest-mode .scene-wrap{grid-area:scene}
 .material-item sub{font-size:.7em;line-height:0;vertical-align:sub}
 .question-coverage-item span{overflow-wrap:anywhere;hyphens:auto}
 .difficulty-choice small{display:block;line-height:1.4}
+
+/* Winkel: links uitgelijnde tekst, exact verticaal gecentreerd. */
+#cards-arena-panel .cards-arena-grid button[data-arena-target="shop"]{
+ position:relative!important; text-align:left!important;
+}
+#cards-arena-panel .cards-arena-grid button[data-arena-target="shop"] > span{
+ position:absolute!important; top:50%!important; left:12px!important;
+ transform:translateY(-50%)!important; margin:0!important;
+ align-self:auto!important; text-align:left!important; width:auto!important;
+ max-width:55%!important;
+}

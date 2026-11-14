@@ -1,8 +1,8 @@
 const LEVELS={
  medieval:{name:"Middeleeuws alchemistenlabo",art:"assets/medieval_lab.webp",labels:["Scheidings-technieken","Aspecten en wetten","Atoommodellen","De chemische binding"],code:[3,7,2,4],intro:"Je bent aangekomen in een middeleeuws alchemistenlabo."},
  lavoisier:{name:"Labo tijdens de Franse Revolutie",art:"assets/french_lab.webp",labels:["Reacties in waterig midden","Kwantitatieve aspecten","Koolstofchemie","Redoxreacties"],code:[8,1,5,6],intro:"De tijdreis brengt je naar het labo van Lavoisier."},
- modern:{name:"Modern chemielabo",art:"assets/modern_lab.webp",labels:["Chemisch evenwicht","pH van een oplossing","Redoxreacties","Elektronen-configuratie"],code:[6,4,9,2],intro:"Je bereikt het moderne chemielabo."},
- future:{name:"Futuristisch chemielabo",art:"assets/futuristic_lab.webp",labels:["Koolwaterstoffen","Monofunctionele koolstof-verbindingen","Polyfunctionele koolstof-verbindingen","Kunststoffen"],code:[5,2,8,1],intro:"Je stapt de toekomst binnen. Het futuristische labo bewaakt de laatste tijdcode."}
+ modern:{name:"Modern chemielabo",art:"assets/modern_lab.webp",labels:["Chemisch evenwicht","pH van een oplossing","Redoxreacties","Elektronenconfiguratie"],code:[6,4,9,2],intro:"Je bereikt het moderne chemielabo."},
+ future:{name:"Futuristisch chemielabo",art:"assets/futuristic_lab.webp",labels:["Koolwaterstoffen","Monofunctionele koolstofverbindingen","Polyfunctionele koolstofverbindingen","Kunststoffen"],code:[5,2,8,1],intro:"Je stapt de toekomst binnen. Het futuristische labo bewaakt de laatste tijdcode."}
 };
 const LEVEL_ORDER=Object.keys(LEVELS);
 const LEVEL_TOTAL=LEVEL_ORDER.length;
@@ -221,12 +221,16 @@ function renderLevel(){
  const sceneCaption=$("scene-caption");if(sceneCaption)sceneCaption.textContent=levelSolved[currentLevel]?"Alle vier puzzels zijn minstens één keer opgelost. Je kunt ze opnieuw oefenen en LabCoins verdienen.":"";
  renderQuestionCoverage();renderInventory();renderEconomyPanel();
 }
+function coverageDisplayLabel(level, index){
+ const labels={modern:{3:"Elektronen-configuratie"},future:{1:"Monofunctionele",2:"Polyfunctionele"}};
+ return labels[level]?.[index] || LEVELS[level].labels[index];
+}
 function renderQuestionCoverage(){
  const el=$("question-coverage");if(!el)return;
  const rows=questionCoverage.filter(r=>r.level_id===currentLevel);
  if(!rows.length){el.innerHTML="<strong>Vragenvoortgang</strong><small>Meld je online aan om je beantwoorde vragen bij te houden.</small>";return;}
  const byObject=new Map(rows.map(r=>[r.object_id,r]));
- el.innerHTML=`<strong>Vragenvoortgang</strong><div class="question-coverage-grid">${["object1","object2","object3","object4"].map((obj,i)=>{const r=byObject.get(obj)||{};const done=Number(r.answered_count)||0,total=Number(r.total_count)||0,complete=Boolean(r.complete);const pct=total?Math.min(100,done/total*100):0;return `<div class="question-coverage-item ${complete?"complete":""}"><span>${LEVELS[currentLevel].labels[i]}</span><b>${done}/${total}</b><i><em style="width:${pct}%"></em></i><small>${complete?"✓ Alle vragen juist beantwoord":total?"Nog te ontdekken":"Geen actieve vragen"}</small></div>`;}).join("")}</div><small>Elke vraag telt mee zodra je ze minstens één keer juist hebt beantwoord, ongeacht de gekozen moeilijkheid.</small>`;
+ el.innerHTML=`<strong>Vragenvoortgang</strong><div class="question-coverage-grid">${["object1","object2","object3","object4"].map((obj,i)=>{const r=byObject.get(obj)||{};const done=Number(r.answered_count)||0,total=Number(r.total_count)||0,complete=Boolean(r.complete);const pct=total?Math.min(100,done/total*100):0;return `<div class="question-coverage-item ${complete?"complete":""}"><span>${coverageDisplayLabel(currentLevel,i)}</span><b>${done}/${total}</b><i><em style="width:${pct}%"></em></i><small>${complete?"✓ Alle vragen juist beantwoord":total?"Nog te ontdekken":"Geen actieve vragen"}</small></div>`;}).join("")}</div><small>Elke vraag telt mee zodra je ze minstens één keer juist hebt beantwoord, ongeacht de gekozen moeilijkheid.</small>`;
 }
 function updateProgress(){const n=Object.values(levelSolved).filter(Boolean).length;$("progress-text").textContent=`${n} van ${LEVEL_TOTAL} levels voltooid`;$("progress-fill").style.width=`${n/LEVEL_TOTAL*100}%`;}
 function localAttemptStorageKey(level,obj){return `chemie-escape-attempt:${level}:${obj}`;}
